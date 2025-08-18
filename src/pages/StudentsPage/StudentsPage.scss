@@ -1,0 +1,134 @@
+// Main layout responsive styles
+.main-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+
+  &__nav {
+    width: 100%;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .__container {
+    max-width: 1480px;
+    width: 100%;
+    min-width: 300px;
+    margin: 0 auto;
+  }
+
+}
+
+// Header section responsive styles
+.layout-header-section {
+  padding: 20px 40px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+// Filters section responsive styles
+.students-filters-section {
+  padding: 0 40px 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+// Table section responsive styles
+.students-table-section {
+  padding: 0 40px 40px;
+  width: 100%;
+  box-sizing: border-box;
+  flex: 1;
+}
+
+// Student name styling
+.student-name {
+  font-weight: 500;
+  color: var(--primary-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// View link styling
+.view-link {
+  transition: all 0.2s ease;
+
+  &:hover {
+    opacity: 0.8;
+    transform: translateY(-1px);
+  }
+}
+
+// Approve button styling
+.approve-button {
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Tablet responsiveness (1024px and below)
+@media (max-width: 1024px) {
+  .layout-header-section {
+    padding: 16px 32px;
+  }
+
+  .students-filters-section {
+    padding: 0 32px 16px;
+  }
+
+  .students-table-section {
+    padding: 0 32px 32px;
+  }
+}
+
+// Mobile responsiveness (768px and below)
+@media (max-width: 768px) {
+  .layout-header-section {
+    padding: 12px 20px;
+  }
+
+  .students-filters-section {
+    padding: 0 20px 12px;
+  }
+
+  .students-table-section {
+    padding: 0 20px 20px;
+  }
+
+  .student-name {
+    font-size: 14px;
+    max-width: 80px;
+  }
+}
+
+// Small mobile responsiveness (480px and below)
+@media (max-width: 480px) {
+  .layout-header-section {
+    padding: 8px 16px;
+  }
+
+  .students-filters-section {
+    padding: 0 16px 8px;
+  }
+
+  .students-table-section {
+    padding: 0 16px 16px;
+  }
+
+  .student-name {
+    font-size: 12px;
+    max-width: 60px;
+  }
+
+  .view-link,
+  .approve-button {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+}
