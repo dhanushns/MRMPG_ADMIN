@@ -224,10 +224,6 @@ const DashboardPage: React.FC = () => {
         fetchMembersData(currentPage, filters, sortState.key, sortState.direction);
     }, [currentPage, fetchMembersData, filters, sortState]);
 
-    const handleEditMember = (memberId: number) => {
-        console.log(`Edit member with ID: ${memberId}`);
-    };
-
     // QuickView Modal Handlers
     const handleRowClick = (row: MemberData) => {
         setSelectedMember(row);
