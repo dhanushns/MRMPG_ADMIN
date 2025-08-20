@@ -4,9 +4,10 @@ import "./HeaderLayout.scss"
 interface HeaderLayoutProps {
     title: string;
     subText?: string;
+    pageInfo?: string;
 }
 
-const HeaderLayout = ({ title, subText }: HeaderLayoutProps): React.ReactElement => {
+const HeaderLayout = ({ title, subText, pageInfo }: HeaderLayoutProps): React.ReactElement => {
     return (
         <header>
             <div className="header-container">
@@ -16,6 +17,11 @@ const HeaderLayout = ({ title, subText }: HeaderLayoutProps): React.ReactElement
                 <div className="header-subtext">
                     {subText && <p>{subText}</p>}
                 </div>
+                {pageInfo && (
+                    <div className="header-page-info">
+                        <span className="page-info-text">{pageInfo}</span>
+                    </div>
+                )}
             </div>
         </header>
     );

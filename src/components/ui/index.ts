@@ -9,6 +9,7 @@ import NumberInput from "./NumberInput";
 import Checkbox from "./Checkbox";
 import Radio from "./Radio";
 import Icons from "./Icons";
+import Tabs from "./Tabs";
 
 const ui = {
     Label,
@@ -21,7 +22,8 @@ const ui = {
     NumberInput,
     Checkbox,
     Radio,
-    Icons
+    Icons,
+    Tabs
 }
 
 export default ui;

@@ -1,12 +1,7 @@
-import React, { useState, useMemo } from "react";
+import React from "react";
 import "./TableLayout.scss";
 import ui from "@/components/ui";
 import type { types } from "@/types";
-
-type SortState = {
-    key: string | null;
-    direction: "asc" | "desc";
-};
 
 const TableLayout: React.FC<types["TableLayoutProps"]> = ({
     columns,
@@ -15,67 +10,38 @@ const TableLayout: React.FC<types["TableLayoutProps"]> = ({
     pagination = true,
     pageSize = 10,
     sortable = true,
+    currentSort = { key: null, direction: "asc" },
     className = "",
     onRowClick,
     onSort,
     emptyMessage = "No data available"
 }) => {
-    const [currentPage, setCurrentPage] = useState(1);
-    const [sortState, setSortState] = useState<SortState>({ key: null, direction: "asc" });
-
-    const sortedData = useMemo(() => {
-        if (!sortState.key) return data;
-
-        return [...data].sort((a, b) => {
-            const aValue = a[sortState.key!];
-            const bValue = b[sortState.key!];
-
-            if (typeof aValue === "string" && typeof bValue === "string") {
-                const comparison = aValue.localeCompare(bValue);
-                return sortState.direction === "asc" ? comparison : -comparison;
-            }
-
-            if (typeof aValue === "number" && typeof bValue === "number") {
-                if (aValue < bValue) return sortState.direction === "asc" ? -1 : 1;
-                if (aValue > bValue) return sortState.direction === "asc" ? 1 : -1;
-                return 0;
-            }
-
-            // Convert to string for comparison as fallback
-            const aString = String(aValue || "");
-            const bString = String(bValue || "");
-            const comparison = aString.localeCompare(bString);
-            return sortState.direction === "asc" ? comparison : -comparison;
-        });
-    }, [data, sortState]);
-
-    const paginatedData = useMemo(() => {
-        if (!pagination) return sortedData;
-
-        const startIndex = (currentPage - 1) * pageSize;
-        const endIndex = startIndex + pageSize;
-        return sortedData.slice(startIndex, endIndex);
-    }, [sortedData, currentPage, pageSize, pagination]);
-
-    const totalPages = Math.ceil(sortedData.length / pageSize);
+    // Determine if we're using external pagination
+    const isExternalPagination = typeof pagination === 'object' && pagination !== null;
+    const currentPage = isExternalPagination ? pagination.currentPage : 1;
+    const totalPages = isExternalPagination ? pagination.totalPages : Math.ceil(data.length / pageSize);
+    const totalItems = isExternalPagination ? pagination.totalItems : data.length;
 
     const handleSort = (columnKey: string) => {
-        if (!sortable) return;
+        if (!sortable || !onSort) return;
 
         const column = columns.find(col => col.key === columnKey);
         if (!column?.sortable) return;
 
-        const newDirection =
-            sortState.key === columnKey && sortState.direction === "asc"
-                ? "desc"
+        // Toggle direction based on current sort state
+        const newDirection = 
+            currentSort.key === columnKey && currentSort.direction === "asc" 
+                ? "desc" 
                 : "asc";
-
-        setSortState({ key: columnKey, direction: newDirection });
-        onSort?.(columnKey, newDirection);
+        
+        onSort(columnKey, newDirection);
     };
 
     const handlePageChange = (page: number) => {
-        setCurrentPage(page);
+        if (isExternalPagination) {
+            pagination.onPageChange(page);
+        }
+        // Remove internal pagination handling since we're using only external functions
     };
 
     const renderCell = (column: types["TableColumn"], row: types["TableData"], rowIndex: number): React.ReactNode => {
@@ -133,7 +99,7 @@ const TableLayout: React.FC<types["TableLayoutProps"]> = ({
             <div className="table-pagination">
                 <div className="pagination-info">
                     <span>
-                        Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, sortedData.length)} of {sortedData.length} entries
+                        Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalItems)} of {totalItems} entries
                     </span>
                 </div>
                 <div className="pagination-controls">
@@ -192,7 +158,7 @@ const TableLayout: React.FC<types["TableLayoutProps"]> = ({
                                         className={`
                       ${column.align ? `text-${column.align}` : 'text-left'}
                       ${column.sortable && sortable ? 'sortable' : ''}
-                      ${sortState.key === column.key ? 'sorted' : ''}
+                      ${currentSort.key === column.key ? 'sorted' : ''}
                     `}
                                         style={{ width: column.width }}
                                         onClick={() => handleSort(column.key)}
@@ -203,16 +169,15 @@ const TableLayout: React.FC<types["TableLayoutProps"]> = ({
                                                 <div className="sort-icons">
                                                     <ui.Icons
                                                         name={
-                                                            sortState.key === column.key
-                                                                ? sortState.direction === "asc"
+                                                            currentSort.key === column.key
+                                                                ? currentSort.direction === "asc"
                                                                     ? "chevronUp"
                                                                     : "chevronDown"
                                                                 : "chevronDown"
                                                         }
                                                         size={14}
                                                         strokeWidth={3}
-                                                        className={`sort-icon ${sortState.key === column.key ? 'active' : ''
-                                                            }`}
+                                                        className={`sort-icon ${currentSort.key === column.key ? 'active' : ''}`}
                                                     />
                                                 </div>
                                             )}
@@ -222,7 +187,7 @@ const TableLayout: React.FC<types["TableLayoutProps"]> = ({
                             </tr>
                         </thead>
                         <tbody>
-                            {paginatedData.length === 0 ? (
+                            {data.length === 0 ? (
                                 <tr>
                                     <td colSpan={columns.length} className="empty-state">
                                         <div className="empty-content">
@@ -232,7 +197,7 @@ const TableLayout: React.FC<types["TableLayoutProps"]> = ({
                                     </td>
                                 </tr>
                             ) : (
-                                paginatedData.map((row, rowIndex) => (
+                                data.map((row, rowIndex) => (
                                     <tr
                                         key={rowIndex}
                                         className={onRowClick ? 'clickable' : ''}

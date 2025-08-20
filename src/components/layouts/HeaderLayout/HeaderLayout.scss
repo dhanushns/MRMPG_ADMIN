@@ -95,6 +95,70 @@
     }
 }
 
+.header-page-info {
+    margin-top: 8px;
+    
+    .page-info-text {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+        
+        &:hover {
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            transform: translateY(-1px);
+        }
+    }
+
+    // Tablet responsive
+    @media (max-width: 1024px) {
+        margin-top: 6px;
+        
+        .page-info-text {
+            font-size: 13px;
+            padding: 5px 10px;
+        }
+    }
+
+    // Mobile responsive
+    @media (max-width: 768px) {
+        margin-top: 5px;
+        
+        .page-info-text {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 16px;
+        }
+    }
+
+    // Small mobile responsive
+    @media (max-width: 480px) {
+        margin-top: 4px;
+        
+        .page-info-text {
+            font-size: 11px;
+            padding: 3px 6px;
+            border-radius: 14px;
+        }
+    }
+
+    // Extra small mobile responsive
+    @media (max-width: 360px) {
+        .page-info-text {
+            font-size: 10px;
+            padding: 2px 5px;
+            border-radius: 12px;
+        }
+    }
+}
+
 // Additional responsive utilities
 @media (max-width: 768px) {
     .header-container {

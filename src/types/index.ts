@@ -27,7 +27,7 @@ interface FilterOptionProps {
   disabled?: boolean;
 }
 
-type FilterValue = string | string[] | number | boolean | Date | null;
+type FilterValue = string | string[] | number | boolean | Date | { start: string; end: string } | null;
 
 interface FilterItemProps {
   id: string;
@@ -61,9 +61,9 @@ interface FilterItemProps {
 interface FilterLayoutProps {
   title?: string;
   filters: FilterItemProps[];
-  layout?: "horizontal" | "vertical" | "grid";
+  layout?: "horizontal" | "vertical" | "grid" | "inline";
   columns?: number;
-  spacing?: "small" | "medium" | "large";
+  spacing?: "small" | "medium" | "large" | "compact";
   showResetButton?: boolean;
   showApplyButton?: boolean;
   onApply?: (filters: Record<string, FilterValue>) => void;
@@ -71,6 +71,7 @@ interface FilterLayoutProps {
   className?: string;
   collapsible?: boolean;
   defaultCollapsed?: boolean;
+  downloadReport?: boolean;
 }
 
 // Icon types
@@ -147,7 +148,17 @@ type IconName =
   | "plane"
   | "train"
   | "bike"
-  | "indianRupee";
+  | "indianRupee"
+  | "userPlus"
+  | "dollarSign"
+  | "trendingUp"
+  | "trendingDown"
+  | "fileText"
+  | "creditCard"
+  | "checkCircle"
+  | "activity"
+  | "alertCircle"
+  | "userMinus"
 
 interface IconProps {
   name: IconName;
@@ -182,13 +193,54 @@ interface TableLayoutProps {
   columns: TableColumn[];
   data: TableData[];
   loading?: boolean;
-  pagination?: boolean;
+  pagination?: boolean | {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    onPageChange: (page: number) => void;
+  };
   pageSize?: number;
   sortable?: boolean;
+  currentSort?: {
+    key: string | null;
+    direction: "asc" | "desc";
+  };
   className?: string;
   onRowClick?: (row: TableData, index: number) => void;
   onSort?: (key: string, direction: "asc" | "desc") => void;
   emptyMessage?: string;
+}
+
+interface ActionButton {
+    label: string;
+    icon?: types["IconName"];
+    variant?: "primary" | "secondary" | "outline" | "ghost";
+    size?: "small" | "medium" | "large";
+    onClick: () => void;
+    disabled?: boolean;
+}
+
+interface CardLayoutProps {
+    title: string;
+    value: string | number;
+    icon: types["IconName"];
+    percentage?: number;
+    trend?: "up" | "down" | "neutral";
+    color?: "primary" | "success" | "warning" | "error" | "info";
+    className?: string;
+    onClick?: () => void;
+    loading?: boolean;
+    subtitle?: string;
+
+    actions?: ActionButton[];
+    showActions?: "always" | "hover" | "never";
+    customContent?: React.ReactNode;
+    footer?: React.ReactNode;
+    badge?: {
+        text: string;
+        color?: "primary" | "success" | "warning" | "error" | "info";
+    };
+    style?: React.CSSProperties;
 }
 
 interface types {
@@ -201,6 +253,8 @@ interface types {
   TableColumn: TableColumn;
   TableData: TableData;
   TableLayoutProps: TableLayoutProps;
+  CardLayoutProps: CardLayoutProps;
+  ActionButtonProps: ActionButton;
 }
 
 export type { types };

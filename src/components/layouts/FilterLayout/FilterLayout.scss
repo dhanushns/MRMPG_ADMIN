@@ -1,5 +1,4 @@
 .filter-layout {
-  padding: 20px 40px;
 
   // Responsive padding
   @media (max-width: 768px) {
@@ -13,6 +12,8 @@
   &__header {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
     justify-content: space-between;
     margin-bottom: 16px;
 
@@ -207,6 +208,42 @@
     }
   }
 
+  &--spacing-compact {
+    .filter-layout__content {
+      gap: 6px;
+
+      @media (max-width: 480px) {
+        gap: 4px;
+      }
+    }
+  }
+
+  &--inline {
+    .filter-layout__content {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 12px;
+
+      @media (max-width: 768px) {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+
+      .filter-item {
+        flex: 0 0 auto;
+        min-width: 200px;
+
+        @media (max-width: 768px) {
+          min-width: unset;
+          flex: 1 1 auto;
+        }
+      }
+    }
+  }
+
   &__actions {
     display: flex;
     gap: 12px;
@@ -257,6 +294,45 @@
   textarea {
     min-width: 0;
     max-width: 100%;
+  }
+
+  &--date-range {
+    .date-range-inputs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+
+      @media (max-width: 480px) {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+      }
+
+      .date-range-start,
+      .date-range-end {
+        flex: 1;
+        min-width: 120px;
+
+        @media (max-width: 480px) {
+          min-width: unset;
+          width: 100%;
+        }
+      }
+
+      .date-range-separator {
+        font-size: var(--font-size-sm);
+        color: var(--gray-600);
+        font-weight: var(--font-weight-medium);
+        white-space: nowrap;
+        padding: 0 4px;
+
+        @media (max-width: 480px) {
+          align-self: center;
+          padding: 0;
+        }
+      }
+    }
   }
 
   .filter-error {

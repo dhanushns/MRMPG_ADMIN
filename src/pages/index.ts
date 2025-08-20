@@ -1,11 +1,15 @@
 import LoginPage from "./LoginPage";
-import StudentsPage from "./StudentsPage";
+import MembersPage from "./MembersPage";
 import DashboardPage from "./DashboardPage";
+import RoomPage from "./RoomsPage";
+import ApprovalManagementPage from "./MembersPage";
 
 const pages = {
     LoginPage,
-    StudentsPage,
-    DashboardPage
+    MembersPage,
+    DashboardPage,
+    RoomPage,
+    ApprovalManagementPage
 }
 
 export default pages;

@@ -72,7 +72,16 @@ import {
   Plane,
   Train,
   Bike,
-  IndianRupee
+  IndianRupee,
+  UserPlus,
+  DollarSign,
+  TrendingUp,
+  TrendingDown,
+  FileText,
+  CreditCard,
+  UserMinus,
+  ActivityIcon,
+  AlertCircleIcon,
 } from "lucide-react";
 import type { types } from "@/types";
 
@@ -171,7 +180,22 @@ const iconMap = {
   train: Train,
   bike: Bike,
   
-  indianRupee: IndianRupee
+  // Finance & Business
+  indianRupee: IndianRupee,
+  dollarSign: DollarSign,
+  creditCard: CreditCard,
+  
+  // Trends & Analytics
+  trendingUp: TrendingUp,
+  trendingDown: TrendingDown,
+  
+  // Additional Actions
+  userPlus: UserPlus,
+  userMinus: UserMinus,
+  fileText: FileText,
+  activity: ActivityIcon,
+  alertCircle: AlertCircleIcon,
+  
 } as const;
 
 const Icons: React.FC<types["IconProps"]> = ({
@@ -183,7 +207,7 @@ const Icons: React.FC<types["IconProps"]> = ({
   onClick,
   ...props
 }) => {
-  const IconComponent = iconMap[name];
+  const IconComponent = iconMap[name as keyof typeof iconMap];
   
   if (!IconComponent) {
     console.warn(`Icon "${name}" not found`);

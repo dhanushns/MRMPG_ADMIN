@@ -10,7 +10,7 @@ const MainLayout = () => {
         const params = new URLSearchParams(search);
         
         // For students page, get enrollment type
-        if (pathname === '/students') {
+        if (pathname === '/members') {
             return params.get('enrollment') || 'long_term';
         }
         
@@ -20,7 +20,7 @@ const MainLayout = () => {
         }
         
         // For dashboard page, get view type
-        if (pathname === '/' || pathname === '/dashboard') {
+        if (pathname === '/') {
             return params.get('view') || 'overview';
         }
         

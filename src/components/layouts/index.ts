@@ -4,7 +4,8 @@ import HeaderLayout from "./HeaderLayout";
 import FilterLayout from "./FilterLayout";
 import { TableLayout } from "./TableLayout";
 import MainLayout from "./MainLayout/MainLayout";
-
+import CardLayout, { CardGrid } from "./CardLayout";
+import QuickViewModal from "./QuickViewModal";
 
 const layouts = {
     AuthLayout,
@@ -12,7 +13,10 @@ const layouts = {
     HeaderLayout,
     FilterLayout,
     TableLayout,
-    MainLayout
+    MainLayout,
+    CardLayout,
+    CardGrid,
+    QuickViewModal
 }
 
 export default layouts;

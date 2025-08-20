@@ -22,21 +22,21 @@ const TopNav = ({ selectedTab }: TopNavProps): React.ReactElement => {
             id: "dashboard",
             layout: "entity",
             label: "Dashboard",
-            path: "/dashboard",
+            path: "/",
             class: "dashboard-nav"
         },
         {
-            id: "students",
+            id: "members",
             layout: "root",
-            label: "Students",
-            path: "/students?enrollment=long_term",
-            class: "students-nav",
+            label: "Members",
+            path: "/members?enrollment=long_term",
+            class: "members-tab",
             tabs: [
                 {
                     id: "long_term",
                     layout: "entity",
                     label: "Long Term",
-                    path: "/students?enrollment=long_term",
+                    path: "/members?enrollment=long_term",
                     selected: true,
                     class: "long-term-nav"
                 },
@@ -44,19 +44,27 @@ const TopNav = ({ selectedTab }: TopNavProps): React.ReactElement => {
                     id: "short_term",
                     layout: "entity",
                     label: "Short Term",
-                    path: "/students?enrollment=short_term",
+                    path: "/members?enrollment=short_term",
                     selected: false,
                     class: "short-term-nav"
                 },
-                {
+            ]
+        },
+        {
                     id: "approval_management",
                     layout: "entity",
                     label: "Approval Management",
-                    path: "/students?enrollment=approval_management",
+                    path: "/members?enrollment=approval_management",
                     selected: false,
                     class: "approval-management-nav"
-                }
-            ]
+                },
+        {
+            id: "rooms",
+            layout: "entity",
+            label: "Rooms",
+            path: "/rooms",
+            class: "rooms-nav"
+
         },
         {
             id: "report",
@@ -124,7 +132,7 @@ const TopNav = ({ selectedTab }: TopNavProps): React.ReactElement => {
         if (menu.id === "dashboard" && (pathname === "/" || pathname === "/dashboard")) {
             return true;
         }
-        if (menu.id === "students" && pathname === "/students") {
+        if (menu.id === "members" && pathname === "/members") {
             return true;
         }
         if (menu.id === "report" && pathname === "/reports") {

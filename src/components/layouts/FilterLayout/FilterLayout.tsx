@@ -3,7 +3,7 @@ import type { types } from "@/types";
 import ui from "@/components/ui";
 import "./FilterLayout.scss";
 
-type FilterValue = string | string[] | number | boolean | Date | null;
+type FilterValue = string | string[] | number | boolean | Date | { start: string; end: string } | null;
 
 const FilterLayout = ({
     title,
@@ -17,7 +17,8 @@ const FilterLayout = ({
     onReset,
     className = "",
     collapsible = false,
-    defaultCollapsed = false
+    defaultCollapsed = false,
+    downloadReport = false
 }: types["FilterLayoutProps"]): React.ReactElement => {
     const [filterValues, setFilterValues] = useState<Record<string, FilterValue>>(() => {
         const initialValues: Record<string, FilterValue> = {};
@@ -96,14 +97,14 @@ const FilterLayout = ({
         };
 
         const gridSpan = layout === "grid" ? getGridSpan() : 1;
-        
+
         // For responsive grids, ensure full-width items span correctly at different breakpoints
         const getResponsiveGridSpan = () => {
             if (filter.fullWidth) return "1 / -1"; // Always span full width
             return `span ${gridSpan}`;
         };
-        
-        const itemStyle = layout === "grid" ? { 
+
+        const itemStyle = layout === "grid" ? {
             gridColumn: getResponsiveGridSpan()
         } : {};
 
@@ -163,6 +164,49 @@ const FilterLayout = ({
                         {error && <span className="filter-error">{error}</span>}
                     </div>
                 );
+
+            case "dateRange": {
+                const dateRangeValue = value as { start: string; end: string } | null;
+                return (
+                    <div key={filter.id} className="filter-item filter-item--date-range" style={itemStyle}>
+                        {filter.label && <ui.Label>{filter.label}</ui.Label>}
+                        <div className="date-range-inputs">
+                            <ui.DateInput
+                                id={`${filter.id}-start`}
+                                value={dateRangeValue?.start || ""}
+                                disabled={filter.disabled}
+                                className={`${filter.className || ""} date-range-start`}
+                                min={filter.min as string}
+                                max={dateRangeValue?.end || filter.max as string}
+                                onChange={(startDate) => {
+                                    const newValue = {
+                                        start: startDate,
+                                        end: dateRangeValue?.end || ""
+                                    };
+                                    handleFilterChange(filter.id, newValue);
+                                }}
+                            />
+                            <span className="date-range-separator">to</span>
+                            <ui.DateInput
+                                id={`${filter.id}-end`}
+                                value={dateRangeValue?.end || ""}
+                                disabled={filter.disabled}
+                                className={`${filter.className || ""} date-range-end`}
+                                min={dateRangeValue?.start || filter.min as string}
+                                max={filter.max as string}
+                                onChange={(endDate) => {
+                                    const newValue = {
+                                        start: dateRangeValue?.start || "",
+                                        end: endDate
+                                    };
+                                    handleFilterChange(filter.id, newValue);
+                                }}
+                            />
+                        </div>
+                        {error && <span className="filter-error">{error}</span>}
+                    </div>
+                );
+            }
 
             case "select":
                 return (
@@ -250,11 +294,11 @@ const FilterLayout = ({
 
     const layoutClass = `filter-layout--${layout}`;
     const spacingClass = `filter-layout--spacing-${spacing}`;
-    
+
     // Calculate responsive column counts based on original columns
     const getResponsiveColumns = (originalColumns: number) => {
         let lg, md, sm;
-        
+
         switch (originalColumns) {
             case 1:
             case 2:
@@ -283,12 +327,12 @@ const FilterLayout = ({
                 md = Math.min(originalColumns, 3);
                 sm = 2;
         }
-        
+
         return { lg, md, sm };
     };
 
     const responsiveCols = getResponsiveColumns(columns);
-    
+
     const gridStyle = layout === "grid" ? {
         "--columns": columns,
         "--columns-lg": responsiveCols.lg,
@@ -339,11 +383,13 @@ const FilterLayout = ({
                     )}
                 </>
             )}
-            <div className="filter-layout__footer">
-                <ui.Button type="button" variant="primary" className="filter-button filter-button__download-report"  rightIcon={<ui.Icons name="download" /> }>
-                    Download Report
-                </ui.Button>
-            </div>
+            {downloadReport && (
+                <div className="filter-layout__footer">
+                    <ui.Button type="button" variant="primary" className="filter-button filter-button__download-report" rightIcon={<ui.Icons name="download" />}>
+                        Download Report
+                    </ui.Button>
+                </div>
+            )}
         </div>
     );
 };
