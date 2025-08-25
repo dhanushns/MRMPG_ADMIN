@@ -27,6 +27,7 @@ export default defineConfig({
       '@types': resolve('./src/types'),
       '@styles': resolve('./src/styles'),
       '@images': resolve('./src/assets/images'),
+      '@api': resolve('./src/api')
     }
   }
 })

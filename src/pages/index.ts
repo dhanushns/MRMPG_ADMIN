@@ -2,14 +2,18 @@ import LoginPage from "./LoginPage";
 import MembersPage from "./MembersPage";
 import DashboardPage from "./DashboardPage";
 import RoomPage from "./RoomsPage";
-import ApprovalManagementPage from "./MembersPage";
+import ApprovalsPage from "./ApprovalsPage";
+import ReviewPage from "./ReviewPage";
+import ReportsPage from "./ReportsPage";
 
 const pages = {
     LoginPage,
     MembersPage,
     DashboardPage,
+    ApprovalsPage,
     RoomPage,
-    ApprovalManagementPage
+    ReviewPage,
+    ReportsPage
 }
 
 export default pages;

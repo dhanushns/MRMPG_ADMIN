@@ -27,7 +27,14 @@ interface FilterOptionProps {
   disabled?: boolean;
 }
 
-type FilterValue = string | string[] | number | boolean | Date | { start: string; end: string } | null;
+type FilterValue =
+  | string
+  | string[]
+  | number
+  | boolean
+  | Date
+  | { start: string; end: string }
+  | null;
 
 interface FilterItemProps {
   id: string;
@@ -159,6 +166,9 @@ type IconName =
   | "activity"
   | "alertCircle"
   | "userMinus"
+  | "checkCircle2"
+  | "xCircle"
+  | "alertTriangle";
 
 interface IconProps {
   name: IconName;
@@ -193,7 +203,7 @@ interface TableLayoutProps {
   columns: TableColumn[];
   data: TableData[];
   loading?: boolean;
-  pagination?: boolean | {
+  pagination?: {
     currentPage: number;
     totalPages: number;
     totalItems: number;
@@ -209,38 +219,46 @@ interface TableLayoutProps {
   onRowClick?: (row: TableData, index: number) => void;
   onSort?: (key: string, direction: "asc" | "desc") => void;
   emptyMessage?: string;
+  // Checkbox functionality
+  showCheckboxes?: boolean;
+  selectedRows?: (string | number)[];
+  onSelectionChange?: (
+    selectedIds: (string | number)[],
+    selectedRows: TableData[]
+  ) => void;
+  rowIdField?: string; // Field to use as unique identifier for rows (default: 'id')
 }
 
 interface ActionButton {
-    label: string;
-    icon?: types["IconName"];
-    variant?: "primary" | "secondary" | "outline" | "ghost";
-    size?: "small" | "medium" | "large";
-    onClick: () => void;
-    disabled?: boolean;
+  label: string;
+  icon?: types["IconName"];
+  variant?: "primary" | "secondary" | "outline" | "ghost";
+  size?: "small" | "medium" | "large";
+  onClick: () => void;
+  disabled?: boolean;
 }
 
 interface CardLayoutProps {
-    title: string;
-    value: string | number;
-    icon: types["IconName"];
-    percentage?: number;
-    trend?: "up" | "down" | "neutral";
-    color?: "primary" | "success" | "warning" | "error" | "info";
-    className?: string;
-    onClick?: () => void;
-    loading?: boolean;
-    subtitle?: string;
+  title: string;
+  value: string | number;
+  icon: types["IconName"];
+  percentage?: number;
+  trend?: "up" | "down" | "neutral";
+  color?: "primary" | "success" | "warning" | "error" | "info";
+  className?: string;
+  onClick?: () => void;
+  loading?: boolean;
+  subtitle?: string;
 
-    actions?: ActionButton[];
-    showActions?: "always" | "hover" | "never";
-    customContent?: React.ReactNode;
-    footer?: React.ReactNode;
-    badge?: {
-        text: string;
-        color?: "primary" | "success" | "warning" | "error" | "info";
-    };
-    style?: React.CSSProperties;
+  actions?: ActionButton[];
+  showActions?: "always" | "hover" | "never";
+  customContent?: React.ReactNode;
+  footer?: React.ReactNode;
+  badge?: {
+    text: string;
+    color?: "primary" | "success" | "warning" | "error" | "info";
+  };
+  style?: React.CSSProperties;
 }
 
 interface types {
@@ -256,5 +274,4 @@ interface types {
   CardLayoutProps: CardLayoutProps;
   ActionButtonProps: ActionButton;
 }
-
 export type { types };

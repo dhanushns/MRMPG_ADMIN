@@ -25,6 +25,21 @@
   }
 }
 
+// Global styles to ensure dropdowns in quick view modal appear on top
+.quick-view-modal-overlay {
+  
+  // Any dropdown content within this overlay should have maximum z-index
+  .select-dropdown-menu,
+  .dropdown-menu,
+  .select-options,
+  [data-select-dropdown],
+  [role="listbox"],
+  [role="menu"] {
+    z-index: 99999 !important;
+    position: absolute !important;
+  }
+}
+
 .quick-view-modal {
   background: white;
   border-radius: 16px;
@@ -36,6 +51,21 @@
   animation: slideIn 0.3s ease-out;
   position: relative;
   scrollbar-width: none;
+  z-index: 1000;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  
+  // Global rule to ensure all select dropdowns appear on top
+  .select-dropdown,
+  .select-dropdown-content,
+  .dropdown-content,
+  [class*="dropdown"],
+  [class*="select-menu"] {
+    z-index: 9999 !important;
+    position: relative;
+  }
 }
 
 @keyframes fadeIn {
@@ -199,13 +229,29 @@
 // Info Layout
 .quick-view-content {
   padding: 24px;
+  position: relative;
+  z-index: 1;
+  overflow: visible;
 }
 
 .info-section {
   margin-bottom: 28px;
+  position: relative;
+  z-index: 1;
 
   &:last-child {
     margin-bottom: 0;
+  }
+
+  // Special handling for approval form section
+  &:has(.approval-form) {
+    overflow: visible;
+    z-index: 10;
+    
+    // Ensure any dropdown content appears above everything else
+    .select-wrapper.select-wrapper--open {
+      z-index: 1000;
+    }
   }
 
   .section-title {
@@ -383,8 +429,155 @@
   }
 }
 
+// Approval Form
+.approval-form {
+  position: relative;
+  z-index: 1;
+  
+  .form-grid {
+    display: grid;
+    gap: 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      z-index: 1;
+
+      // Highest z-index for PG Location select (first form group)
+      &:has(#pgLocation) {
+        z-index: 200;
+      }
+
+      // High z-index for room number select
+      &:has(#roomNo) {
+        z-index: 150;
+      }
+
+      // Medium z-index for rent amount input (third form group)
+      &:nth-child(3) {
+        z-index: 100;
+      }
+
+      // Lower z-index for advance amount input (fourth form group)
+      &:nth-child(4) {
+        z-index: 50;
+      }    .form-input {
+      transition: all 0.2s ease;
+
+      &:focus-within {
+        transform: translateY(-1px);
+      }
+
+      // Dynamic focus colors based on member type
+      &.form-input--long_term {
+        &:focus-within {
+          border-color: var(--primary-color, #667eea);
+          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+      }
+
+      &.form-input--short_term {
+        &:focus-within {
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+      }
+
+      // Readonly state styling
+      &[readonly] {
+        background-color: #f9fafb;
+        color: #6b7280;
+        cursor: not-allowed;
+        border-color: #d1d5db;
+      }
+
+      // Disabled state styling  
+      &:disabled {
+        background-color: #f3f4f6;
+        color: #9ca3af;
+        cursor: not-allowed;
+        border-color: #d1d5db;
+        opacity: 0.6;
+      }
+    }
+
+    // Auto-filled note styling
+    .auto-filled-note {
+      color: #10b981;
+      font-size: 12px;
+      font-style: italic;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+      &::before {
+        content: "✓";
+        color: #10b981;
+        font-weight: bold;
+      }
+    }
+
+    // Error message styling
+    .error-message {
+      color: #ef4444;
+      font-size: 12px;
+      margin-top: 4px;
+      display: block;
+    }
+
+    // Specific styling for select dropdown
+    .select-wrapper {
+      position: relative;
+      z-index: inherit;
+
+      &--custom {
+        .select-dropdown-content {
+          z-index: 2000; // Very high z-index to ensure it appears above everything
+          position: absolute;
+          top: calc(100% + 4px);
+          left: 0;
+          right: 0;
+          background: #ffffff;
+          border: 1px solid #d1d5db;
+          border-radius: 8px;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 8px 16px rgba(0, 0, 0, 0.1);
+          max-height: 200px;
+          overflow: hidden;
+        }
+      }
+    }
+  }
+
+
+  &.approval-form--long_term {
+    .form-group label {
+      color: #1f2937;
+
+      &::after {
+        color: var(--primary-color, #667eea);
+      }
+    }
+  }
+
+  &.approval-form--short_term {
+    .form-group label {
+      color: #1f2937;
+
+      &::after {
+        color: #3b82f6;
+      }
+    }
+  }
+}
+
 // Footer Layout
-.quick-view-footer {
+.quick-view-footer { 
   padding: 20px 24px;
   border-top: 1px solid #e5e7eb;
   background: #f9fafb;
@@ -437,6 +630,12 @@
       }
     }
   }
+}
+
+.approve-user-actions{
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
 }
 
 // Responsive Design
@@ -516,6 +715,16 @@
     }
   }
 
+  .approval-form {
+    .form-grid {
+      gap: 12px;
+    }
+
+    .form-group {
+      gap: 4px;
+    }
+  }
+
   .documents-list .document-item {
     padding: 10px 12px;
     flex-direction: column;
@@ -572,6 +781,16 @@
 
   .info-section .section-title {
     font-size: 14px;
+  }
+
+  .approval-form {
+    .form-grid {
+      gap: 10px;
+    }
+
+    .form-group {
+      gap: 3px;
+    }
   }
 
   .status-badge, .approval-badge {

@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import type { types } from "@/types";
+import type { staffResponse } from "@/types/apiResponseTypes";
 import "./TopNav.scss"
 import PG_LOGO from "@images/MRM_PG.png";
 import tempProfile from "@images/profile-temp.jpg";
 import ui from "@/components/ui";
+import { AuthManager } from "@/utils/index";
 
 interface TopNavProps {
     selectedTab?: string | null;
@@ -16,6 +18,19 @@ const TopNav = ({ selectedTab }: TopNavProps): React.ReactElement => {
     const location = useLocation();
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [staffData, setStaffData] = useState<staffResponse | null>(null);
+
+    // Get staff data on component mount
+    useEffect(() => {
+        const staff = AuthManager.getStaffData() as staffResponse;
+        setStaffData(staff);
+    }, []);
+
+    const handleLogout = () => {
+        AuthManager.clearAuthData();
+        navigate('/login');
+        setActiveDropdown(null);
+    };
 
     const menus: types["Menu"][] = [
         {
@@ -51,13 +66,13 @@ const TopNav = ({ selectedTab }: TopNavProps): React.ReactElement => {
             ]
         },
         {
-                    id: "approval_management",
-                    layout: "entity",
-                    label: "Approval Management",
-                    path: "/members?enrollment=approval_management",
-                    selected: false,
-                    class: "approval-management-nav"
-                },
+            id: "approvals",
+            layout: "entity",
+            label: "Approvals",
+            path: "/approvals",
+            selected: false,
+            class: "approvals-nav"
+        },
         {
             id: "rooms",
             layout: "entity",
@@ -128,7 +143,7 @@ const TopNav = ({ selectedTab }: TopNavProps): React.ReactElement => {
 
     const isActiveMenu = (menu: types["Menu"]) => {
         const { pathname } = location;
-        
+
         if (menu.id === "dashboard" && (pathname === "/" || pathname === "/dashboard")) {
             return true;
         }
@@ -141,13 +156,13 @@ const TopNav = ({ selectedTab }: TopNavProps): React.ReactElement => {
         if (menu.id === "review" && pathname === "/review") {
             return true;
         }
-        
+
         return false;
     };
 
     const getActiveTabForMenu = (menu: types["Menu"]) => {
         const params = new URLSearchParams(location.search);
-        
+
         if (menu.id === "students") {
             return selectedTab || params.get('enrollment') || "long_term";
         }
@@ -188,21 +203,31 @@ const TopNav = ({ selectedTab }: TopNavProps): React.ReactElement => {
                             {menus.map(menu => (
                                 <li
                                     key={menu.id}
-                                    className={`nav-item ${menu.layout === "root" ? "has-dropdown" : ""} ${menu.class}`}
-                                    onMouseEnter={() => menu.layout === "root" && setActiveDropdown(menu.id)}
-                                    onMouseLeave={() => menu.layout === "root" && setActiveDropdown(null)}
+                                    className={`nav-item ${menu.layout === "root" ? "has-dropdown" : ""} ${menu.layout === "image" ? "has-dropdown" : ""} ${menu.class}`}
+                                    onMouseEnter={() => {
+                                        if (menu.layout === "root") {
+                                            setActiveDropdown(menu.id);
+                                        } else if (menu.layout === "image") {
+                                            setActiveDropdown("profile");
+                                        }
+                                    }}
+                                    onMouseLeave={() => {
+                                        if (menu.layout === "root" || menu.layout === "image") {
+                                            setActiveDropdown(null);
+                                        }
+                                    }}
                                 >
                                     {menu.layout === "root" ? (
                                         <div className="dropdown-wrapper">
-                                    <Link
-                                        to={menu.path}
-                                        className={`nav-link ${activeDropdown === menu.id ? "active" : ""} ${isActiveMenu(menu) ? "current-page" : ""}`}
-                                    >
-                                        {menu.label}
-                                        <div className="dropdown-arrow">
-                                            <ui.Icons name="chevronDown" strokeWidth={3} />
-                                        </div>
-                                    </Link>
+                                            <Link
+                                                to={menu.path}
+                                                className={`nav-link ${activeDropdown === menu.id ? "active" : ""} ${isActiveMenu(menu) ? "current-page" : ""}`}
+                                            >
+                                                {menu.label}
+                                                <div className="dropdown-arrow">
+                                                    <ui.Icons name="chevronDown" strokeWidth={3} />
+                                                </div>
+                                            </Link>
                                             <div className={`dropdown-menu ${activeDropdown === menu.id ? "show" : ""}`}>
                                                 {menu.tabs?.map(tab => (
                                                     <Link
@@ -217,7 +242,47 @@ const TopNav = ({ selectedTab }: TopNavProps): React.ReactElement => {
                                             </div>
                                         </div>
                                     ) : menu.layout === "image" ? (
-                                        <img src={String(menu.image) || ""} alt={menu.label || "Profile"} />
+                                        <div className="dropdown-wrapper">
+                                            <div className="profile-image-container">
+                                                <img src={String(menu.image) || ""} alt={menu.label || "Profile"} />
+                                            </div>
+                                            <div className={`dropdown-menu profile-dropdown ${activeDropdown === "profile" ? "show" : ""}`}>
+                                                <div className="profile-card-header">
+                                                    <div className="profile-avatar">
+                                                        <img src={tempProfile} alt="Profile" />
+                                                    </div>
+                                                    <div className="profile-greeting">
+                                                        <h4>Welcome {staffData?.name || 'User'}</h4>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="profile-card-info">
+                                                    <div className="info-row">
+                                                        <span className="info-label">PG:</span>
+                                                        <span className="info-value">
+                                                            {staffData?.pg?.name || 'N/A'}
+                                                            <br></br>
+                                                            {staffData?.pg?.type || 'N/A'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="info-row">
+                                                        <span className="info-label">Location:</span>
+                                                        <span className="info-value">{staffData?.pg?.location || 'N/A'}</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="profile-card-actions">
+                                                    <ui.Button
+                                                        variant="outline"
+                                                        size="small"
+                                                        fullWidth
+                                                        onClick={handleLogout}
+                                                    >
+                                                        Logout
+                                                    </ui.Button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     ) : (
                                         <Link to={menu.path} className={`nav-link ${isActiveMenu(menu) ? "current-page" : ""}`}>
                                             {menu.label}
@@ -261,9 +326,23 @@ const TopNav = ({ selectedTab }: TopNavProps): React.ReactElement => {
                                             </div>
                                         </div>
                                     ) : menu.layout === "image" ? (
-                                        <div className="profile-item">
+                                        <div className="profile-item mobile-profile">
                                             <img src={String(menu.image) || ""} alt={menu.label || "Profile"} />
-                                            <span>Profile</span>
+                                            <div className="profile-details">
+                                                <div className="profile-name">{staffData?.name || 'User'}</div>
+                                                <div className="profile-pg">
+                                                    {staffData?.pg?.name || 'N/A'} | {staffData?.pg?.type || 'N/A'}
+                                                </div>
+                                                <div className="profile-location">{staffData?.pg?.location || 'N/A'}</div>
+                                                <ui.Button
+                                                    variant="outline"
+                                                    size="small"
+                                                    onClick={handleLogout}
+                                                    className="mobile-logout-btn"
+                                                >
+                                                    Logout
+                                                </ui.Button>
+                                            </div>
                                         </div>
                                     ) : (
                                         <Link

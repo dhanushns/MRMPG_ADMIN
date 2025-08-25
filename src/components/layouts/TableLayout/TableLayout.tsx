@@ -7,20 +7,70 @@ const TableLayout: React.FC<types["TableLayoutProps"]> = ({
     columns,
     data,
     loading = false,
-    pagination = true,
+    pagination = {
+        currentPage: 1,
+        totalItems: 1,
+        totalPages: 1,
+        onPageChange: () => {}
+    },
     pageSize = 10,
     sortable = true,
     currentSort = { key: null, direction: "asc" },
     className = "",
     onRowClick,
     onSort,
-    emptyMessage = "No data available"
+    emptyMessage = "No data available",
+    showCheckboxes = false,
+    selectedRows = [],
+    onSelectionChange,
+    rowIdField = "id"
 }) => {
-    // Determine if we're using external pagination
-    const isExternalPagination = typeof pagination === 'object' && pagination !== null;
-    const currentPage = isExternalPagination ? pagination.currentPage : 1;
-    const totalPages = isExternalPagination ? pagination.totalPages : Math.ceil(data.length / pageSize);
-    const totalItems = isExternalPagination ? pagination.totalItems : data.length;
+
+    const getRowId = (row: types["TableData"]) => {
+        return row[rowIdField] as string | number;
+    };
+
+    const isRowSelected = (row: types["TableData"]) => {
+        const rowId = getRowId(row);
+        return selectedRows.includes(rowId);
+    };
+
+    const isAllCurrentPageSelected = () => {
+        if (!showCheckboxes || data.length === 0) return false;
+        return data.every(row => isRowSelected(row));
+    };
+
+    const handleSelectAll = () => {
+        if (!onSelectionChange) return;
+
+        const currentPageIds = data.map(getRowId);
+        let newSelectedRows: (string | number)[];
+
+        if (isAllCurrentPageSelected()) {
+            newSelectedRows = selectedRows.filter(id => !currentPageIds.includes(id));
+        } else {
+            newSelectedRows = [...new Set([...selectedRows, ...currentPageIds])];
+        }
+
+        const selectedRowData = data.filter(row => newSelectedRows.includes(getRowId(row)));
+        onSelectionChange(newSelectedRows, selectedRowData);
+    };
+
+    const handleRowSelect = (row: types["TableData"]) => {
+        if (!onSelectionChange) return;
+
+        const rowId = getRowId(row);
+        let newSelectedRows: (string | number)[];
+
+        if (isRowSelected(row)) {
+            newSelectedRows = selectedRows.filter(id => id !== rowId);
+        } else {
+            newSelectedRows = [...selectedRows, rowId];
+        }
+
+        const selectedRowData = data.filter(row => newSelectedRows.includes(getRowId(row)));
+        onSelectionChange(newSelectedRows, selectedRowData);
+    };
 
     const handleSort = (columnKey: string) => {
         if (!sortable || !onSort) return;
@@ -29,19 +79,16 @@ const TableLayout: React.FC<types["TableLayoutProps"]> = ({
         if (!column?.sortable) return;
 
         // Toggle direction based on current sort state
-        const newDirection = 
-            currentSort.key === columnKey && currentSort.direction === "asc" 
-                ? "desc" 
+        const newDirection =
+            currentSort.key === columnKey && currentSort.direction === "asc"
+                ? "desc"
                 : "asc";
-        
+
         onSort(columnKey, newDirection);
     };
 
     const handlePageChange = (page: number) => {
-        if (isExternalPagination) {
-            pagination.onPageChange(page);
-        }
-        // Remove internal pagination handling since we're using only external functions
+        pagination.onPageChange(page);
     };
 
     const renderCell = (column: types["TableColumn"], row: types["TableData"], rowIndex: number): React.ReactNode => {
@@ -51,7 +98,6 @@ const TableLayout: React.FC<types["TableLayoutProps"]> = ({
             return column.render(value, row, rowIndex);
         }
 
-        // Convert unknown values to displayable content
         if (value === null || value === undefined) {
             return "-";
         }
@@ -60,25 +106,24 @@ const TableLayout: React.FC<types["TableLayoutProps"]> = ({
             return String(value);
         }
 
-        // For complex objects, you might want to handle them differently
         return String(value);
     };
 
     const renderPagination = () => {
-        if (!pagination || totalPages <= 1) return null;
+        if (!pagination || pagination.totalPages <= 1) return null;
 
         const getVisiblePages = () => {
             const delta = 2;
             const range = [];
             const rangeWithDots = [];
 
-            for (let i = Math.max(2, currentPage - delta);
-                i <= Math.min(totalPages - 1, currentPage + delta);
+            for (let i = Math.max(2, pagination.currentPage - delta);
+                i <= Math.min(pagination.totalPages - 1, pagination.currentPage + delta);
                 i++) {
                 range.push(i);
             }
 
-            if (currentPage - delta > 2) {
+            if (pagination.currentPage - delta > 2) {
                 rangeWithDots.push(1, '...');
             } else {
                 rangeWithDots.push(1);
@@ -86,10 +131,10 @@ const TableLayout: React.FC<types["TableLayoutProps"]> = ({
 
             rangeWithDots.push(...range);
 
-            if (currentPage + delta < totalPages - 1) {
-                rangeWithDots.push('...', totalPages);
+            if (pagination.currentPage + delta < pagination.totalPages - 1) {
+                rangeWithDots.push('...', pagination.totalPages);
             } else {
-                rangeWithDots.push(totalPages);
+                rangeWithDots.push(pagination.totalPages);
             }
 
             return rangeWithDots;
@@ -99,14 +144,14 @@ const TableLayout: React.FC<types["TableLayoutProps"]> = ({
             <div className="table-pagination">
                 <div className="pagination-info">
                     <span>
-                        Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalItems)} of {totalItems} entries
+                        Showing {((pagination.currentPage - 1) * pageSize) + 1} to {Math.min(pagination.currentPage * pageSize, pagination.totalItems)} of {pagination.totalItems} entries
                     </span>
                 </div>
                 <div className="pagination-controls">
                     <button
                         className="pagination-btn"
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={currentPage === 1}
+                        onClick={() => handlePageChange(pagination.currentPage - 1)}
+                        disabled={pagination.currentPage === 1}
                     >
                         <ui.Icons name="chevronLeft" size={16} strokeWidth={3} />
                     </button>
@@ -114,7 +159,7 @@ const TableLayout: React.FC<types["TableLayoutProps"]> = ({
                     {getVisiblePages().map((page, index) => (
                         <button
                             key={index}
-                            className={`pagination-btn ${page === currentPage ? 'active' : ''} ${page === '...' ? 'dots' : ''}`}
+                            className={`pagination-btn ${page === pagination.currentPage ? 'active' : ''} ${page === '...' ? 'dots' : ''}`}
                             onClick={() => typeof page === 'number' && handlePageChange(page)}
                             disabled={page === '...'}
                         >
@@ -124,8 +169,8 @@ const TableLayout: React.FC<types["TableLayoutProps"]> = ({
 
                     <button
                         className="pagination-btn"
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={currentPage === totalPages}
+                        onClick={() => handlePageChange(pagination.currentPage + 1)}
+                        disabled={pagination.currentPage === pagination.totalPages}
                     >
                         <ui.Icons name="chevronRight" size={16} strokeWidth={3} />
                     </button>
@@ -152,6 +197,15 @@ const TableLayout: React.FC<types["TableLayoutProps"]> = ({
                     <table className="data-table">
                         <thead>
                             <tr>
+                                {showCheckboxes && (
+                                    <th className="checkbox-column">
+                                        <ui.Checkbox
+                                            id="select-all"
+                                            checked={isAllCurrentPageSelected()}
+                                            onChange={handleSelectAll}
+                                        />
+                                    </th>
+                                )}
                                 {columns.map((column) => (
                                     <th
                                         key={column.key}
@@ -189,7 +243,7 @@ const TableLayout: React.FC<types["TableLayoutProps"]> = ({
                         <tbody>
                             {data.length === 0 ? (
                                 <tr>
-                                    <td colSpan={columns.length} className="empty-state">
+                                    <td colSpan={columns.length + (showCheckboxes ? 1 : 0)} className="empty-state">
                                         <div className="empty-content">
                                             <ui.Icons name="file" size={48} className="empty-icon" />
                                             <p>{emptyMessage}</p>
@@ -203,6 +257,21 @@ const TableLayout: React.FC<types["TableLayoutProps"]> = ({
                                         className={onRowClick ? 'clickable' : ''}
                                         onClick={() => onRowClick?.(row, rowIndex)}
                                     >
+                                        {showCheckboxes && (
+                                            <td
+                                                className="checkbox-column"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleRowSelect(row);
+                                                }}
+                                            >
+                                                <ui.Checkbox
+                                                    id={`select-row-${getRowId(row)}`}
+                                                    checked={isRowSelected(row)}
+                                                    onChange={() => handleRowSelect(row)}
+                                                />
+                                            </td>
+                                        )}
                                         {columns.map((column) => (
                                             <td
                                                 key={`${rowIndex}-${column.key}`}

@@ -2,29 +2,15 @@ import React, { useState, useEffect, useCallback } from 'react';
 import layouts from "@layouts/index";
 import type { types } from "@/types";
 import './DashboardPage.scss';
+import { AuthManager, ApiClient, buildDashboardQueryParams } from '@/utils';
+import { useNavigate } from 'react-router-dom';
+import type {
+    AdminResponse,
+    TableMemberData,
+    DashboardApiResponse
+} from '@/types/apiResponseTypes';
+import ui from '@/components/ui';
 
-interface MemberData {
-    [key: string]: unknown;
-    id: number;
-    name: string;
-    work: string;
-    location: string;
-    age: number;
-    roomNo: string;
-    rentAmount: number;
-    status: "Paid" | "Pending";
-    memberType: "long_term" | "short_term";
-    profileImage?: string;
-    phone?: string;
-    email?: string;
-    paymentApprovalStatus: "Approved" | "Pending" | "Rejected";
-    documents?: {
-        name: string;
-        imageUrl: string;
-    }[];
-}
-
-// type FilterValue = string | string[] | number | boolean | Date | { start: string; end: string } | null;
 
 interface FilterValues {
     search: string;
@@ -35,7 +21,21 @@ interface FilterValues {
 }
 
 const DashboardPage: React.FC = () => {
-    const [membersData, setMembersData] = useState<MemberData[]>([]);
+    const navigate = useNavigate();
+
+    // Check token validity periodically
+    useEffect(() => {
+        const checkTokenValidity = () => {
+            if (!AuthManager.isTokenValid()) {
+                AuthManager.clearAuthData();
+                navigate('/login');
+            }
+        };
+        checkTokenValidity();
+    }, [navigate]);
+
+    const [, setStaffData] = useState<AdminResponse | null>(null);
+    const [membersData, setMembersData] = useState<TableMemberData[]>([]);
     const [loading, setLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -53,155 +53,67 @@ const DashboardPage: React.FC = () => {
     });
     // QuickView Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedMember, setSelectedMember] = useState<MemberData | null>(null);
+    const [selectedMember, setSelectedMember] = useState<TableMemberData | null>(null);
 
-    const generateSampleData = (): MemberData[] => {
-        const baseData = [
-            { 
-                id: 1, 
-                name: "Rajesh Kumar", 
-                work: "Software Engineer", 
-                location: "Bangalore", 
-                age: 28, 
-                roomNo: "A-101", 
-                rentAmount: 15000, 
-                status: "Paid",
-                memberType: "long_term",
-                phone: "+91 9876543210",
-                email: "rajesh.kumar@email.com",
-                paymentApprovalStatus: "Approved",
-                documents: [
-                    { name: "Aadhar Card", imageUrl: "/src/assets/images/profile-temp.jpg" },
-                    { name: "PAN Card", imageUrl: "/src/assets/images/profile-temp.jpg" }
-                ]
-            },
-            { 
-                id: 2, 
-                name: "Priya Sharma", 
-                work: "Data Analyst", 
-                location: "Hyderabad", 
-                age: 25, 
-                roomNo: "B-204", 
-                rentAmount: 12000, 
-                status: "Pending",
-                memberType: "short_term",
-                phone: "+91 9876543211",
-                email: "priya.sharma@email.com",
-                paymentApprovalStatus: "Pending",
-                documents: [
-                    { name: "Aadhar Card", imageUrl: "/src/assets/images/profile-temp.jpg" }
-                ]
-            },
-            { 
-                id: 3, 
-                name: "Amit Singh", 
-                work: "Marketing Manager", 
-                location: "Delhi", 
-                age: 32, 
-                roomNo: "C-302", 
-                rentAmount: 18000, 
-                status: "Paid",
-                memberType: "long_term",
-                phone: "+91 9876543212",
-                email: "amit.singh@email.com",
-                paymentApprovalStatus: "Approved",
-                documents: [
-                    { name: "Aadhar Card", imageUrl: "/src/assets/images/profile-temp.jpg" },
-                    { name: "Driving License", imageUrl: "/src/assets/images/profile-temp.jpg" }
-                ]
+    // Authentication check and staff data extraction
+    useEffect(() => {
+        const checkAuthentication = () => {
+            if (!AuthManager.isAuthenticated()) {
+                navigate('/login');
+                return;
             }
-        ] as MemberData[];
 
-        // Generate additional simplified data
-        const additionalData = [];
-        for (let i = 4; i <= 30; i++) {
-            additionalData.push({
-                id: i,
-                name: `Member ${i}`,
-                work: ["Software Engineer", "Data Analyst", "Marketing Manager", "UI/UX Designer"][Math.floor(Math.random() * 4)],
-                location: ["Bangalore", "Hyderabad", "Delhi", "Mumbai", "Chennai"][Math.floor(Math.random() * 5)],
-                age: 22 + Math.floor(Math.random() * 20),
-                roomNo: `${["A", "B", "C"][Math.floor(Math.random() * 3)]}-${100 + i}`,
-                rentAmount: 10000 + Math.floor(Math.random() * 15000),
-                status: Math.random() > 0.5 ? "Paid" : "Pending",
-                memberType: Math.random() > 0.6 ? "long_term" : "short_term",
-                phone: `+91 987654${String(3200 + i).padStart(4, '0')}`,
-                email: `member${i}@email.com`,
-                paymentApprovalStatus: ["Approved", "Pending", "Rejected"][Math.floor(Math.random() * 3)],
-                documents: [
-                    { name: "Aadhar Card", imageUrl: "/src/assets/images/profile-temp.jpg" }
-                ]
-            } as MemberData);
-        }
+            const extractedStaffData = AuthManager.getStaffData() as AdminResponse | null;
+            if (extractedStaffData) {
+                setStaffData(extractedStaffData);
+            } else {
+                AuthManager.clearAuthData();
+                navigate('/login');
+            }
+        };
 
-        return [...baseData, ...additionalData];
-    };
+        checkAuthentication();
+    }, [navigate]);
 
     const fetchMembersData = useCallback(async (page: number, filterParams: FilterValues, sortKey: string | null = null, sortDirection: "asc" | "desc" = "asc") => {
         setLoading(true);
-        
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        let allData = generateSampleData();
-        
-        if (filterParams.search) {
-            allData = allData.filter(member => 
-                member.name.toLowerCase().includes(filterParams.search.toLowerCase()) ||
-                member.roomNo.toLowerCase().includes(filterParams.search.toLowerCase())
+
+        try {
+            const queryString = buildDashboardQueryParams(
+                page,
+                {
+                    search: filterParams.search,
+                    work: filterParams.work,
+                    status: filterParams.status,
+                    location: filterParams.location,
+                },
+                sortKey,
+                sortDirection,
+                10
             );
+
+            const endpoint = `/dashboard/members${queryString ? `?${queryString}` : ''}`;
+
+            const apiResponse = await ApiClient.get(endpoint) as DashboardApiResponse;
+            if (apiResponse.success && apiResponse.data) {
+                setMembersData(apiResponse.data.tableData);
+                setTotalPages(apiResponse.pagination?.totalPages || 1);
+                setTotalMembers(apiResponse.pagination?.total || 0);
+                setCurrentPage(apiResponse.pagination?.page || page);
+            } else {
+                setMembersData([]);
+                setTotalPages(1);
+                setTotalMembers(0);
+            }
+
+        } catch (error) {
+            console.error('Error fetching members data:', error);
+            setMembersData([]);
+            setTotalPages(1);
+            setTotalMembers(0);
+        } finally {
+            setLoading(false);
         }
-        
-        if (filterParams.work) {
-            allData = allData.filter(member => member.work === filterParams.work);
-        }
-        
-        if (filterParams.status) {
-            allData = allData.filter(member => member.status === filterParams.status);
-        }
-        
-        if (filterParams.location) {
-            allData = allData.filter(member => member.location === filterParams.location);
-        }
-        
-        allData = allData.filter(member => 
-            member.age >= filterParams.ageRange.min && 
-            member.age <= filterParams.ageRange.max
-        );
-        
-        // Apply sorting
-        if (sortKey) {
-            allData.sort((a, b) => {
-                const aValue = a[sortKey as keyof MemberData];
-                const bValue = b[sortKey as keyof MemberData];
-                
-                if (typeof aValue === "string" && typeof bValue === "string") {
-                    const comparison = aValue.localeCompare(bValue);
-                    return sortDirection === "asc" ? comparison : -comparison;
-                }
-                
-                if (typeof aValue === "number" && typeof bValue === "number") {
-                    if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
-                    if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
-                    return 0;
-                }
-                
-                // Convert to string for comparison as fallback
-                const aString = String(aValue || "");
-                const bString = String(bValue || "");
-                const comparison = aString.localeCompare(bString);
-                return sortDirection === "asc" ? comparison : -comparison;
-            });
-        }
-        
-        const pageSize = 10;
-        const startIndex = (page - 1) * pageSize;
-        const endIndex = startIndex + pageSize;
-        const paginatedData = allData.slice(startIndex, endIndex);
-        
-        setMembersData(paginatedData);
-        setTotalMembers(allData.length);
-        setTotalPages(Math.ceil(allData.length / pageSize));
-        setLoading(false);
     }, []);
 
     const handleFilterChange = (newFilters: FilterValues) => {
@@ -221,11 +133,14 @@ const DashboardPage: React.FC = () => {
     };
 
     useEffect(() => {
-        fetchMembersData(currentPage, filters, sortState.key, sortState.direction);
+        // Only fetch data if user is authenticated
+        if (AuthManager.isAuthenticated()) {
+            fetchMembersData(currentPage, filters, sortState.key, sortState.direction);
+        }
     }, [currentPage, fetchMembersData, filters, sortState]);
 
     // QuickView Modal Handlers
-    const handleRowClick = (row: MemberData) => {
+    const handleRowClick = (row: TableMemberData) => {
         setSelectedMember(row);
         setIsModalOpen(true);
     };
@@ -235,10 +150,8 @@ const DashboardPage: React.FC = () => {
         setSelectedMember(null);
     };
 
-    const handleDeleteUser = (userId: number) => {
+    const handleDeleteUser = (userId: string) => {
         console.log(`Delete user with ID: ${userId}`);
-        // Here you would typically call an API to delete the user
-        // For now, just close the modal
         handleCloseModal();
     };
 
@@ -282,7 +195,7 @@ const DashboardPage: React.FC = () => {
             },
             onClick: () => console.log("Open approvals dashboard")
         },
-         {
+        {
             title: "Pending Registration Approvals",
             value: "4",
             icon: "file" as const,
@@ -370,30 +283,30 @@ const DashboardPage: React.FC = () => {
 
     const tableColumns: types["TableColumn"][] = [
         {
+            key: "memberId",
+            label: "Member ID",
+            sortable: true,
+            width: "10%",
+            align: "center" as const,
+        },
+        {
             key: "name",
             label: "Name",
             sortable: true,
-            width: "15%",
+            width: "10%",
             align: "left" as const,
-        },
-        {
-            key: "work",
-            label: "Work",
-            sortable: true,
-            width: "20%"
         },
         {
             key: "location",
             label: "Location",
             sortable: true,
-            width: "12%"
+            width: "10%"
         },
         {
-            key: "age",
-            label: "Age",
+            key: "rentType",
+            label: "Rent Type",
             sortable: true,
-            width: "8%",
-            align: "center" as const
+            width: "10%"
         },
         {
             key: "roomNo",
@@ -403,12 +316,25 @@ const DashboardPage: React.FC = () => {
             align: "center" as const
         },
         {
-            key: "rentAmount",
-            label: "Rent Amount",
+            key: "advance",
+            label: "Advance",
             sortable: true,
-            width: "12%",
+            width: "10%"
+        },
+        {
+            key: "rent",
+            label: "Rent",
+            sortable: true,
+            width: "10%",
             align: "center" as const,
-            render: (value: unknown) => `₹${(value as number).toLocaleString()}`
+            render: (value: unknown) => (
+                <div className='currency-value'>
+                    <span className='currency-symbol'>
+                        <ui.Icons name="indianRupee" size={14} />
+                    </span>
+                    <span className='currency-amount'>{value as string}</span>
+                </div>
+            )
         },
         {
             key: "status",
@@ -428,8 +354,8 @@ const DashboardPage: React.FC = () => {
         <>
             <div className='dashboard-page'>
                 <div className='dashboard-page__header'>
-                    <layouts.HeaderLayout 
-                        title='Dashboard' 
+                    <layouts.HeaderLayout
+                        title='Dashboard'
                         subText='Manage and view detailed information of PG members and trends'
                     />
                 </div>
@@ -463,27 +389,44 @@ const DashboardPage: React.FC = () => {
                             pageSize={10}
                             currentSort={sortState}
                             onSort={handleSort}
-                            onRowClick={(row) => handleRowClick(row as MemberData)}
+                            onRowClick={(row) => handleRowClick(row as TableMemberData)}
                             emptyMessage="No members found"
                         />
                     </div>
                 </div>
 
-              
+
                 <layouts.QuickViewModal
                     isOpen={isModalOpen}
+                    modelLayouts={
+                        {
+                            paymentInfo: true,
+                            documents: true,
+                            approvalForm: false
+                        }
+                    }
                     onClose={handleCloseModal}
                     memberData={selectedMember ? {
-                        id: selectedMember.id,
-                        name: selectedMember.name,
-                        roomNo: selectedMember.roomNo,
-                        memberType: selectedMember.memberType,
-                        profileImage: selectedMember.profileImage,
-                        phone: selectedMember.phone,
-                        email: selectedMember.email,
-                        paymentStatus: selectedMember.status,
-                        paymentApprovalStatus: selectedMember.paymentApprovalStatus,
-                        documents: selectedMember.documents
+                        id: selectedMember.originalData.id,
+                        memberId: selectedMember.memberId,
+                        name: selectedMember.originalData.name,
+                        roomNo: selectedMember.originalData.room.roomNo,
+                        memberType: selectedMember.originalData.rentType === 'LONG_TERM' ? "long_term" : "short_term",
+                        profileImage: selectedMember.originalData.photoUrl,
+                        phone: selectedMember.originalData.phone,
+                        email: selectedMember.originalData.email,
+                        paymentStatus: selectedMember.status === 'APPROVED' ? "Paid" : "Pending",
+                        paymentApprovalStatus: selectedMember.status as "Pending" | "Approved" | "Rejected",
+                        age: selectedMember.originalData.age,
+                        work: selectedMember.originalData.work,
+                        location: selectedMember.originalData.location,
+                        advanceAmount: selectedMember.originalData.advanceAmount,
+                        rent: selectedMember.originalData.room.rent,
+                        joinedOn: new Date(selectedMember.originalData.dateOfJoining).toLocaleDateString('en-IN'),
+                        documents: [{
+                            name: 'Aadhar Card',
+                            url: selectedMember.originalData.aadharUrl
+                        }]
                     } : null}
                     onDeleteUser={handleDeleteUser}
                 />

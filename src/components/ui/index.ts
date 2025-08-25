@@ -10,6 +10,8 @@ import Checkbox from "./Checkbox";
 import Radio from "./Radio";
 import Icons from "./Icons";
 import Tabs from "./Tabs";
+import AuthenticatedImage from "./AuthenticatedImage";
+import DocumentViewer from "./DocumentViewer";
 
 const ui = {
     Label,
@@ -23,7 +25,9 @@ const ui = {
     Checkbox,
     Radio,
     Icons,
-    Tabs
+    Tabs,
+    AuthenticatedImage,
+    DocumentViewer
 }
 
 export default ui;

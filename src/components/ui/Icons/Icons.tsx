@@ -82,6 +82,9 @@ import {
   UserMinus,
   ActivityIcon,
   AlertCircleIcon,
+  CheckCircle2Icon,
+  XCircleIcon,
+  AlertTriangleIcon
 } from "lucide-react";
 import type { types } from "@/types";
 
@@ -195,7 +198,10 @@ const iconMap = {
   fileText: FileText,
   activity: ActivityIcon,
   alertCircle: AlertCircleIcon,
-  
+  checkCircle2: CheckCircle2Icon,
+  xCircle : XCircleIcon,
+  alertTriangle: AlertTriangleIcon
+
 } as const;
 
 const Icons: React.FC<types["IconProps"]> = ({

@@ -1,35 +1,37 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./AuthLayout.scss"
 import ui from "@/components/ui";
+import type { LoginResponse } from "@/types/apiResponseTypes";
+import { AuthManager, ApiClient } from "@/utils/index";
 
 interface LoginFormData {
-  username: string;
+  email: string;
   password: string;
 }
 
 interface FormErrors {
-  username?: string;
+  email?: string;
   password?: string;
 }
 const AuthLayout = (): React.ReactElement => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState<LoginFormData>({
-    username: '',
+    email: '',
     password: ''
   });
-  
+
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, ] = useState(false);
+  const [showPassword,] = useState(false);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    if (!formData.username.trim()) {
-      newErrors.username = 'Username is required';
-    } else if (formData.username.length < 3) {
-      newErrors.username = 'Username must be at least 3 characters';
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email is invalid';
     }
 
     if (!formData.password) {
@@ -48,7 +50,7 @@ const AuthLayout = (): React.ReactElement => {
       ...prev,
       [name]: value
     }));
-    
+
     if (errors[name as keyof FormErrors]) {
       setErrors(prev => ({
         ...prev,
@@ -59,26 +61,40 @@ const AuthLayout = (): React.ReactElement => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!validateForm()) {
       return;
     }
-
-    setIsLoading(true);
+    setIsLoading(true); 
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('Login submitted:', formData);
-      // Here you can handle the successful login (e.g., redirecting the user)
-      // Redirect to studentPage
-      navigate('/');
-
+      const apiResponse = await ApiClient.postWithoutAuth('/admin/login', formData) as LoginResponse;
+      if (apiResponse.success) {
+        const { token, admin, expiresIn } = apiResponse.data;
+        AuthManager.setAuthData({ token, admin, expiresIn });
+        navigate('/');
+      } else {
+        setErrors({ 
+          email: apiResponse.message || 'Invalid credentials',
+          password: 'Please check your email and password'
+        });
+      }
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('Login request failed:', error);
+      setErrors({ 
+        email: 'Invalid email or password',
+        password: 'Please check your credentials and try again'
+      });
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    const token = AuthManager.getToken();
+    if (token) {
+      navigate('/');
+    }
+  }, [navigate]);
 
   return (
     <div className="auth-layout">
@@ -86,32 +102,32 @@ const AuthLayout = (): React.ReactElement => {
         <div className="auth-header">
           <h1 className="auth-title">Login</h1>
         </div>
-        
+
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-group">
-            <ui.Label 
-              htmlFor="username" 
+            <ui.Label
+              htmlFor="email"
               required
               className="form-label"
             >
-              Username
+              Email
             </ui.Label>
             <ui.Input
-              id="username"
-              name="username"
+              id="email"
+              name="email"
               type="text"
-              value={formData.username}
+              value={formData.email}
               onChange={handleInputChange}
-              error={errors.username}
-              placeholder="Enter your username"
+              error={errors.email}
+              placeholder="Enter your email"
               size="large"
               fullWidth
             />
           </div>
 
           <div className="form-group">
-            <ui.Label 
-              htmlFor="password" 
+            <ui.Label
+              htmlFor="password"
               required
               className="form-label"
             >
