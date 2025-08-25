@@ -82,7 +82,7 @@ interface FilterLayoutProps {
 }
 
 // Icon types
-type IconName =
+export type IconName =
   | "search"
   | "user"
   | "users"
@@ -168,7 +168,8 @@ type IconName =
   | "userMinus"
   | "checkCircle2"
   | "xCircle"
-  | "alertTriangle";
+  | "alertTriangle"
+  | "loader";
 
 interface IconProps {
   name: IconName;

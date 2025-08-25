@@ -1,5 +1,7 @@
+import type { IconName } from ".";
+
 // Base API Response interface
-interface BaseApiResponse {
+export interface BaseApiResponse {
   success: boolean;
   message: string;
   error?: string;
@@ -49,15 +51,15 @@ export interface PaymentStatus {
 
 export interface Payment {
   id: string;
-  memberId:string;
+  memberId: string;
   member: MemberData;
   pgId: string;
   pg: Pg;
   month: Date;
   year: number;
   amount: number;
-  rentBillScreenshot:string;
-  electricityBillScreenshot:string;
+  rentBillScreenshot: string;
+  electricityBillScreenshot: string;
   paidDate: Date;
   attemptNumber: number;
   status: "PENDING" | "APPROVED" | "REJECTED" | "OVERDUE";
@@ -113,36 +115,58 @@ export interface PendingRegistrationData {
   pgLocation: string;
   rentType: string;
   photoUrl: string;
-  aadharUrl:string;
+  aadharUrl: string;
   pgType: PgType;
 }
 
 export type ApprovalMembersResponse = PaginatedResponse<PendingRegistrationData>;
 
 // Formatted member data for table display
-export interface TableMemberData {
+export interface TableMemberData extends MemberData {
   [key: string]: unknown;
-  memberId: string;
-  name: string;
   pgLocation: string;
-  rentType: string;
   roomNo: string;
-  advance: string;
-  rent: string;
-  status: string;
-  originalData: MemberData;
+  rent: number;
+  paymentStatus: "PAID" | "PENDING" | "OVERDUE";
+  status: "PENDING" | "APPROVED" | "REJECTED" | "OVERDUE";
 }
 
 // Members API Response
 export interface DashboardApiResponse extends BaseApiResponse {
   data: {
-    tableData : TableMemberData[],
+    tableData: TableMemberData[],
   },
   pagination: {
     page: number;
     limit: number;
     total: number;
     totalPages: number;
+  };
+}
+
+// Dashboard Stats card reponse
+
+export type colors = "primary" | "success" | "warning" | "error" | "info";
+
+export interface CardItem {
+  title: string;
+  value: string;
+  trend?: "up" | "down";
+  percentage?: number;
+  icon: IconName;
+  color: colors;
+  subtitle: string;
+  badge?: {
+    text: string;
+    color: colors;
+  };
+  onClick?: () => void;
+}
+
+export interface DashboardStatsResponse extends BaseApiResponse {
+  data: {
+    cards: CardItem[];
+    lastUpdated: Date;
   };
 }
 
@@ -162,6 +186,7 @@ export interface QuickViewMemberData {
   age?: number;
   work?: string;
   location?: string;
+  pgLocation?: string;
   advanceAmount?: number;
   rent?: number;
   joinedOn?: string;

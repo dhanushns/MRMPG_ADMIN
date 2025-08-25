@@ -2,8 +2,9 @@ import layouts from "@/components/layouts";
 import ui from "@/components/ui";
 import { useEffect, useState } from "react";
 import type { types } from "@/types";
-import type { ApprovalMembersResponse, PendingRegistrationData, QuickViewMemberData } from "@/types/apiResponseTypes";
+import type { ApprovalMembersResponse, BaseApiResponse, PendingRegistrationData, QuickViewMemberData } from "@/types/apiResponseTypes";
 import { ApiClient } from "@/utils";
+import { useNotification } from "@/hooks/useNotification";
 
 const ApprovalsPage = () => {
 
@@ -14,6 +15,8 @@ const ApprovalsPage = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [totalMembers, setTotalMembers] = useState(0);
 
+    const notification = useNotification();
+
     // QuickView Modal state
     const [quickViewModal, setQuickViewModal] = useState<{
         isOpen: boolean;
@@ -22,6 +25,10 @@ const ApprovalsPage = () => {
         isOpen: false,
         memberData: null
     });
+
+    // Loading states for approve/reject actions
+    const [approveLoading, setApproveLoading] = useState(false);
+    const [rejectLoading, setRejectLoading] = useState(false);
 
     const tabsItem = [
         {
@@ -188,10 +195,11 @@ const ApprovalsPage = () => {
                 setCurrentPage(1);
                 setTotalPages(1);
                 setTotalMembers(0);
+                notification.showError('Failed to fetch pending registrations', "Contact support", 2000);
             }
 
         } catch (err) {
-            console.error("Error fetching pending registrations:", err);
+            notification.showError('Error fetching pending registrations', "Check your network connection", 2000);
             return [];
         }
         finally {
@@ -217,10 +225,10 @@ const ApprovalsPage = () => {
             name: memberData.name,
             email: memberData.email,
             phone: memberData.phone,
-            roomNo: '', // Empty for pending registrations
+            roomNo: '', 
             memberType: memberData.rentType === 'LONG_TERM' ? 'long_term' : 'short_term',
             profileImage: memberData.photoUrl,
-            paymentStatus: 'Pending', // Default for pending registrations
+            paymentStatus: 'Pending',
             paymentApprovalStatus: 'Pending',
             documents: [
                 { name: 'Photo', url: memberData.photoUrl },
@@ -228,7 +236,8 @@ const ApprovalsPage = () => {
             ].filter(doc => doc.url), // Filter out empty URLs
             age: memberData.age,
             work: memberData.work,
-            location: memberData.location
+            location: memberData.location,
+            pgLocation: memberData.pgLocation
         };
 
         setQuickViewModal({
@@ -244,27 +253,52 @@ const ApprovalsPage = () => {
         });
     };
 
-    const handleApproveUser = async (userId: string, formData: { roomNo: string; rentAmount: string; advanceAmount?: string; pgLocation: string }) => {
+    const handleApproveUser = async (userId: string, pgId: string, formData: { roomNo: string; rentAmount: string; advanceAmount?: string; pgLocation: string; dateOfJoining?: string }) => {
+        setApproveLoading(true);
         try {
-            console.log('Approving user:', userId, formData);
-            // Here you would make an API call to approve the user
-            // await ApiClient.post(`/approval/approve/${userId}`, formData);
-            
-            // Refresh the data after approval
-            getPendingRegistrationsData();
-            handleCloseQuickView();
+            const approveForm = {
+                status: 'APPROVED',
+                pgId: pgId,
+                ...formData
+            }
+
+            const apiResponse = await ApiClient.put(`/approval/members/${userId}`, approveForm) as BaseApiResponse;
+
+            if(apiResponse && apiResponse.success) {
+                notification.showSuccess('Member Approved', 'A new member has been added successfully in ' + formData.pgLocation);
+                getPendingRegistrationsData();
+                handleCloseQuickView();
+            }
+            else{
+                notification.showError(apiResponse?.message || 'Member Approval Failed', 'Failed to approve member in ' + formData.pgLocation);
+            }
         } catch (error) {
-            console.error('Error approving user:', error);
+            notification.showError('Member Approval Failed', 'Failed to approve member in ' + formData.pgLocation);
+        } finally {
+            setApproveLoading(false);
         }
     };
 
     const handleRejectUser = async (userId: string) => {
+        setRejectLoading(true);
         try {
-            console.log('Rejecting user:', userId);
-            getPendingRegistrationsData();
-            handleCloseQuickView();
+            const rejectForm = {
+                status: 'REJECTED',
+            };
+
+            const apiResponse = await ApiClient.put(`/approval/members/${userId}`, rejectForm) as BaseApiResponse;
+
+            if (apiResponse && apiResponse.success) {
+                notification.showSuccess('Member Rejected', 'Member has been rejected successfully');
+                getPendingRegistrationsData();
+                handleCloseQuickView();
+            } else {
+                notification.showError(apiResponse?.message || 'Member Rejection Failed', 'Failed to reject member');
+            }
         } catch (error) {
-            console.error('Error rejecting user:', error);
+            notification.showError('Member Rejection Failed', 'Failed to reject member');
+        } finally {
+            setRejectLoading(false);
         }
     };
 
@@ -305,7 +339,10 @@ const ApprovalsPage = () => {
                     approvalForm: true
                 }}
                 onApproveUser={handleApproveUser}
-                onDeleteUser={handleRejectUser}
+                onDeleteUser={() => console.log("DELETED USER")}
+                onRejectUser={handleRejectUser}
+                approveLoading={approveLoading}
+                rejectLoading={rejectLoading}
             />
         </div>
     );

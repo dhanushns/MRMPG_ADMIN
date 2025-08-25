@@ -3,6 +3,7 @@ import "./QuickViewModal.scss";
 import ui from "@/components/ui";
 import type { QuickViewMemberData } from "@/types/apiResponseTypes";
 import { ApiClient } from "@/utils";
+import { useNotification } from "@/hooks/useNotification";
 
 // Type for room data from API
 interface RoomData {
@@ -30,7 +31,10 @@ interface QuickViewModalProps {
     };
     memberData: QuickViewMemberData | null;
     onDeleteUser?: (userId: string) => void;
-    onApproveUser?: (userId: string, formData: { roomNo: string; rentAmount: string; advanceAmount?: string; pgLocation: string }) => void;
+    onApproveUser?: (userId: string, pgId: string, formData: { roomNo: string; rentAmount: string; advanceAmount?: string; pgLocation: string; dateOfJoining?: string }) => void;
+    onRejectUser?: (userId: string) => void;
+    approveLoading?: boolean;
+    rejectLoading?: boolean;
 }
 
 const QuickViewModal: React.FC<QuickViewModalProps> = ({
@@ -39,7 +43,10 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
     memberData,
     onDeleteUser,
     onApproveUser,
-    modelLayouts
+    onRejectUser,
+    modelLayouts,
+    approveLoading = false,
+    rejectLoading = false
 }) => {
     // Document viewer state
     const [documentViewer, setDocumentViewer] = useState<{
@@ -57,19 +64,26 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
         roomNo: '',
         rentAmount: '',
         advanceAmount: '',
-        pgLocation: ''
+        pgLocation: memberData?.pgLocation || '',
+        dateOfJoining: ''
     });
 
     // Form validation errors
     const [formErrors, setFormErrors] = useState({
         roomNo: '',
         rentAmount: '',
-        pgLocation: ''
+        pgLocation: memberData?.pgLocation || ''
     });
 
     // Room data and loading state
     const [roomData, setRoomData] = useState<RoomData[]>([]);
     const [roomsLoading, setRoomsLoading] = useState(false);
+
+    // Store the pgid
+    const [pgId, setPgId] = useState<string>('');
+
+    // To handle the notification
+    const notification = useNotification();
 
     // Reset form when modal opens/closes
     useEffect(() => {
@@ -78,7 +92,8 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                 roomNo: memberData?.roomNo || '',
                 rentAmount: '',
                 advanceAmount: '',
-                pgLocation: ''
+                pgLocation: '',
+                dateOfJoining: ''
             });
             setFormErrors({
                 roomNo: '',
@@ -119,12 +134,13 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
             
             if (response && response.success && response.data) {
                 setRoomData(response.data.rooms);
+                setPgId(response.data.pgId);
             } else {
                 setRoomData([]);
-                console.error('Failed to fetch room data:', response?.message);
+                notification.showError(response.message || 'Failed to fetch room data');
             }
-        } catch (error) {
-            console.error('Error fetching room data:', error);
+        } catch (error: any) {
+            notification.showError(error.message || 'Error fetching room data');
             setRoomData([]);
         } finally {
             setRoomsLoading(false);
@@ -197,13 +213,21 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
 
     const handleApproveUser = () => {
         if (validateForm() && onApproveUser && memberData?.id) {
-            onApproveUser(memberData.id.toString(), {
+            onApproveUser(memberData.id.toString(), pgId, {
                 roomNo: formData.roomNo,
                 rentAmount: formData.rentAmount,
                 advanceAmount: formData.advanceAmount || undefined,
-                pgLocation: formData.pgLocation
+                pgLocation: formData.pgLocation,
+                dateOfJoining: formData.dateOfJoining || undefined
             });
-            onClose();
+            // Don't close modal here - parent will close it after successful API call
+        }
+    };
+
+    const handleRejectUser = () => {
+        if (onRejectUser && memberData?.id) {
+            onRejectUser(memberData.id.toString());
+            // Don't close modal here - parent will close it after successful API call
         }
     };
 
@@ -233,8 +257,25 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
     };
 
     return (
-        <div className="quick-view-modal-overlay" onClick={onClose}>
+        <div className="quick-view-modal-overlay" onClick={() => {
+            // Prevent closing modal when loading
+            if (!approveLoading && !rejectLoading) {
+                onClose();
+            }
+        }}>
             <div className="quick-view-modal" onClick={(e) => e.stopPropagation()}>
+                {/* Loading Overlay */}
+                {(approveLoading || rejectLoading) && (
+                    <div className="modal-loading-overlay">
+                        <div className="loading-content">
+                            <ui.Icons name="loader" size={24} className="animate-spin" />
+                            <span className="loading-text">
+                                {approveLoading ? 'Approving member...' : 'Rejecting member...'}
+                            </span>
+                        </div>
+                    </div>
+                )}
+                
                 {/* Combined Header and Banner Layout */}
                 <div className={`quick-view-header-banner header-banner--${memberData.memberType}`}>
                     {/* Header Section */}
@@ -244,7 +285,16 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                                 {memberData.memberType === 'long_term' ? 'Long-Term Member' : 'Short-Term Member'}
                             </span>
                         </div>
-                        <button className="close-button" onClick={onClose}>
+                        <button 
+                            className="close-button" 
+                            onClick={() => {
+                                // Prevent closing modal when loading
+                                if (!approveLoading && !rejectLoading) {
+                                    onClose();
+                                }
+                            }}
+                            disabled={approveLoading || rejectLoading}
+                        >
                             <ui.Icons name="close" size={20} strokeWidth={2} />
                         </button>
                     </div>
@@ -257,7 +307,6 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                                     <ui.AuthenticatedImage
                                         src={memberData.profileImage}
                                         alt={memberData.name}
-                                        fallbackSrc="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2Y1ZjVmNSIvPgogIDx0ZXh0IHg9IjUwIiB5PSI1MCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+SW1hZ2U8L3RleHQ+Cjwvc3ZnPg=="
                                     />
                                 ) : (
                                     <div className="profile-placeholder">
@@ -362,6 +411,8 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                                             id="pgLocation"
                                             variant="custom"
                                             value={formData.pgLocation}
+                                            searchable
+                                            defaultValue={formData.pgLocation}
                                             onChange={(value) => handleFormChange('pgLocation', value)}
                                             placeholder="Select PG location"
                                             className={`form-input form-input--${memberData.memberType}`}
@@ -431,6 +482,16 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                                             className={`form-input form-input--${memberData.memberType}`}
                                         />
                                     </div>
+
+                                    <div className="form-group">
+                                        <ui.Label htmlFor="dateOfJoining">Date Of Joining</ui.Label>
+                                        <ui.DateInput
+                                            id="dateOfJoining"
+                                            value={formData.dateOfJoining}
+                                            onChange={(value) => handleFormChange('dateOfJoining', value)}
+                                            className={`form-input form-input--${memberData.memberType}`}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -445,20 +506,22 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                                 <ui.Button
                                     variant="danger"
                                     size="medium"
-                                    onClick={() => console.log("Reject User Clicked")}
+                                    onClick={handleRejectUser}
+                                    disabled={rejectLoading || approveLoading}
                                     className="approve-user-btn"
-                                    leftIcon={<ui.Icons name="check" size={16} />}
+                                    leftIcon={<ui.Icons name={rejectLoading ? "loader" : "close"} size={16} className={rejectLoading ? "animate-spin" : ""} />}
                                 >
-                                    Reject
+                                    {rejectLoading ? "Rejecting..." : "Reject"}
                                 </ui.Button>
                                 <ui.Button
                                     variant="success"
                                     size="medium"
                                     onClick={handleApproveUser}
+                                    disabled={approveLoading || rejectLoading}
                                     className="approve-user-btn"
-                                    leftIcon={<ui.Icons name="check" size={16} />}
+                                    leftIcon={<ui.Icons name={approveLoading ? "loader" : "check"} size={16} className={approveLoading ? "animate-spin" : ""} />}
                                 >
-                                    Approve User
+                                    {approveLoading ? "Approving..." : "Approve User"}
                                 </ui.Button>
                             </div>
 

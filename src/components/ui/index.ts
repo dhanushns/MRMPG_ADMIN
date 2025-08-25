@@ -12,6 +12,7 @@ import Icons from "./Icons";
 import Tabs from "./Tabs";
 import AuthenticatedImage from "./AuthenticatedImage";
 import DocumentViewer from "./DocumentViewer";
+import Notification from "./Notification";
 
 const ui = {
     Label,
@@ -27,7 +28,8 @@ const ui = {
     Icons,
     Tabs,
     AuthenticatedImage,
-    DocumentViewer
+    DocumentViewer,
+    Notification
 }
 
 export default ui;

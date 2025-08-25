@@ -7,9 +7,12 @@ import { useNavigate } from 'react-router-dom';
 import type {
     AdminResponse,
     TableMemberData,
-    DashboardApiResponse
+    DashboardApiResponse,
+    CardItem,
+    DashboardStatsResponse
 } from '@/types/apiResponseTypes';
 import ui from '@/components/ui';
+import { useNotification } from '@/hooks/useNotification';
 
 
 interface FilterValues {
@@ -22,6 +25,7 @@ interface FilterValues {
 
 const DashboardPage: React.FC = () => {
     const navigate = useNavigate();
+    const notification = useNotification();
 
     // Check token validity periodically
     useEffect(() => {
@@ -34,9 +38,12 @@ const DashboardPage: React.FC = () => {
         checkTokenValidity();
     }, [navigate]);
 
+    // Loading states
+    const [tableLoading, setTableLoading] = useState(false);
+    const [cardLoading, setCardLoading] = useState(false);
+
     const [, setStaffData] = useState<AdminResponse | null>(null);
     const [membersData, setMembersData] = useState<TableMemberData[]>([]);
-    const [loading, setLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalMembers, setTotalMembers] = useState(0);
@@ -51,6 +58,60 @@ const DashboardPage: React.FC = () => {
         location: '',
         ageRange: { min: 18, max: 65 }
     });
+
+    const mockCards: CardItem[] = [
+        {
+            title: "Total Members",
+            value: "0",
+            trend: "up",
+            percentage: 10,
+            icon: "users",
+            color: "primary",
+            subtitle: "All registered members",
+        },
+        {
+            title: "Total Members",
+            value: "0",
+            trend: "up",
+            percentage: 10,
+            icon: "users",
+            color: "primary",
+            subtitle: "All registered members",
+        },
+        {
+            title: "Total Members",
+            value: "0",
+            trend: "up",
+            percentage: 10,
+            icon: "users",
+            color: "primary",
+            subtitle: "All registered members",
+        },
+        {
+            title: "Total Members",
+            value: "0",
+            trend: "up",
+            percentage: 10,
+            icon: "users",
+            color: "primary",
+            subtitle: "All registered members",
+        },
+        {
+            title: "Total Members",
+            value: "0",
+            trend: "up",
+            percentage: 10,
+            icon: "users",
+            color: "primary",
+            subtitle: "All registered members",
+        },
+
+    ]
+
+    // Dashboard Stats Card
+    const [cards, setCards] = useState<CardItem[]>(mockCards);
+    const [lastUpdated, setLastUpdated] = useState<Date | string | undefined>(undefined);
+
     // QuickView Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedMember, setSelectedMember] = useState<TableMemberData | null>(null);
@@ -76,7 +137,7 @@ const DashboardPage: React.FC = () => {
     }, [navigate]);
 
     const fetchMembersData = useCallback(async (page: number, filterParams: FilterValues, sortKey: string | null = null, sortDirection: "asc" | "desc" = "asc") => {
-        setLoading(true);
+        setTableLoading(true);
 
         try {
             const queryString = buildDashboardQueryParams(
@@ -104,16 +165,62 @@ const DashboardPage: React.FC = () => {
                 setMembersData([]);
                 setTotalPages(1);
                 setTotalMembers(0);
+                notification.showError('Failed to fetch members data', "Contact support", 5000);
             }
 
         } catch (error) {
-            console.error('Error fetching members data:', error);
+            notification.showError('Error fetching members data', "Check your network connection", 5000);
             setMembersData([]);
             setTotalPages(1);
             setTotalMembers(0);
         } finally {
-            setLoading(false);
+            setTableLoading(false);
         }
+    }, []);
+
+    // Fetch dashboard cards
+    const fetchDashboardCards = useCallback(async () => {
+        setCardLoading(true);
+
+        try {
+            const apiResponse = await ApiClient.get('/dashboard/stats') as DashboardStatsResponse;
+            if (apiResponse.success && apiResponse.data) {
+                setCards(apiResponse.data.cards);
+                setLastUpdated(apiResponse.data.lastUpdated);
+            } else {
+                setCards([]);
+                notification.showError('Failed to fetch dashboard cards', "Contact support", 5000);
+            }
+
+        } catch (error) {
+            notification.showError('Error fetching dashboard cards', "Check your network connection", 5000);
+            setCards([]);
+        } finally {
+            setCardLoading(false);
+        }
+    }, []);
+
+    const refreshDashboardCards = useCallback(async () => {
+        setCardLoading(true);
+
+        try {
+
+            const apiResponse = await ApiClient.post('/dashboard/stats/refresh', {}) as DashboardStatsResponse;
+            if (apiResponse.success && apiResponse.data) {
+                setCards(apiResponse.data.cards);
+                setLastUpdated(apiResponse.data.lastUpdated);
+            } else {
+                setCards([]);
+                notification.showError('Failed to fetch dashboard cards', "Contact support", 5000);
+            }
+        } catch (error) {
+            notification.showError('Error refreshing dashboard cards', "Check your network connection", 5000);
+            setCards([]);
+        }
+        finally {
+            setCardLoading(false);
+        }
+
     }, []);
 
     const handleFilterChange = (newFilters: FilterValues) => {
@@ -136,6 +243,7 @@ const DashboardPage: React.FC = () => {
         // Only fetch data if user is authenticated
         if (AuthManager.isAuthenticated()) {
             fetchMembersData(currentPage, filters, sortState.key, sortState.direction);
+            fetchDashboardCards();
         }
     }, [currentPage, fetchMembersData, filters, sortState]);
 
@@ -154,60 +262,6 @@ const DashboardPage: React.FC = () => {
         console.log(`Delete user with ID: ${userId}`);
         handleCloseModal();
     };
-
-    const sampleCards = [
-        {
-            title: "Total Members",
-            value: "12,439",
-            trend: "up" as const,
-            percentage: 12,
-            icon: "users" as const,
-            color: "primary" as const,
-            subtitle: "Compared to last month",
-        },
-        {
-            title: "Rent Collection",
-            value: "89,432",
-            trend: "up" as const,
-            percentage: 8,
-            icon: "indianRupee" as const,
-            color: "success" as const,
-            subtitle: "August 2025",
-        },
-        {
-            title: "New Members",
-            value: "12",
-            trend: "down" as const,
-            percentage: -3,
-            icon: "userMinus" as const,
-            color: "error" as const,
-            subtitle: "Lesser than previous month",
-        },
-        {
-            title: "Pending Payment Approvals",
-            value: "10",
-            icon: "clock" as const,
-            color: "warning" as const,
-            subtitle: "Awaiting admin action",
-            badge: {
-                text: "Action Required",
-                color: "error" as const
-            },
-            onClick: () => console.log("Open approvals dashboard")
-        },
-        {
-            title: "Pending Registration Approvals",
-            value: "4",
-            icon: "file" as const,
-            color: "warning" as const,
-            subtitle: "Awaiting admin action",
-            badge: {
-                text: "Action Required",
-                color: "error" as const
-            },
-            onClick: () => console.log("Open approvals dashboard")
-        }
-    ];
 
     const filterItems: types["FilterItemProps"][] = [
         {
@@ -316,7 +370,7 @@ const DashboardPage: React.FC = () => {
             align: "center" as const
         },
         {
-            key: "advance",
+            key: "advanceAmount",
             label: "Advance",
             sortable: true,
             width: "10%"
@@ -362,7 +416,16 @@ const DashboardPage: React.FC = () => {
 
                 <div className='dashboard-page__content'>
                     <div className='dashboard-page__cards'>
-                        <layouts.CardGrid cards={sampleCards} loading={false} columns={3} gap='md' className='dashboard-cards' />
+                        <layouts.CardGrid
+                            cards={cards}
+                            loading={cardLoading}
+                            columns={3}
+                            gap='md'
+                            showRefresh
+                            onRefresh={refreshDashboardCards}
+                            lastUpdated={lastUpdated}
+                            className='dashboard-cards'
+                        />
                     </div>
 
                     <div className='dashboard-page__filter-section'>
@@ -379,7 +442,7 @@ const DashboardPage: React.FC = () => {
                         <layouts.TableLayout
                             columns={tableColumns}
                             data={membersData}
-                            loading={loading}
+                            loading={tableLoading}
                             pagination={{
                                 currentPage: currentPage,
                                 totalPages: totalPages,
@@ -407,25 +470,25 @@ const DashboardPage: React.FC = () => {
                     }
                     onClose={handleCloseModal}
                     memberData={selectedMember ? {
-                        id: selectedMember.originalData.id,
+                        id: selectedMember.id,
                         memberId: selectedMember.memberId,
-                        name: selectedMember.originalData.name,
-                        roomNo: selectedMember.originalData.room.roomNo,
-                        memberType: selectedMember.originalData.rentType === 'LONG_TERM' ? "long_term" : "short_term",
-                        profileImage: selectedMember.originalData.photoUrl,
-                        phone: selectedMember.originalData.phone,
-                        email: selectedMember.originalData.email,
+                        name: selectedMember.name,
+                        roomNo: selectedMember.roomNo,
+                        memberType: selectedMember.rentType === 'LONG_TERM' ? "long_term" : "short_term",
+                        profileImage: selectedMember.photoUrl,
+                        phone: selectedMember.phone,
+                        email: selectedMember.email,
                         paymentStatus: selectedMember.status === 'APPROVED' ? "Paid" : "Pending",
                         paymentApprovalStatus: selectedMember.status as "Pending" | "Approved" | "Rejected",
-                        age: selectedMember.originalData.age,
-                        work: selectedMember.originalData.work,
-                        location: selectedMember.originalData.location,
-                        advanceAmount: selectedMember.originalData.advanceAmount,
-                        rent: selectedMember.originalData.room.rent,
-                        joinedOn: new Date(selectedMember.originalData.dateOfJoining).toLocaleDateString('en-IN'),
+                        age: selectedMember.age,
+                        work: selectedMember.work,
+                        location: selectedMember.location,
+                        advanceAmount: selectedMember.advanceAmount,
+                        rent: selectedMember.rent,
+                        joinedOn: new Date(selectedMember.dateOfJoining).toLocaleDateString('en-IN'),
                         documents: [{
                             name: 'Aadhar Card',
-                            url: selectedMember.originalData.aadharUrl
+                            url: selectedMember.aadharUrl
                         }]
                     } : null}
                     onDeleteUser={handleDeleteUser}

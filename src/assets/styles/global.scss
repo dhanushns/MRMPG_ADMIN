@@ -218,6 +218,19 @@ p {
   border-color: var(--primary-color);
 }
 
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .visually-hidden {
   position: absolute !important;
   width: 1px !important;

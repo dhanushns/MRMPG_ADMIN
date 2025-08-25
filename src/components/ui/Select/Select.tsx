@@ -20,6 +20,7 @@ interface SelectProps {
     onBlur?: () => void;
     searchable?: boolean;
     variant?: "native" | "custom";
+    defaultValue?: string;
 }
 
 const Select: React.FC<SelectProps> = ({
@@ -34,11 +35,19 @@ const Select: React.FC<SelectProps> = ({
     onFocus,
     onBlur,
     searchable = false,
-    variant = "custom"
+    variant = "custom",
+    defaultValue
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // Set default value on mount if provided and value is empty
+    useEffect(() => {
+        if (defaultValue && !value && options.some(option => option.value === defaultValue)) {
+            onChange(defaultValue);
+        }
+    }, [defaultValue, value, options, onChange]);
 
     // Filter options based on search term
     const filteredOptions = searchTerm

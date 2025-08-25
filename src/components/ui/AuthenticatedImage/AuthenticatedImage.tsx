@@ -1,5 +1,6 @@
 import React from 'react';
 import { useImage } from '@/utils';
+import ui from '@/components/ui';
 
 interface AuthenticatedImageProps {
   src: string;
@@ -52,7 +53,12 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
           ...style
         }}
       >
-        <div style={{ fontSize: '12px', color: '#999' }}>Loading...</div>
+        <ui.Icons 
+          name="loader" 
+          size={16} 
+          className="animate-spin" 
+          color="#999" 
+        />
       </div>
     );
   }
@@ -87,7 +93,7 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
           ...style
         }}
       >
-        <div style={{ fontSize: '12px', color: '#999' }}>Failed to load</div>
+        <ui.Icons name="user" size={16} color="#999" />
       </div>
     );
   }
