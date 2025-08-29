@@ -40,7 +40,7 @@ const CardLayout: React.FC<CardLayoutProps> = ({
     value,
     icon,
     percentage,
-    trend = "neutral",
+    trend,
     color = "primary",
     className = "",
     onClick,

@@ -15,10 +15,12 @@ const FilterLayout = ({
     showApplyButton = false,
     onApply,
     onReset,
+    onChange,
     className = "",
     collapsible = false,
     defaultCollapsed = false,
-    downloadReport = false
+    downloadReport = false,
+    loading = false
 }: types["FilterLayoutProps"]): React.ReactElement => {
     const [filterValues, setFilterValues] = useState<Record<string, FilterValue>>(() => {
         const initialValues: Record<string, FilterValue> = {};
@@ -41,11 +43,12 @@ const FilterLayout = ({
                 return newErrors;
             });
         }
-        const filter = filters.find(f => f.id === id);
-        if (filter?.onChange) {
-            filter.onChange(id, value);
+        
+        // Use the parent onChange function if provided
+        if (onChange) {
+            onChange(id, value);
         }
-    }, [filters, errors]);
+    }, [onChange, errors]);
 
     const validateFilters = useCallback(() => {
         const newErrors: Record<string, string> = {};
@@ -292,10 +295,20 @@ const FilterLayout = ({
         }
     };
 
+    const renderLoadingSkeleton = () => {
+        const skeletonItems = Array.from({ length: Math.min(columns * 2, 6) }, (_, index) => (
+            <div key={`skeleton-${index}`} className="filter-item filter-item--skeleton">
+                <div className="skeleton-label"></div>
+                <div className="skeleton-input"></div>
+            </div>
+        ));
+
+        return skeletonItems;
+    };
+
     const layoutClass = `filter-layout--${layout}`;
     const spacingClass = `filter-layout--spacing-${spacing}`;
 
-    // Calculate responsive column counts based on original columns
     const getResponsiveColumns = (originalColumns: number) => {
         let lg, md, sm;
 
@@ -341,14 +354,20 @@ const FilterLayout = ({
     } as React.CSSProperties : {};
 
     return (
-        <div className={`filter-layout ${layoutClass} ${spacingClass} ${className}`} style={gridStyle}>
+        <div className={`filter-layout ${layoutClass} ${spacingClass} ${className} ${loading ? 'filter-layout--loading' : ''}`} style={gridStyle}>
             {(title || collapsible) && (
                 <div className="filter-layout__header">
                     {title && <h3 className="filter-layout__title">{title}</h3>}
                     {collapsible && (
                         <>
-                            <ui.Button type="button" variant="secondary" className="filter-layout__toggle" onClick={() => setIsCollapsed(!isCollapsed)}
-                                aria-expanded={!isCollapsed}>
+                            <ui.Button 
+                                type="button" 
+                                variant="secondary" 
+                                className="filter-layout__toggle" 
+                                onClick={() => setIsCollapsed(!isCollapsed)}
+                                aria-expanded={!isCollapsed}
+                                disabled={loading}
+                            >
                                 <div className="toggle-text">
                                     {isCollapsed ? "Show Filters" : "Hide Filters"}
                                 </div>
@@ -364,18 +383,30 @@ const FilterLayout = ({
             {(!collapsible || !isCollapsed) && (
                 <>
                     <div className="filter-layout__content">
-                        {filters.map(renderFilterItem)}
+                        {loading ? renderLoadingSkeleton() : filters.map(renderFilterItem)}
                     </div>
 
                     {(showResetButton || showApplyButton) && (
                         <div className="filter-layout__actions">
                             {showResetButton && (
-                                <ui.Button type="button" variant="outline" className="filter-button" onClick={handleReset}>
+                                <ui.Button 
+                                    type="button" 
+                                    variant="outline" 
+                                    className="filter-button" 
+                                    onClick={handleReset}
+                                    disabled={loading}
+                                >
                                     Reset
                                 </ui.Button>
                             )}
                             {showApplyButton && (
-                                <ui.Button type="button" variant="secondary" className="filter-button" onClick={handleApply}>
+                                <ui.Button 
+                                    type="button" 
+                                    variant="secondary" 
+                                    className="filter-button" 
+                                    onClick={handleApply}
+                                    disabled={loading}
+                                >
                                     Apply Filters
                                 </ui.Button>
                             )}
@@ -385,7 +416,13 @@ const FilterLayout = ({
             )}
             {downloadReport && (
                 <div className="filter-layout__footer">
-                    <ui.Button type="button" variant="primary" className="filter-button filter-button__download-report" rightIcon={<ui.Icons name="download" />}>
+                    <ui.Button 
+                        type="button" 
+                        variant="primary" 
+                        className="filter-button filter-button__download-report" 
+                        rightIcon={<ui.Icons name="download" />}
+                        disabled={loading}
+                    >
                         Download Report
                     </ui.Button>
                 </div>

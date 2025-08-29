@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import layouts from "@layouts/index";
 import type { types } from "@/types";
 import './DashboardPage.scss';
@@ -9,7 +9,8 @@ import type {
     TableMemberData,
     DashboardApiResponse,
     CardItem,
-    DashboardStatsResponse
+    DashboardStatsResponse,
+    DashboardFiltersResponse
 } from '@/types/apiResponseTypes';
 import ui from '@/components/ui';
 import { useNotification } from '@/hooks/useNotification';
@@ -18,14 +19,18 @@ import { useNotification } from '@/hooks/useNotification';
 interface FilterValues {
     search: string;
     work: string;
-    status: string;
+    paymentStatus: string;
     location: string;
-    ageRange: { min: number; max: number };
+    pgLocation: string;
+    roomId: string;
+    rentType: string;
+    pgId: string;
 }
 
 const DashboardPage: React.FC = () => {
     const navigate = useNavigate();
     const notification = useNotification();
+    const isInitialLoad = useRef(true);
 
     // Check token validity periodically
     useEffect(() => {
@@ -41,6 +46,7 @@ const DashboardPage: React.FC = () => {
     // Loading states
     const [tableLoading, setTableLoading] = useState(false);
     const [cardLoading, setCardLoading] = useState(false);
+    const [filtersLoading, setFiltersLoading] = useState(false);
 
     const [, setStaffData] = useState<AdminResponse | null>(null);
     const [membersData, setMembersData] = useState<TableMemberData[]>([]);
@@ -54,67 +60,25 @@ const DashboardPage: React.FC = () => {
     const [filters, setFilters] = useState<FilterValues>({
         search: '',
         work: '',
-        status: '',
+        paymentStatus: '',
         location: '',
-        ageRange: { min: 18, max: 65 }
+        pgLocation: '',
+        roomId: '',
+        rentType: '',
+        pgId: '',
     });
 
-    const mockCards: CardItem[] = [
-        {
-            title: "Total Members",
-            value: "0",
-            trend: "up",
-            percentage: 10,
-            icon: "users",
-            color: "primary",
-            subtitle: "All registered members",
-        },
-        {
-            title: "Total Members",
-            value: "0",
-            trend: "up",
-            percentage: 10,
-            icon: "users",
-            color: "primary",
-            subtitle: "All registered members",
-        },
-        {
-            title: "Total Members",
-            value: "0",
-            trend: "up",
-            percentage: 10,
-            icon: "users",
-            color: "primary",
-            subtitle: "All registered members",
-        },
-        {
-            title: "Total Members",
-            value: "0",
-            trend: "up",
-            percentage: 10,
-            icon: "users",
-            color: "primary",
-            subtitle: "All registered members",
-        },
-        {
-            title: "Total Members",
-            value: "0",
-            trend: "up",
-            percentage: 10,
-            icon: "users",
-            color: "primary",
-            subtitle: "All registered members",
-        },
-
-    ]
-
     // Dashboard Stats Card
-    const [cards, setCards] = useState<CardItem[]>(mockCards);
+    const [cards, setCards] = useState<CardItem[]>();
     const [lastUpdated, setLastUpdated] = useState<Date | string | undefined>(undefined);
 
     // QuickView Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedMember, setSelectedMember] = useState<TableMemberData | null>(null);
+
+    // Filter state
+    const [filterItems, setFilterItems] = useState<types["FilterItemProps"][]>([]);
+
 
     // Authentication check and staff data extraction
     useEffect(() => {
@@ -138,15 +102,18 @@ const DashboardPage: React.FC = () => {
 
     const fetchMembersData = useCallback(async (page: number, filterParams: FilterValues, sortKey: string | null = null, sortDirection: "asc" | "desc" = "asc") => {
         setTableLoading(true);
-
         try {
             const queryString = buildDashboardQueryParams(
                 page,
                 {
                     search: filterParams.search,
                     work: filterParams.work,
-                    status: filterParams.status,
+                    paymentStatus: filterParams.paymentStatus,
                     location: filterParams.location,
+                    pgLocation: filterParams.pgLocation,
+                    roomId: filterParams.roomId,
+                    rentType: filterParams.rentType,
+                    pgId: filterParams.pgId,
                 },
                 sortKey,
                 sortDirection,
@@ -165,7 +132,7 @@ const DashboardPage: React.FC = () => {
                 setMembersData([]);
                 setTotalPages(1);
                 setTotalMembers(0);
-                notification.showError('Failed to fetch members data', "Contact support", 5000);
+                notification.showError(apiResponse.message || 'Failed to fetch members data', apiResponse.error || "Contact support", 5000);
             }
 
         } catch (error) {
@@ -176,7 +143,7 @@ const DashboardPage: React.FC = () => {
         } finally {
             setTableLoading(false);
         }
-    }, []);
+    }, [notification]);
 
     // Fetch dashboard cards
     const fetchDashboardCards = useCallback(async () => {
@@ -185,11 +152,11 @@ const DashboardPage: React.FC = () => {
         try {
             const apiResponse = await ApiClient.get('/dashboard/stats') as DashboardStatsResponse;
             if (apiResponse.success && apiResponse.data) {
-                setCards(apiResponse.data.cards);
+                setCards(apiResponse.data.cards || []);
                 setLastUpdated(apiResponse.data.lastUpdated);
             } else {
                 setCards([]);
-                notification.showError('Failed to fetch dashboard cards', "Contact support", 5000);
+                notification.showError(apiResponse.error || "Failed to fetch dashboard cards", "Contact support", 5000);
             }
 
         } catch (error) {
@@ -198,7 +165,7 @@ const DashboardPage: React.FC = () => {
         } finally {
             setCardLoading(false);
         }
-    }, []);
+    }, [notification]);
 
     const refreshDashboardCards = useCallback(async () => {
         setCardLoading(true);
@@ -207,7 +174,7 @@ const DashboardPage: React.FC = () => {
 
             const apiResponse = await ApiClient.post('/dashboard/stats/refresh', {}) as DashboardStatsResponse;
             if (apiResponse.success && apiResponse.data) {
-                setCards(apiResponse.data.cards);
+                setCards(apiResponse.data.cards || []);
                 setLastUpdated(apiResponse.data.lastUpdated);
             } else {
                 setCards([]);
@@ -221,12 +188,51 @@ const DashboardPage: React.FC = () => {
             setCardLoading(false);
         }
 
-    }, []);
+    }, [notification]);
 
-    const handleFilterChange = (newFilters: FilterValues) => {
+    const fetchFilterOptions = useCallback(async () => {
+        setFiltersLoading(true);
+        try {
+
+            const apiResponse = await ApiClient.get('/dashboard/filters') as DashboardFiltersResponse
+            if (apiResponse.success && apiResponse.data) {
+                setFilterItems(apiResponse.data.filters);
+            }
+            else {
+                setFilterItems([]);
+                notification.showError('Failed to fetch filter options', "Check your network connection", 5000);
+            }
+
+        } catch (error) {
+            notification.showError('Error fetching filter options', "Contact support", 5000);
+        } finally {
+            setFiltersLoading(false);
+        }
+    }, [notification]);
+
+    // Filter on-change
+    const onChange = (id: string, value: string | string[] | number | boolean | Date | { start: string; end: string } | null) => {
+        const newFilters = { ...filters, [id]: value as string };
         setFilters(newFilters);
+    };
+
+    const handleApplyFilters = () => {
         setCurrentPage(1);
-        fetchMembersData(1, newFilters, sortState.key, sortState.direction);
+        fetchMembersData(1, filters, sortState.key, sortState.direction);
+    };
+
+    const handleResetFilters = () => {
+        setFilters({
+            search: '',
+            work: '',
+            paymentStatus: '',
+            location: '',
+            pgLocation: '',
+            roomId: '',
+            rentType: '',
+            pgId: '',
+        });
+        fetchMembersData(1, filters, sortState.key, sortState.direction);
     };
 
     const handlePageChange = (page: number) => {
@@ -239,13 +245,15 @@ const DashboardPage: React.FC = () => {
         fetchMembersData(currentPage, filters, key, direction);
     };
 
+    // Initial data loading - only runs once when component mounts
     useEffect(() => {
-        // Only fetch data if user is authenticated
-        if (AuthManager.isAuthenticated()) {
-            fetchMembersData(currentPage, filters, sortState.key, sortState.direction);
+        if (AuthManager.isAuthenticated() && isInitialLoad.current) {
             fetchDashboardCards();
+            fetchFilterOptions();
+            fetchMembersData(1, filters, null, "asc");
+            isInitialLoad.current = false;
         }
-    }, [currentPage, fetchMembersData, filters, sortState]);
+    }, [fetchDashboardCards, fetchFilterOptions, fetchMembersData, filters]);
 
     // QuickView Modal Handlers
     const handleRowClick = (row: TableMemberData) => {
@@ -262,78 +270,6 @@ const DashboardPage: React.FC = () => {
         console.log(`Delete user with ID: ${userId}`);
         handleCloseModal();
     };
-
-    const filterItems: types["FilterItemProps"][] = [
-        {
-            id: "search",
-            placeholder: "Search by name or room number",
-            type: "search",
-            fullWidth: true,
-            onChange: (_id: string, value: string | string[] | number | boolean | Date | { start: string; end: string } | null) => {
-                const newFilters = { ...filters, search: value as string };
-                handleFilterChange(newFilters);
-            }
-        },
-        {
-            id: "work",
-            label: "Work",
-            placeholder: "Select work type",
-            type: "select",
-            options: [
-                { value: "", label: "All Work Types" },
-                { value: "Software Engineer", label: "Software Engineer" },
-                { value: "Data Analyst", label: "Data Analyst" },
-                { value: "Marketing Manager", label: "Marketing Manager" },
-                { value: "UI/UX Designer", label: "UI/UX Designer" },
-                { value: "DevOps Engineer", label: "DevOps Engineer" },
-                { value: "Product Manager", label: "Product Manager" },
-                { value: "Sales Executive", label: "Sales Executive" },
-                { value: "HR Manager", label: "HR Manager" },
-                { value: "Finance Analyst", label: "Finance Analyst" },
-                { value: "Content Writer", label: "Content Writer" }
-            ],
-            onChange: (_id: string, value: string | string[] | number | boolean | Date | { start: string; end: string } | null) => {
-                const newFilters = { ...filters, work: value as string };
-                handleFilterChange(newFilters);
-            }
-        },
-        {
-            id: "status",
-            label: "Payment Status",
-            placeholder: "Select status",
-            type: "select",
-            options: [
-                { value: "", label: "All Status" },
-                { value: "Paid", label: "Paid" },
-                { value: "Pending", label: "Pending" }
-            ],
-            onChange: (_id: string, value: string | string[] | number | boolean | Date | { start: string; end: string } | null) => {
-                const newFilters = { ...filters, status: value as string };
-                handleFilterChange(newFilters);
-            }
-        },
-        {
-            id: "location",
-            label: "Location",
-            placeholder: "Select location",
-            type: "select",
-            options: [
-                { value: "", label: "All Locations" },
-                { value: "Bangalore", label: "Bangalore" },
-                { value: "Hyderabad", label: "Hyderabad" },
-                { value: "Delhi", label: "Delhi" },
-                { value: "Mumbai", label: "Mumbai" },
-                { value: "Chennai", label: "Chennai" },
-                { value: "Pune", label: "Pune" },
-                { value: "Kochi", label: "Kochi" },
-                { value: "Kolkata", label: "Kolkata" }
-            ],
-            onChange: (_id: string, value: string | string[] | number | boolean | Date | { start: string; end: string } | null) => {
-                const newFilters = { ...filters, location: value as string };
-                handleFilterChange(newFilters);
-            }
-        }
-    ];
 
     const tableColumns: types["TableColumn"][] = [
         {
@@ -365,7 +301,6 @@ const DashboardPage: React.FC = () => {
         {
             key: "roomNo",
             label: "Room No",
-            sortable: true,
             width: "10%",
             align: "center" as const
         },
@@ -373,7 +308,8 @@ const DashboardPage: React.FC = () => {
             key: "advanceAmount",
             label: "Advance",
             sortable: true,
-            width: "10%"
+            width: "10%",
+            align: "center" as const,
         },
         {
             key: "rent",
@@ -417,9 +353,9 @@ const DashboardPage: React.FC = () => {
                 <div className='dashboard-page__content'>
                     <div className='dashboard-page__cards'>
                         <layouts.CardGrid
-                            cards={cards}
+                            cards={cards ? cards : [{ icon: "clock" }, { icon: "clock" }, { icon: "clock" }, { icon: "clock" }]}
                             loading={cardLoading}
-                            columns={3}
+                            columns={4}
                             gap='md'
                             showRefresh
                             onRefresh={refreshDashboardCards}
@@ -430,11 +366,16 @@ const DashboardPage: React.FC = () => {
 
                     <div className='dashboard-page__filter-section'>
                         <layouts.FilterLayout
-                            filters={filterItems}
+                            filters={filtersLoading ? [] : filterItems}
                             className="dashboard-filters"
                             collapsible={true}
-                            columns={2}
+                            columns={4}
                             showResetButton
+                            showApplyButton
+                            onApply={handleApplyFilters}
+                            onReset={handleResetFilters}
+                            onChange={onChange}
+                            loading={filtersLoading}
                         />
                     </div>
 
@@ -454,6 +395,9 @@ const DashboardPage: React.FC = () => {
                             onSort={handleSort}
                             onRowClick={(row) => handleRowClick(row as TableMemberData)}
                             emptyMessage="No members found"
+                            showRefresh={true}
+                            refreshLoading={tableLoading}
+                            onRefresh={() => fetchMembersData(currentPage, filters, sortState.key, sortState.direction)}
                         />
                     </div>
                 </div>
@@ -474,12 +418,12 @@ const DashboardPage: React.FC = () => {
                         memberId: selectedMember.memberId,
                         name: selectedMember.name,
                         roomNo: selectedMember.roomNo,
-                        memberType: selectedMember.rentType === 'LONG_TERM' ? "long_term" : "short_term",
+                        memberType: selectedMember.rentType === 'LONG_TERM' ? "long-term" : "short-term",
                         profileImage: selectedMember.photoUrl,
                         phone: selectedMember.phone,
                         email: selectedMember.email,
-                        paymentStatus: selectedMember.status === 'APPROVED' ? "Paid" : "Pending",
-                        paymentApprovalStatus: selectedMember.status as "Pending" | "Approved" | "Rejected",
+                        paymentStatus: selectedMember.paymentStatus,
+                        paymentApprovalStatus: selectedMember.approvalStatus,
                         age: selectedMember.age,
                         work: selectedMember.work,
                         location: selectedMember.location,

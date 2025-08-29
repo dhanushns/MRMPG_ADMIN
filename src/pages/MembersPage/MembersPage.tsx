@@ -1,16 +1,35 @@
-import React, {  useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import "./MembersPage.scss"
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import type { types } from "@/types";
+import type {
+    MembersApiResponse,
+    TableMemberData,
+    DashboardFiltersResponse
+} from "@/types/apiResponseTypes";
 import ui from "@/components/ui";
 import layouts from "@/components/layouts";
+import { AuthManager, ApiClient, buildDashboardQueryParams } from '@/utils';
+import { useNotification } from '@/hooks/useNotification';
+
+interface FilterValues {
+    search: string;
+    work: string;
+    paymentStatus: string;
+    location: string;
+    checkInDate: string;
+}
 
 const MembersPage = (): React.ReactElement => {
+    const navigate = useNavigate();
+    const notification = useNotification();
+    const isInitialLoad = useRef(true);
 
     const { search } = useLocation();
     const params = useMemo(() => new URLSearchParams(search), [search]);
-    const enrollmentType = params.get('enrollment') || 'long_term';
+    const enrollmentType = params.get('enrollment') || 'long-term';
     const [loading, setLoading] = useState(false);
+    const [filtersLoading, setFiltersLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalMembers, setTotalMembers] = useState(0);
@@ -18,58 +37,135 @@ const MembersPage = (): React.ReactElement => {
         key: null,
         direction: "asc"
     });
-    const [membersData, setMembersData] = useState<types["TableData"][]>([]);
-    const [currentFilters, setCurrentFilters] = useState<Record<string, unknown>>({});
+    const [membersData, setMembersData] = useState<TableMemberData[]>([]);
+    const [filters, setFilters] = useState<FilterValues>({
+        search: '',
+        work: '',
+        paymentStatus: '',
+        location: '',
+        checkInDate: '',
+    });
+    const [filterItems, setFilterItems] = useState<types["FilterItemProps"][]>([]);
 
-    const getData = useCallback(async (page = 1, filters = {}, sort = sortState) => {
+    // QuickView Modal State
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedMember, setSelectedMember] = useState<TableMemberData | null>(null);
+
+    // Check token validity
+    useEffect(() => {
+        const checkTokenValidity = () => {
+            if (!AuthManager.isTokenValid()) {
+                AuthManager.clearAuthData();
+                navigate('/login');
+            }
+        };
+        checkTokenValidity();
+    }, [navigate]);
+
+    const fetchMembersData = useCallback(async (page: number, filterParams: FilterValues, sortKey: string | null = null, sortDirection: "asc" | "desc" = "asc") => {
         setLoading(true);
         try {
-            const queryParams = new URLSearchParams({
-                page: page.toString(),
-                limit: '10',
-                type: enrollmentType,
-                ...Object.entries(filters).reduce((acc, [key, value]) => {
-                    if (value !== null && value !== undefined && value !== '') {
-                        acc[key] = String(value);
-                    }
-                    return acc;
-                }, {} as Record<string, string>)
-            });
+            const queryString = buildDashboardQueryParams(
+                page,
+                {
+                    search: filterParams.search,
+                    work: filterParams.work,
+                    paymentStatus: filterParams.paymentStatus,
+                    location: filterParams.location,
+                    rentType: enrollmentType,
+                    checkInDate: filterParams.checkInDate,
+                },
+                sortKey,
+                sortDirection,
+                10
+            );
 
-            if (sort.key) {
-                queryParams.append('sortBy', sort.key);
-                queryParams.append('sortOrder', sort.direction);
+            const endpoint = `/members/${enrollmentType}/${queryString ? `?${queryString}` : ''}`;
+
+            const apiResponse = await ApiClient.get(endpoint) as MembersApiResponse;
+            if (apiResponse.success && apiResponse.data) {
+                setMembersData(apiResponse.data.tableData);
+                setTotalPages(apiResponse.pagination?.totalPages || 1);
+                setTotalMembers(apiResponse.pagination?.total || 0);
+                setCurrentPage(apiResponse.pagination?.page || page);
+            } else {
+                setMembersData([]);
+                setTotalPages(1);
+                setTotalMembers(0);
+                notification.showError(apiResponse.message || 'Failed to fetch members data', apiResponse.error || "Contact support", 5000);
             }
 
-            console.log("Data fetched");
-
-            const response = await fetch(`/api/members?${queryParams}`);  // api call
-            const data = await response.json();
-
-            setMembersData(data.members || []);
-            setTotalMembers(data.total || 0);
-            setTotalPages(data.totalPages || 1);
-            setCurrentPage(page);
         } catch (error) {
-            console.error('Error fetching members data:', error);
+            notification.showError('Error fetching members data', "Check your network connection", 5000);
             setMembersData([]);
-            setTotalMembers(0);
             setTotalPages(1);
+            setTotalMembers(0);
         } finally {
             setLoading(false);
         }
-    }, [enrollmentType, sortState]);
+    }, [enrollmentType, notification]);
+
+    const fetchFilterOptions = useCallback(async () => {
+        setFiltersLoading(true);
+        try {
+            const apiResponse = await ApiClient.get('/members/filters') as DashboardFiltersResponse;
+            if (apiResponse.success && apiResponse.data) {
+                setFilterItems(apiResponse.data.filters);
+            } else {
+                setFilterItems([]);
+                notification.showError('Failed to fetch filter options', "Check your network connection", 5000);
+            }
+        } catch (error) {
+            notification.showError('Error fetching filter options', "Contact support", 5000);
+        } finally {
+            setFiltersLoading(false);
+        }
+    }, [notification]);
+
+
+    // Initial data loading
+    useEffect(() => {
+        if (AuthManager.isAuthenticated() && isInitialLoad.current) {
+            fetchFilterOptions();
+            fetchMembersData(1, filters, null, "asc");
+            isInitialLoad.current = false;
+        }
+    }, [fetchFilterOptions, fetchMembersData, filters]);
+
+    // Handle enrollment type changes
+    useEffect(() => {
+        if (AuthManager.isAuthenticated() && !isInitialLoad.current) {
+            // Clear current data immediately to prevent showing wrong data
+            setMembersData([]);
+            setTotalPages(1);
+            setTotalMembers(0);
+            
+            // Reset filters when enrollment type changes
+            const resetFilters = {
+                search: '',
+                work: '',
+                paymentStatus: '',
+                location: '',
+                checkInDate: '',
+            };
+            setFilters(resetFilters);
+            setCurrentPage(1);
+            
+            // Fetch new data for the new enrollment type
+            fetchMembersData(1, resetFilters, null, "asc");
+        }
+    }, [enrollmentType, fetchMembersData]);
 
 
     const getHeader = () => {
         switch (enrollmentType) {
-            case 'long_term':
+            case 'long-term':
                 return {
                     title: "Long Term Enrollment Details",
                     subText: "Manage and view detailed information about long-term enrollments",
                     pageInfo: `Total Members: ${totalMembers}`
                 };
-            case 'short_term':
+            case 'short-term':
                 return {
                     title: "Short Term Enrollment Details",
                     subText: "Manage and view detailed information about short-term enrollments",
@@ -83,83 +179,6 @@ const MembersPage = (): React.ReactElement => {
                 };
         }
     };
-
- 
-    const getFilters = useCallback((): types["FilterItemProps"][] => {
-        const baseFilters: types["FilterItemProps"][] = [
-            {
-                id: "search",
-                type: "search" as const,
-                placeholder: "Search by name, ID, or room number...",
-                fullWidth: true,
-                gridSpan: 4
-            }
-        ];
-
-        if (enrollmentType === 'long_term') {
-            return [
-                ...baseFilters,
-                {
-                    id: "work",
-                    type: "select" as const,
-                    label: "Work Type",
-                    options: [
-                        { value: "student", label: "Student" },
-                        { value: "employee", label: "Employee" },
-                        { value: "other", label: "Other" }  
-                    ],
-                    placeholder: "Select work type..."
-                },
-                {
-                    id: "location",
-                    type: "multiSelect" as const,
-                    label: "Location",
-                    options: [
-                        { value: "erode", label: "Erode" },
-                        { value: "salem", label: "Salem" },
-                        { value: "tirupur", label: "Tirupur" },
-                        { value: "coimbatore", label: "Coimbatore" }
-                    ],
-                    variant: "dropdown" as const,
-                    placeholder: "Select locations",
-                    searchable: true,
-                    showSelectAll: true
-                },
-                {
-                    id: "paymentStatus",
-                    type: "select" as const,
-                    label: "Payment Status",
-                    options: [
-                        { value: "paid", label: "Paid" },
-                        { value: "pending", label: "Pending" },
-                        { value: "overdue", label: "Overdue" }
-                    ],
-                    placeholder: "Select payment status..."
-                }
-            ];
-        } else {
-            return [
-                ...baseFilters,
-                {
-                    id: "checkInDate",
-                    type: "date" as const,
-                    label: "Check-in Date",
-                    placeholder: "Select check-in date"
-                },
-                {
-                    id: "paymentStatus",
-                    type: "select" as const,
-                    label: "Payment Status",
-                    options: [
-                        { value: "paid", label: "Paid" },
-                        { value: "pending", label: "Pending" },
-                        { value: "overdue", label: "Overdue" }
-                    ],  
-                    placeholder: "Select payment status..."
-                }
-            ];
-        }
-    }, [enrollmentType]);
 
 
     const getColumns = useCallback((): types["TableColumn"][] => {
@@ -176,7 +195,7 @@ const MembersPage = (): React.ReactElement => {
                 style: { color: "var(--primary-color)" }
             },
             {
-                key: "id",
+                key: "memberId",
                 label: "Member ID",
                 sortable: true,
                 align: "center",
@@ -188,26 +207,26 @@ const MembersPage = (): React.ReactElement => {
                 sortable: true,
                 align: "center",
                 width: "10%",
-            }
+            },
+            {
+                key: "work",
+                label: "Work",
+                sortable: true,
+                align: "center",
+                width: "12%",
+            },
+            {
+                key: "pgLocation",
+                label: "Pg Location",
+                sortable: true,
+                align: "center",
+                width: "12%",
+            },
         ];
 
-        if (enrollmentType === 'long_term') {
+        if (enrollmentType === 'long-term') {
             return [
                 ...baseColumns,
-                {
-                    key: "work",
-                    label: "Work",
-                    sortable: true,
-                    align: "center",
-                    width: "12%",
-                },
-                {
-                    key: "location",
-                    label: "Location",
-                    sortable: true,
-                    align: "center",
-                    width: "12%",
-                },
                 {
                     key: "rent",
                     label: "Rent",
@@ -222,7 +241,7 @@ const MembersPage = (): React.ReactElement => {
                     ),
                 },
                 {
-                    key: "advance",
+                    key: "advanceAmount",
                     label: "Advance",
                     sortable: false,
                     align: "center",
@@ -235,8 +254,8 @@ const MembersPage = (): React.ReactElement => {
                     ),
                 },
                 {
-                    key: "payment",
-                    label: "Payment",
+                    key: "status",
+                    label: "Status",
                     sortable: false,
                     align: "center",
                     width: "15%",
@@ -251,35 +270,21 @@ const MembersPage = (): React.ReactElement => {
             return [
                 ...baseColumns,
                 {
-                    key: "work",
-                    label: "Work",
+                    key: "dateOfJoining",
+                    label: "JoinedOn",
                     sortable: true,
                     align: "center",
                     width: "12%",
+                    render: (value) => {
+                        const date = new Date(value as string);
+                        return (
+                            <span>{date.toLocaleDateString()}</span>
+                        );
+                    }
                 },
                 {
-                    key: "location",
-                    label: "Location",
-                    sortable: true,
-                    align: "center",
-                    width: "12%",
-                },
-                {
-                    key: "dailyRate",
-                    label: "Daily Rate",
-                    sortable: true,
-                    align: "center",
-                    width: "12%",
-                    render: (value) => (
-                        <div className="amount">
-                            <ui.Icons name="indianRupee" size={14} />
-                            <span>{value as string}</span>
-                        </div>
-                    ),
-                },
-                {
-                    key: "payment",
-                    label: "payment",
+                    key: "status",
+                    label: "Status",
                     sortable: false,
                     align: "center",
                     width: "15%",
@@ -293,43 +298,57 @@ const MembersPage = (): React.ReactElement => {
         }
     }, [enrollmentType]);
 
+    // Filter on-change
+    const onChange = (id: string, value: string | string[] | number | boolean | Date | { start: string; end: string } | null) => {
+        const newFilters = { ...filters, [id]: value as string };
+        setFilters(newFilters);
+    };
+
     const handleRowClick = (row: types["TableData"]) => {
-        console.log("Row clicked:", row); // implement the QuickViewModel and set user details props.
+        setSelectedMember(row as TableMemberData);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setSelectedMember(null);
+    };
+
+    const handleDeleteUser = (userId: string) => {
+        console.log(`Delete user with ID: ${userId}`);
+        handleCloseModal();
     };
 
     const handleSort = (key: string, direction: "asc" | "desc") => {
         setSortState({ key, direction });
-        getData(currentPage, currentFilters, { key, direction });
+        fetchMembersData(currentPage, filters, key, direction);
     };
 
-    const handleFilterApply = async (filters: Record<string, unknown>) => {
-        setLoading(true);
-        setCurrentFilters(filters);
-        try {
-            await getData(1, filters); // Reset to page 1 when applying filters
-        } finally {
-            setLoading(false);
-        }
+    const handleFilterApply = () => {
+        setCurrentPage(1);
+        fetchMembersData(1, filters, sortState.key, sortState.direction);
     };
 
-    const handleFilterReset = async () => {
-        setLoading(true);
-        setCurrentFilters({});
-        try {
-            await getData(1, {}); // Reset to page 1 with no filters
-        } finally {
-            setLoading(false);
-        }
+    const handleFilterReset = () => {
+        const resetFilters = {
+            search: '',
+            work: '',
+            paymentStatus: '',
+            location: '',
+            checkInDate: '',
+        };
+        setFilters(resetFilters);
+        setCurrentPage(1);
+        fetchMembersData(1, resetFilters, sortState.key, sortState.direction);
     };
 
     const handlePageChange = (page: number) => {
-        getData(page, currentFilters);
+        setCurrentPage(page);
+        fetchMembersData(page, filters, sortState.key, sortState.direction);
     };
 
     const headerConfig = getHeader();
-    const filtersConfig = getFilters();
     const columnsConfig = getColumns();
-    // getData(currentPage, currentFilters, sortState);
 
     return (
         <>
@@ -345,15 +364,17 @@ const MembersPage = (): React.ReactElement => {
                 <div className="members-page__content">
                     <div className="members-page__filter-section">
                         <layouts.FilterLayout
-                            filters={filtersConfig}
+                            filters={filtersLoading ? [] : filterItems}
                             layout="grid"
                             columns={4}
                             onApply={handleFilterApply}
                             onReset={handleFilterReset}
+                            onChange={onChange}
                             showApplyButton
                             showResetButton
                             collapsible
                             className="members-filters"
+                            loading={filtersLoading}
                         />
                     </div>
 
@@ -375,9 +396,47 @@ const MembersPage = (): React.ReactElement => {
                             onSort={handleSort}
                             emptyMessage={`No ${enrollmentType.replace('_', '-')} members found`}
                             className="students-table"
+                            showRefresh={true}
+                            refreshLoading={loading}
+                            onRefresh={() => fetchMembersData(currentPage, filters, sortState.key, sortState.direction)}
                         />
                     </div>
                 </div>
+
+                <layouts.QuickViewModal
+                    isOpen={isModalOpen}
+                    modelLayouts={
+                        {
+                            paymentInfo: true,
+                            documents: true,
+                            approvalForm: false
+                        }
+                    }
+                    onClose={handleCloseModal}
+                    memberData={selectedMember ? {
+                        id: selectedMember.id,
+                        memberId: selectedMember.memberId,
+                        name: selectedMember.name,
+                        roomNo: selectedMember.roomNo,
+                        memberType: selectedMember.rentType === 'LONG_TERM' ? "long-term" : "short-term",
+                        profileImage: selectedMember.photoUrl,
+                        phone: selectedMember.phone,
+                        email: selectedMember.email,
+                        paymentStatus: selectedMember.status === 'APPROVED' ? "Paid" : "Pending",
+                        paymentApprovalStatus: selectedMember.status as "Pending" | "Approved" | "Rejected",
+                        age: selectedMember.age,
+                        work: selectedMember.work,
+                        location: selectedMember.location,
+                        advanceAmount: selectedMember.advanceAmount,
+                        rent: selectedMember.rent,
+                        joinedOn: new Date(selectedMember.dateOfJoining).toLocaleDateString('en-IN'),
+                        documents: [{
+                            name: 'Aadhar Card',
+                            url: selectedMember.aadharUrl
+                        }]
+                    } : null}
+                    onDeleteUser={handleDeleteUser}
+                />
             </div>
         </>
     );

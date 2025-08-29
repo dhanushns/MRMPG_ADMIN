@@ -1,19 +1,30 @@
 import layouts from "@/components/layouts";
 import ui from "@/components/ui";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { types } from "@/types";
-import type { ApprovalMembersResponse, BaseApiResponse, PendingRegistrationData, QuickViewMemberData } from "@/types/apiResponseTypes";
+import type { ApprovalFiltersResponse, ApprovalMembersResponse, ApprovalStats, BaseApiResponse, CardItem, PaymentApprovalData, PaymentApprovalResponse, PendingRegistrationData, QuickViewMemberData } from "@/types/apiResponseTypes";
 import { ApiClient } from "@/utils";
 import { useNotification } from "@/hooks/useNotification";
+
+interface ApprovalCards {
+    registration: CardItem[];
+    payment: CardItem[];
+}
+
+interface lastUpdatedProps {
+    registration: Date;
+    payment: Date;
+};
 
 const ApprovalsPage = () => {
 
     const [activeTab, setActiveTab] = useState("pending_registration");
-    const [tableData, setTableData] = useState<PendingRegistrationData[]>([]);
+    const [registrationTableData, setRegistrationTableData] = useState<PendingRegistrationData[]>([]);
+    const [paymentTableData, setPaymentTableData] = useState<PaymentApprovalData[]>([]);
+
     const [TableLoading, setTableLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const [totalMembers, setTotalMembers] = useState(0);
 
     const notification = useNotification();
 
@@ -26,81 +37,31 @@ const ApprovalsPage = () => {
         memberData: null
     });
 
-    // Loading states for approve/reject actions
+    // Loading states
     const [approveLoading, setApproveLoading] = useState(false);
     const [rejectLoading, setRejectLoading] = useState(false);
+    const [fetchingStats, setFetchingStats] = useState(false);
+    const [filterItemsLoading, setFilterItemsLoading] = useState(false);
+
+    // Cards stats
+    const [approvalCards, setApprovalCards] = useState<ApprovalCards | null>(null);
+    const [lastUpdated, setLastUpdated] = useState<lastUpdatedProps | null>(null);
+
+    // filter items
+    const [filterItems, setFilterItems] = useState<types["FilterItemProps"][]>([]);
 
     const tabsItem = [
         {
             id: "pending_registration",
             label: "Registration Pending",
-            count: 12,
+            count: registrationTableData.length,
         },
         {
             id: "pending_payment",
             label: "Payment Pending",
-            count: 5
+            count: paymentTableData.length,
         }
     ]
-
-    const getTabCards = (): types["CardLayoutProps"][] => {
-
-        switch (activeTab) {
-            case "pending_registration":
-                return [
-                    {
-                        title: "Total Requests",
-                        value: "200",
-                        trend: "up" as const,
-                        percentage: 12,
-                        icon: "userPlus" as const,
-                        color: "success" as const,
-                        subtitle: "Compared to last month",
-                    },
-                    {
-                        title: "Approved",
-                        value: "20",
-                        icon: "checkCircle2" as const,
-                        color: "success" as const,
-                        subtitle: "August 2025",
-                    },
-                    {
-                        title: "Rejected",
-                        value: "12",
-                        icon: "xCircle" as const,
-                        color: "error" as const,
-                        subtitle: "Rejected Registration approvals",
-                    }
-                ]
-            case "pending_payment":
-                return [
-                    {
-                        title: "Not Paid",
-                        value: "12",
-                        icon: "clock" as const,
-                        color: "warning" as const,
-                        subtitle: "Members still not yet uploaded the payment screenshots",
-                    },
-                    {
-                        title: "Approved",
-                        value: "20",
-                        icon: "checkCircle2" as const,
-                        color: "success" as const,
-                        subtitle: "Approved Payment Requests",
-                    },
-                    {
-                        title: "Rejected",
-                        value: "12",
-                        icon: "xCircle" as const,
-                        color: "error" as const,
-                        subtitle: "Rejected Payment Requests",
-                    }
-                ]
-            default:
-                return [];
-        }
-
-    }
 
     const getTableColums = (): types["TableColumn"][] => {
         switch (activeTab) {
@@ -162,39 +123,112 @@ const ApprovalsPage = () => {
                         )
                     }
                 ]
+            case "pending_payment":
+                return [
+                    {
+                        key: "name",
+                        label: "Name",
+                        sortable: true,
+                        width: "10%",
+                        align: "left" as const,
+                    },
+                    {
+                        key: "work",
+                        label: "Work",
+                        sortable: true,
+                        width: "10%",
+                        align: "center" as const
+                    },
+                    {
+                        key: "rentType",
+                        label: "Rent Type",
+                        sortable: true,
+                        width: "10%"
+                    },
+                    {
+                        key: "pgLocation",
+                        label: "PG Location",
+                        sortable: true,
+                        width: "10%",
+                        align: "center" as const
+                    },
+                    {
+                        key: "phone",
+                        label: "Phone",
+                        sortable: true,
+                        width: "10%"
+                    },
+                    {
+                        key: "rent",
+                        label: "Rent",
+                        sortable: true,
+                        width: "10%",
+                        align: "center" as const,
+                    },
+                    {
+                        key: "currentMonthPaymentStatus",
+                        label: "Payment",
+                        sortable: false,
+                        width: "10%",
+                        align: "center" as const,
+                        render: (value: unknown) => (
+                            <span className={`status-badge status-badge--${(value as string).toLowerCase()}`}>
+                                {value as string}
+                            </span>
+                        )
+                    },
+                    {
+                        key: "currentMonthApprovalStatus",
+                        label: "Approval",
+                        sortable: false,
+                        width: "10%",
+                        align: "center" as const,
+                        render: (value: unknown) => (
+                            <span className={`status-badge status-badge--${(value as string).toLowerCase()}`}>
+                                {value as string}
+                            </span>
+                        )
+                    }
+                ]
             default:
                 return [];
         }
+    }
+
+    const getTableData = (): PendingRegistrationData[] | PaymentApprovalData[] => {
+        return activeTab === 'pending_registration' ? registrationTableData : paymentTableData;
     }
 
     useEffect(() => {
         switch (activeTab) {
             case "pending_registration":
                 getPendingRegistrationsData();
+                fetchApprovalStats();
                 break;
             case "pending_payment":
+                getPaymentsData();
+                getPaymentApprovalFilters();
                 break;
             default:
                 break;
         }
     }, [activeTab])
 
+    // Function to get pending registrations data
     const getPendingRegistrationsData = async () => {
         setTableLoading(true);
         try {
 
             const apiResponse = await ApiClient.get("/approval/members") as ApprovalMembersResponse;
             if (apiResponse && apiResponse.success) {
-                setTableData(apiResponse.data);
+                setRegistrationTableData(apiResponse.data);
                 setCurrentPage(apiResponse.pagination.page);
                 setTotalPages(apiResponse.pagination.totalPages);
-                setTotalMembers(apiResponse.pagination.total);
             }
             else {
-                setTableData([]);
+                setRegistrationTableData([]);
                 setCurrentPage(1);
                 setTotalPages(1);
-                setTotalMembers(0);
                 notification.showError('Failed to fetch pending registrations', "Contact support", 2000);
             }
 
@@ -207,6 +241,109 @@ const ApprovalsPage = () => {
         }
 
     }
+
+    // Function to get pending payment data
+    const getPaymentsData = async () => {
+        setTableLoading(true);
+        try {
+
+            const apiResponse = await ApiClient.get("/approval/payments") as PaymentApprovalResponse;
+            console.log(apiResponse);
+            if (apiResponse && apiResponse.success) {
+                setPaymentTableData(apiResponse.data.tableData);
+                setCurrentPage(apiResponse.data.pagination.page);
+                setTotalPages(apiResponse.data.pagination.totalPages);
+            }
+            else {
+                setPaymentTableData([]);
+                setCurrentPage(1);
+                setTotalPages(1);
+                notification.showError('Failed to fetch pending registrations', "Contact support", 2000);
+            }
+
+        } catch (err) {
+            notification.showError('Error fetching pending registrations', "Check your network connection", 2000);
+            return [];
+        }
+        finally {
+            setTableLoading(false);
+        }
+    }
+
+    // Function to get the filters for payment approvals
+    const getPaymentApprovalFilters = async () => {
+        setFilterItemsLoading(true);
+        try {
+            const apiResponse = await ApiClient.get("/approval/payments/filters") as ApprovalFiltersResponse;
+            if (apiResponse && apiResponse.success) {
+                setFilterItems(apiResponse.data.filters);
+            } else {
+                setFilterItems([]);
+                notification.showError(apiResponse.error || 'Failed to fetch payment approval filters', apiResponse.message || 'Contact support', 2000);
+            }
+        } catch (error) {
+            notification.showError('Error fetching filters', "Check your network connection", 2000);
+        }
+        finally {
+            setFilterItemsLoading(false);
+        }
+    }
+
+    //Function to get tab cards
+    const fetchApprovalStats = useCallback(async () => {
+
+        setFetchingStats(true);
+        try {
+            const apiResponse = await ApiClient.get("/approval/stats") as ApprovalStats;
+            if (apiResponse.success && apiResponse.data) {
+                setApprovalCards(apiResponse.data.cards);
+                setLastUpdated(apiResponse.data.lastUpdated);
+            }
+            else {
+                notification.showError(apiResponse?.message || 'Failed to fetch approval stats', apiResponse.error, 2000);
+            } ``
+
+        } catch (error) {
+            notification.showError('Error fetching approval stats', "Check your network connection", 2000);
+        } finally {
+            setFetchingStats(false);
+        }
+
+    }, [notification]);
+
+    // Refresh Stats card
+    const handleRefreshStats = useCallback(async () => {
+        setFetchingStats(true);
+        try {
+
+            const apiResponse = await ApiClient.post("/approval/stats/refresh", {}) as ApprovalStats;
+            if (apiResponse.success && apiResponse.data) {
+                setApprovalCards(apiResponse.data.cards);
+                setLastUpdated(apiResponse.data.lastUpdated);
+            }
+            else {
+                notification.showError(apiResponse?.message || 'Failed to refresh approval stats', apiResponse.error, 2000);
+            }
+
+        } catch (error) {
+            notification.showError('Error fetching approval stats', "Check your network connection", 2000);
+        }
+        finally {
+            setFetchingStats(false);
+        }
+    }, [notification]);
+
+
+    const getTabCards = () => {
+        switch (activeTab) {
+            case "pending_registration":
+                return approvalCards?.registration || [];
+            case "pending_payment":
+                return approvalCards?.payment || [];
+            default:
+                return [];
+        }
+    };
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
@@ -225,15 +362,15 @@ const ApprovalsPage = () => {
             name: memberData.name,
             email: memberData.email,
             phone: memberData.phone,
-            roomNo: '', 
-            memberType: memberData.rentType === 'LONG_TERM' ? 'long_term' : 'short_term',
+            roomNo: '',
+            memberType: memberData.rentType === 'LONG_TERM' ? 'long-term' : 'short-term',
             profileImage: memberData.photoUrl,
-            paymentStatus: 'Pending',
-            paymentApprovalStatus: 'Pending',
+            paymentStatus: 'PENDING',
+            paymentApprovalStatus: 'PENDING',
             documents: [
                 { name: 'Photo', url: memberData.photoUrl },
                 { name: 'Aadhar Card', url: memberData.aadharUrl }
-            ].filter(doc => doc.url), // Filter out empty URLs
+            ].filter(doc => doc.url),
             age: memberData.age,
             work: memberData.work,
             location: memberData.location,
@@ -264,12 +401,12 @@ const ApprovalsPage = () => {
 
             const apiResponse = await ApiClient.put(`/approval/members/${userId}`, approveForm) as BaseApiResponse;
 
-            if(apiResponse && apiResponse.success) {
+            if (apiResponse && apiResponse.success) {
                 notification.showSuccess('Member Approved', 'A new member has been added successfully in ' + formData.pgLocation);
                 getPendingRegistrationsData();
                 handleCloseQuickView();
             }
-            else{
+            else {
                 notification.showError(apiResponse?.message || 'Member Approval Failed', 'Failed to approve member in ' + formData.pgLocation);
             }
         } catch (error) {
@@ -309,20 +446,38 @@ const ApprovalsPage = () => {
             </div>
             <div className="approvals-page__content">
                 <div className="approvals-page__tabs">
-                    <ui.Tabs tabs={tabsItem} activeTab={activeTab} onTabChange={handleTabChange} />
+                    <ui.Tabs tabs={tabsItem} activeTab={activeTab} onTabChange={handleTabChange} showCounts />
                 </div>
+                {activeTab === 'pending_payment' && (
+                    <div className="approvals-page__filters">
+                        <layouts.FilterLayout
+                            filters={filterItems}
+                            loading={filterItemsLoading}
+                            className="approvals-page__filters"
+                            columns={4}
+                            showApplyButton
+                            showResetButton />
+                    </div>
+                )}
                 <div className="approvals-page__cards">
-                    <layouts.CardGrid cards={getTabCards()} columns={3} gap="md" className="approvals-page__card-grid" />
+                    <layouts.CardGrid
+                        cards={approvalCards ? getTabCards() : [{ icon: "clock" }, { icon: "clock" }, { icon: "clock" }, { icon: "clock" }]}
+                        columns={4} gap="md"
+                        loading={fetchingStats}
+                        // showRefresh
+                        // onRefresh={handleRefreshStats}
+                        // lastUpdated={lastUpdated ? (activeTab === 'pending_registration' ? lastUpdated.registration : lastUpdated.payment) : undefined}
+                        className="approvals-page__card-grid" />
                 </div>
                 <div className="approvals-page__table">
                     <layouts.TableLayout
                         columns={getTableColums()}
-                        data={tableData}
+                        data={getTableData()}
                         loading={TableLoading}
                         pagination={{
                             currentPage: currentPage,
                             totalPages: totalPages,
-                            totalItems: totalMembers,
+                            totalItems: getTableData().length,
                             onPageChange: handlePageChange
                         }}
                     />

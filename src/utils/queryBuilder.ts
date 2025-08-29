@@ -37,8 +37,12 @@ export const buildQueryParams = (
         if (['page', 'limit', 'search', 'sortBy', 'sortOrder'].includes(key)) {
             return; // Skip already handled parameters
         }
-
-        if (value !== undefined && value !== null && value !== '') {
+        // More robust empty value checking
+        if (value !== undefined && value !== null && value !== '' && value !== 0 && !(Array.isArray(value) && value.length === 0)) {
+            if (typeof value === 'string' && value.trim() === '') {
+                return;
+            }
+            
             if (typeof value === 'object' && 'min' in value && 'max' in value) {
                 // Handle range objects (like ageRange)
                 const rangeValue = value as { min: number; max: number };

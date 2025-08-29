@@ -11,7 +11,7 @@ const TableLayout: React.FC<types["TableLayoutProps"]> = ({
         currentPage: 1,
         totalItems: 1,
         totalPages: 1,
-        onPageChange: () => {}
+        onPageChange: () => { }
     },
     pageSize = 10,
     sortable = true,
@@ -23,8 +23,31 @@ const TableLayout: React.FC<types["TableLayoutProps"]> = ({
     showCheckboxes = false,
     selectedRows = [],
     onSelectionChange,
-    rowIdField = "id"
+    rowIdField = "id",
+    showRefresh = false,
+    showLastUpdated = false,
+    lastUpdated,
+    onRefresh,
+    refreshLoading = false
 }) => {
+
+    // Format last updated timestamp
+    const formatLastUpdated = (timestamp: Date | string) => {
+        const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+        const now = new Date();
+        const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+
+        if (diffInMinutes < 1) {
+            return "Just now";
+        } else if (diffInMinutes < 60) {
+            return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
+        } else if (diffInMinutes < 1440) {
+            const hours = Math.floor(diffInMinutes / 60);
+            return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+        } else {
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+    };
 
     const getRowId = (row: types["TableData"]) => {
         return row[rowIdField] as string | number;
@@ -182,6 +205,28 @@ const TableLayout: React.FC<types["TableLayoutProps"]> = ({
     if (loading) {
         return (
             <div className={`table-layout ${className}`}>
+                {showRefresh && (
+                    <div className={`table-header __${showLastUpdated && lastUpdated ? 'with-timestamp' : 'no-timestamp'}`}>
+                        {showLastUpdated && lastUpdated && (<div className="last-updated">
+                            <ui.Icons name="clock" size={16} />
+                            <span className="timestamp">
+                                {lastUpdated ? `Last updated: ${formatLastUpdated(lastUpdated)}` : 'Never updated'}
+                            </span>
+                        </div>)}
+                        <div className="refresh-section">
+                            <ui.Button
+                                variant="outline"
+                                size="small"
+                                onClick={onRefresh}
+                                disabled={refreshLoading || loading}
+                                leftIcon={<ui.Icons name={refreshLoading ? "loader" : "refresh"} size={16} className={refreshLoading ? "animate-spin" : ""} />}
+                            >
+                                {refreshLoading ? "Refreshing..." : "Refresh"}
+                            </ui.Button>
+                        </div>
+                    </div>
+                )}
+
                 <div className="table-loading">
                     <ui.Icons name="refresh" size={24} className="loading-spinner" />
                     <span>Loading...</span>
@@ -192,6 +237,28 @@ const TableLayout: React.FC<types["TableLayoutProps"]> = ({
 
     return (
         <div className={`table-layout ${className}`}>
+            {showRefresh && (
+                <div className={`table-header __${showLastUpdated && lastUpdated ? 'with-timestamp' : 'no-timestamp'}`}>
+                    {showLastUpdated && lastUpdated && (<div className="last-updated">
+                        <ui.Icons name="clock" size={16} />
+                        <span className="timestamp">
+                            {lastUpdated ? `Last updated: ${formatLastUpdated(lastUpdated)}` : 'Never updated'}
+                        </span>
+                    </div>)}
+                    <div className="refresh-section">
+                        <ui.Button
+                            variant="outline"
+                            size="small"
+                            onClick={onRefresh}
+                            disabled={refreshLoading || loading}
+                            leftIcon={<ui.Icons name={refreshLoading ? "loader" : "refresh"} size={16} className={refreshLoading ? "animate-spin" : ""} />}
+                        >
+                            {refreshLoading ? "Refreshing..." : "Refresh"}
+                        </ui.Button>
+                    </div>
+                </div>
+            )}
+
             <div className="table-container">
                 <div className="table-wrapper">
                     <table className="data-table">

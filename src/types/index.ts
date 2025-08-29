@@ -42,6 +42,7 @@ interface FilterItemProps {
   label?: string;
   placeholder?: string;
   options?: FilterOptionProps[];
+  actionKey?: string[];
   defaultValue?: FilterValue;
   required?: boolean;
   disabled?: boolean;
@@ -75,10 +76,12 @@ interface FilterLayoutProps {
   showApplyButton?: boolean;
   onApply?: (filters: Record<string, FilterValue>) => void;
   onReset?: () => void;
+  onChange?: (id: string, value: FilterValue) => void;
   className?: string;
   collapsible?: boolean;
   defaultCollapsed?: boolean;
   downloadReport?: boolean;
+  loading?: boolean;
 }
 
 // Icon types
@@ -169,7 +172,8 @@ export type IconName =
   | "checkCircle2"
   | "xCircle"
   | "alertTriangle"
-  | "loader";
+  | "loader"
+  | "userCheck";
 
 interface IconProps {
   name: IconName;
@@ -228,6 +232,12 @@ interface TableLayoutProps {
     selectedRows: TableData[]
   ) => void;
   rowIdField?: string; // Field to use as unique identifier for rows (default: 'id')
+  // Refresh functionality
+  showRefresh?: boolean;
+  showLastUpdated?: boolean;
+  lastUpdated?: Date | string;
+  onRefresh?: () => void;
+  refreshLoading?: boolean;
 }
 
 interface ActionButton {

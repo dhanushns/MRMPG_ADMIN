@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import type { types } from "@/types";
-import type { staffResponse } from "@/types/apiResponseTypes";
+import type { AdminResponse } from "@/types/apiResponseTypes";
 import "./TopNav.scss"
 import PG_LOGO from "@images/MRM_PG.png";
 import tempProfile from "@images/profile-temp.jpg";
@@ -18,11 +18,11 @@ const TopNav = ({ selectedTab }: TopNavProps): React.ReactElement => {
     const location = useLocation();
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [staffData, setStaffData] = useState<staffResponse | null>(null);
+    const [staffData, setStaffData] = useState<AdminResponse | null>(null);
 
     // Get staff data on component mount
     useEffect(() => {
-        const staff = AuthManager.getStaffData() as staffResponse;
+        const staff = AuthManager.getStaffData() as AdminResponse;
         setStaffData(staff);
     }, []);
 
@@ -44,14 +44,14 @@ const TopNav = ({ selectedTab }: TopNavProps): React.ReactElement => {
             id: "members",
             layout: "root",
             label: "Members",
-            path: "/members?enrollment=long_term",
+            path: "/members?enrollment=long-term",
             class: "members-tab",
             tabs: [
                 {
                     id: "long_term",
                     layout: "entity",
                     label: "Long Term",
-                    path: "/members?enrollment=long_term",
+                    path: "/members?enrollment=long-term",
                     selected: true,
                     class: "long-term-nav"
                 },
@@ -59,7 +59,7 @@ const TopNav = ({ selectedTab }: TopNavProps): React.ReactElement => {
                     id: "short_term",
                     layout: "entity",
                     label: "Short Term",
-                    path: "/members?enrollment=short_term",
+                    path: "/members?enrollment=short-term",
                     selected: false,
                     class: "short-term-nav"
                 },
@@ -257,18 +257,7 @@ const TopNav = ({ selectedTab }: TopNavProps): React.ReactElement => {
                                                 </div>
                                                 
                                                 <div className="profile-card-info">
-                                                    <div className="info-row">
-                                                        <span className="info-label">PG:</span>
-                                                        <span className="info-value">
-                                                            {staffData?.pg?.name || 'N/A'}
-                                                            <br></br>
-                                                            {staffData?.pg?.type || 'N/A'}
-                                                        </span>
-                                                    </div>
-                                                    <div className="info-row">
-                                                        <span className="info-label">Location:</span>
-                                                        <span className="info-value">{staffData?.pg?.location || 'N/A'}</span>
-                                                    </div>
+                                                     {/* Insert PG Type */}
                                                 </div>
                                                 
                                                 <div className="profile-card-actions">
@@ -330,10 +319,7 @@ const TopNav = ({ selectedTab }: TopNavProps): React.ReactElement => {
                                             <img src={String(menu.image) || ""} alt={menu.label || "Profile"} />
                                             <div className="profile-details">
                                                 <div className="profile-name">{staffData?.name || 'User'}</div>
-                                                <div className="profile-pg">
-                                                    {staffData?.pg?.name || 'N/A'} | {staffData?.pg?.type || 'N/A'}
-                                                </div>
-                                                <div className="profile-location">{staffData?.pg?.location || 'N/A'}</div>
+                                               {/* Insert PG Type */}
                                                 <ui.Button
                                                     variant="outline"
                                                     size="small"

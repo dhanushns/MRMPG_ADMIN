@@ -34,6 +34,82 @@
     padding: 12px 16px;
   }
 
+  // Table Header (Refresh Section)
+  .table-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+
+    &.__with-timestamp {
+      justify-content: space-between;
+    }
+
+    &.__no-timestamp {
+      justify-content: flex-end;
+    }
+
+    .last-updated {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--gray-600, #6b7280);
+      font-size: 14px;
+
+      svg {
+        color: var(--gray-500, #9ca3af);
+      }
+
+      .timestamp {
+        font-weight: 500;
+      }
+    }
+
+    .refresh-section {
+      display: flex;
+      align-items: center;
+
+    }
+
+    // Small tablets responsive
+    @media (max-width: 768px) {
+      padding: 12px 24px 16px;
+      
+      .last-updated {
+        font-size: 13px;
+        gap: 6px;
+      }
+    }
+
+    // Mobile responsive
+    @media (max-width: 640px) {
+      padding: 10px 20px 14px;
+      flex-direction: column;
+      gap: 12px;
+      align-items: flex-start;
+
+      .refresh-section {
+        align-self: flex-end;
+      }
+    }
+
+    // Small mobile responsive
+    @media (max-width: 480px) {
+      padding: 8px 18px 12px;
+      gap: 10px;
+
+      .last-updated {
+        font-size: 12px;
+        gap: 4px;
+      }
+    }
+
+    // Extra small mobile responsive
+    @media (max-width: 360px) {
+      padding: 6px 16px 10px;
+      gap: 8px;
+    }
+  }
+
   .table-container {
     width: 100%;
     overflow-x: auto;
@@ -44,6 +120,11 @@
     .table-wrapper {
       min-width: 100%;
       padding: 40px;
+
+      // Reduce padding when header is present
+      .table-layout:has(.table-header) & {
+        padding: 20px 40px 40px;
+      }
 
       .data-table {
         width: 100%;
@@ -406,9 +487,21 @@
 // Responsive Design
 @media (max-width: 1024px) {
   .table-layout {
+    .table-header {
+      .last-updated {
+        font-size: 13px;
+        gap: 6px;
+      }
+    }
+
     .table-container {
       .table-wrapper {
         padding: 30px;
+
+        // Reduce padding when header is present
+        .table-layout:has(.table-header) & {
+          padding: 15px 30px 30px;
+        }
 
         .data-table {
           thead th {
@@ -478,9 +571,21 @@
     box-shadow: none;
     border: 1px solid var(--gray-200);
 
+    .table-header {
+      .last-updated {
+        font-size: 12px;
+        gap: 4px;
+      }
+    }
+
     .table-container {
       .table-wrapper {
         padding: 20px;
+
+        // Reduce padding when header is present
+        .table-layout:has(.table-header) & {
+          padding: 10px 20px 20px;
+        }
 
         .data-table {
           min-width: 700px;
@@ -600,9 +705,21 @@
 
 @media (max-width: 480px) {
   .table-layout {
+    .table-header {
+      .last-updated {
+        font-size: 11px;
+        gap: 3px;
+      }
+    }
+
     .table-container {
       .table-wrapper {
         padding: 12px;
+
+        // Reduce padding when header is present
+        .table-layout:has(.table-header) & {
+          padding: 6px 12px 12px;
+        }
 
         .data-table {
           min-width: 600px;

@@ -1,6 +1,6 @@
 import React from "react";
 import CardLayout from "./CardLayout";
-import type { types } from "@/types";
+import type { IconName, types } from "@/types";
 import ui from "@/components/ui";
 import "./CardGrid.scss";
 
@@ -14,8 +14,8 @@ interface ActionButton {
 }
 
 interface CardData {
-    title: string;
-    value: string | number;
+    title?: string;
+    value?: string | number;
     icon: types["IconName"];
     percentage?: number;
     trend?: "up" | "down" | "neutral";
@@ -25,8 +25,6 @@ interface CardData {
     loading?: boolean;
     className?: string;
     style?: React.CSSProperties;
-    
-    // New enhanced props
     actions?: ActionButton[];
     showActions?: "always" | "hover" | "never";
     customContent?: React.ReactNode;
@@ -106,13 +104,13 @@ const CardGrid: React.FC<CardGridProps> = ({
                 {cards.map((card, index) => (
                     <CardLayout
                         key={index}
-                        title={card.title}
-                        value={card.value}
+                        title={card.title || ""}
+                        value={card.value || ""}
                         icon={card.icon}
                         percentage={card.percentage}
                         trend={card.trend}
-                        color={card.color}
-                        subtitle={card.subtitle}
+                        color={card.color || "primary"}
+                        subtitle={card.subtitle || ""}
                         onClick={card.onClick}
                         loading={card.loading || loading}
                         className={card.className}

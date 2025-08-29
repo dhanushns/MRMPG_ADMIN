@@ -1,4 +1,5 @@
 import type { IconName } from ".";
+import type { types } from ".";
 
 // Base API Response interface
 export interface BaseApiResponse {
@@ -19,6 +20,13 @@ export type PaginatedResponse<T> = BaseApiResponse & {
     totalPages: number;
   };
 };
+
+export type Pagination = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
 
 export type AdminResponse = {
   id: string;
@@ -119,7 +127,23 @@ export interface PendingRegistrationData {
   pgType: PgType;
 }
 
+export interface PaymentApprovalData extends MemberData {
+  [key: string]: unknown;
+  rent: number;
+  currentMonthPaymentStatus: "PAID" | "PENDING" | "REJECTED" | "APPROVED" | "OVERDUE";
+  currentMonthApprovalStatus: "APPROVED" | "PENDING" | "REJECTED";
+  currentMonthPayment: Payment;
+  hasCurrentMonthPayment: boolean;
+}
+
 export type ApprovalMembersResponse = PaginatedResponse<PendingRegistrationData>;
+export interface PaymentApprovalResponse extends BaseApiResponse {
+  data: {
+    tableData: PaymentApprovalData[]
+    pagination: Pagination
+  }
+}
+
 
 // Formatted member data for table display
 export interface TableMemberData extends MemberData {
@@ -128,7 +152,7 @@ export interface TableMemberData extends MemberData {
   roomNo: string;
   rent: number;
   paymentStatus: "PAID" | "PENDING" | "OVERDUE";
-  status: "PENDING" | "APPROVED" | "REJECTED" | "OVERDUE";
+  approvalStatus: "PENDING" | "APPROVED" | "REJECTED";
 }
 
 // Members API Response
@@ -144,18 +168,20 @@ export interface DashboardApiResponse extends BaseApiResponse {
   };
 }
 
+export type MembersApiResponse = DashboardApiResponse;
+
 // Dashboard Stats card reponse
 
 export type colors = "primary" | "success" | "warning" | "error" | "info";
 
 export interface CardItem {
-  title: string;
-  value: string;
+  title?: string;
+  value?: string;
   trend?: "up" | "down";
   percentage?: number;
   icon: IconName;
-  color: colors;
-  subtitle: string;
+  color?: colors;
+  subtitle?: string;
   badge?: {
     text: string;
     color: colors;
@@ -165,8 +191,34 @@ export interface CardItem {
 
 export interface DashboardStatsResponse extends BaseApiResponse {
   data: {
-    cards: CardItem[];
+    cards?: CardItem[];
     lastUpdated: Date;
+  };
+}
+
+export interface DashboardFiltersResponse extends BaseApiResponse {
+  data: {
+    filters: types["FilterItemProps"][]
+  }
+}
+
+export interface ApprovalStats extends BaseApiResponse {
+  data: {
+    cards: {
+      registration: CardItem[],
+      payment: CardItem[]
+    },
+    lastUpdated: {
+      registration: Date,
+      payment: Date
+    }
+  }
+}
+
+export interface ApprovalFiltersResponse extends BaseApiResponse {
+  data: {
+    filters: types["FilterItemProps"][];
+    totalPGs: number;
   };
 }
 
@@ -176,12 +228,12 @@ export interface QuickViewMemberData {
   memberId?: string;
   name: string;
   roomNo: string;
-  memberType: "long_term" | "short_term";
+  memberType: "long-term" | "short-term";
   profileImage?: string;
   phone?: string;
   email?: string;
-  paymentStatus: "Paid" | "Pending";
-  paymentApprovalStatus?: "Pending" | "Approved" | "Rejected";
+  paymentStatus: "PAID" | "PENDING" | "OVERDUE";
+  paymentApprovalStatus?: "PENDING" | "APPROVED" | "REJECTED";
   documents?: { name: string; url: string; }[];
   age?: number;
   work?: string;

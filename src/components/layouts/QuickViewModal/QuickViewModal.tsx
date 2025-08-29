@@ -282,7 +282,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                     <div className="header-content">
                         <div className="member-type-badge">
                             <span className="type-badge">
-                                {memberData.memberType === 'long_term' ? 'Long-Term Member' : 'Short-Term Member'}
+                                {memberData.memberType === 'long-term' ? 'Long-Term Member' : 'Short-Term Member'}
                             </span>
                         </div>
                         <button 

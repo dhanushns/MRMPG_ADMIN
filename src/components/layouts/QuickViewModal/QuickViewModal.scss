@@ -134,11 +134,11 @@
   color: white;
 
   // Dynamic background based on member type
-  &.header-banner--long_term {
+  &.header-banner--long-term {
     background: linear-gradient(135deg, var(--primary-color, #667eea) 20%, #d8bbbc 100%);
   }
 
-  &.header-banner--short_term {
+  &.header-banner--short-term {
     background: linear-gradient(135deg, #3b82f6 20%, #b9c1d9 100%);
   }
 
@@ -347,11 +347,11 @@
     }
 
     // Dynamic icon colors based on member type
-    &.section-title--long_term svg {
+    &.section-title--long-term svg {
       color: var(--primary-color, #667eea);
     }
 
-    &.section-title--short_term svg {
+    &.section-title--short-term svg {
       color: #3b82f6;
     }
   }
@@ -383,11 +383,11 @@
     }
 
     // Dynamic left border colors based on member type
-    &.info-item--long_term {
+    &.info-item--long-term {
       border-left-color: var(--primary-color, #667eea);
     }
 
-    &.info-item--short_term {
+    &.info-item--short-term {
       border-left-color: #3b82f6;
     }
   }
@@ -486,11 +486,11 @@
     }
 
     // Dynamic left border colors for documents based on member type
-    &.document-item--long_term {
+    &.document-item--long-term {
       border-left-color: var(--primary-color, #667eea);
     }
 
-    &.document-item--short_term {
+    &.document-item--short-term {
       border-left-color: #3b82f6;
     }
   }
@@ -556,14 +556,14 @@
       }
 
       // Dynamic focus colors based on member type
-      &.form-input--long_term {
+      &.form-input--long-term {
         &:focus-within {
           border-color: var(--primary-color, #667eea);
           box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
       }
 
-      &.form-input--short_term {
+      &.form-input--short-term {
         &:focus-within {
           border-color: #3b82f6;
           box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
@@ -590,7 +590,7 @@
 
     // DateInput specific styling
     .date-input-wrapper {
-      &.form-input--long_term {
+      &.form-input--long-term {
         .date-input {
           &:focus {
             border-color: var(--primary-color, #667eea);
@@ -599,7 +599,7 @@
         }
       }
 
-      &.form-input--short_term {
+      &.form-input--short-term {
         .date-input {
           &:focus {
             border-color: #3b82f6;
@@ -657,7 +657,7 @@
   }
 
 
-  &.approval-form--long_term {
+  &.approval-form--long-term {
     .form-group label {
       color: #1f2937;
 
@@ -667,7 +667,7 @@
     }
   }
 
-  &.approval-form--short_term {
+  &.approval-form--short-term {
     .form-group label {
       color: #1f2937;
 
