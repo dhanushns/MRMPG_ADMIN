@@ -2,9 +2,10 @@ import layouts from "@/components/layouts";
 import ui from "@/components/ui";
 import { useCallback, useEffect, useState } from "react";
 import type { types } from "@/types";
-import type { ApprovalFiltersResponse, ApprovalMembersResponse, ApprovalStats, BaseApiResponse, CardItem, PaymentApprovalData, PaymentApprovalResponse, PendingRegistrationData, QuickViewMemberData } from "@/types/apiResponseTypes";
+import type { ApprovalFiltersResponse, ApprovalMembersResponse, ApprovalStats, BaseApiResponse, CardItem, PaymentApprovalData, PaymentApprovalResponse, PendingRegistrationData, QuickViewMemberData, PaymentQuickViewData } from "@/types/apiResponseTypes";
 import { ApiClient } from "@/utils";
 import { useNotification } from "@/hooks/useNotification";
+import "./ApprovalsPage.scss";
 
 interface ApprovalCards {
     registration: CardItem[];
@@ -44,6 +45,15 @@ const ApprovalsPage = () => {
     const [quickViewModal, setQuickViewModal] = useState<{
         isOpen: boolean;
         memberData: QuickViewMemberData | null;
+    }>({
+        isOpen: false,
+        memberData: null
+    });
+
+    // Payment QuickView Modal state
+    const [paymentQuickViewModal, setPaymentQuickViewModal] = useState<{
+        isOpen: boolean;
+        memberData: PaymentQuickViewData | null;
     }>({
         isOpen: false,
         memberData: null
@@ -147,41 +157,44 @@ const ApprovalsPage = () => {
                         key: "name",
                         label: "Name",
                         sortable: true,
-                        width: "10%",
+                        width: "15%",
                         align: "left" as const,
                     },
                     {
                         key: "work",
                         label: "Work",
                         sortable: true,
-                        width: "10%",
+                        width: "12%",
                         align: "center" as const
                     },
                     {
                         key: "rentType",
                         label: "Rent Type",
                         sortable: true,
-                        width: "10%"
+                        width: "12%"
                     },
                     {
                         key: "pgLocation",
                         label: "PG Location",
                         sortable: true,
-                        width: "10%",
+                        width: "15%",
                         align: "center" as const
                     },
                     {
                         key: "phone",
                         label: "Phone",
                         sortable: true,
-                        width: "10%"
+                        width: "15%"
                     },
                     {
                         key: "rent",
                         label: "Rent",
                         sortable: true,
-                        width: "10%",
+                        width: "12%",
                         align: "center" as const,
+                        render: (value: unknown) => (
+                            <span className="amount">₹{(value as number).toLocaleString()}</span>
+                        )
                     },
                     {
                         key: "currentMonthPaymentStatus",
@@ -199,7 +212,7 @@ const ApprovalsPage = () => {
                         key: "currentMonthApprovalStatus",
                         label: "Approval",
                         sortable: false,
-                        width: "10%",
+                        width: "9%",
                         align: "center" as const,
                         render: (value: unknown) => (
                             <span className={`status-badge status-badge--${(value as string).toLowerCase()}`}>
@@ -488,6 +501,60 @@ const ApprovalsPage = () => {
         });
     };
 
+    // Payment QuickView Modal handlers
+    const handlePaymentQuickView = (memberData: PaymentApprovalData) => {
+        const paymentQuickViewData: PaymentQuickViewData = {
+            id: memberData.id,
+            memberId: memberData.memberId,
+            name: memberData.name,
+            age: memberData.age,
+            gender: memberData.gender,
+            location: memberData.location,
+            email: memberData.email,
+            phone: memberData.phone,
+            work: memberData.work,
+            profileImage: memberData.photoUrl,
+            rentType: memberData.rentType,
+            pgLocation: memberData.pgLocation,
+            pgName: memberData.pgName,
+            roomNo: memberData.roomNo,
+            rent: memberData.rent,
+            advanceAmount: memberData.advanceAmount,
+            dateOfJoining: memberData.dateOfJoining,
+            paymentDetails: {
+                id: memberData.currentMonthPayment.id,
+                paymentStatus: memberData.currentMonthPaymentStatus,
+                approvalStatus: memberData.currentMonthApprovalStatus,
+                amount: memberData.currentMonthPayment.amount,
+                month: memberData.currentMonthPayment.month,
+                year: memberData.currentMonthPayment.year,
+                dueDate: memberData.currentMonthPayment.dueDate,
+                overdueDate: memberData.currentMonthPayment.overdueDate,
+                paidDate: memberData.currentMonthPayment.paidDate,
+                rentBillScreenshot: memberData.currentMonthPayment.rentBillScreenshot,
+                electricityBillScreenshot: memberData.currentMonthPayment.electricityBillScreenshot,
+                attemptNumber: memberData.currentMonthPayment.attemptNumber,
+                createdAt: memberData.currentMonthPayment.createdAt
+            },
+            documents: [
+                { name: 'Profile Photo', url: memberData.photoUrl },
+                { name: 'Aadhar Card', url: memberData.aadharUrl }
+            ].filter(doc => doc.url)
+        };
+
+        setPaymentQuickViewModal({
+            isOpen: true,
+            memberData: paymentQuickViewData
+        });
+    };
+
+    const handleClosePaymentQuickView = () => {
+        setPaymentQuickViewModal({
+            isOpen: false,
+            memberData: null
+        });
+    };
+
     const handleApproveUser = async (userId: string, pgId: string, formData: { roomNo: string; rentAmount: string; advanceAmount?: string; pgLocation: string; dateOfJoining?: string }) => {
         setApproveLoading(true);
         try {
@@ -532,6 +599,54 @@ const ApprovalsPage = () => {
             }
         } catch (error) {
             notification.showError('Member Rejection Failed', 'Failed to reject member');
+        } finally {
+            setRejectLoading(false);
+        }
+    };
+
+    const handleApprovePayment = async (paymentId: string) => {
+        setApproveLoading(true);
+        try {
+            const approveForm = {
+                status: 'APPROVED'
+            };
+
+            const apiResponse = await ApiClient.put(`/approval/payments/${paymentId}`, approveForm) as BaseApiResponse;
+
+            if (apiResponse && apiResponse.success) {
+                notification.showSuccess('Payment Approved', 'Payment has been approved successfully');
+                fetchPaymentsData(currentFilters);
+                fetchApprovalStats(currentFilters);
+                handleClosePaymentQuickView();
+            } else {
+                notification.showError(apiResponse?.message || 'Payment Approval Failed', 'Failed to approve payment');
+            }
+        } catch (error) {
+            notification.showError('Payment Approval Failed', 'Failed to approve payment');
+        } finally {
+            setApproveLoading(false);
+        }
+    };
+
+    const handleRejectPayment = async (paymentId: string) => {
+        setRejectLoading(true);
+        try {
+            const rejectForm = {
+                status: 'REJECTED'
+            };
+
+            const apiResponse = await ApiClient.put(`/approval/payments/${paymentId}`, rejectForm) as BaseApiResponse;
+
+            if (apiResponse && apiResponse.success) {
+                notification.showSuccess('Payment Rejected', 'Payment has been rejected successfully');
+                fetchPaymentsData(currentFilters);
+                fetchApprovalStats(currentFilters);
+                handleClosePaymentQuickView();
+            } else {
+                notification.showError(apiResponse?.message || 'Payment Rejection Failed', 'Failed to reject payment');
+            }
+        } catch (error) {
+            notification.showError('Payment Rejection Failed', 'Failed to reject payment');
         } finally {
             setRejectLoading(false);
         }
@@ -582,6 +697,8 @@ const ApprovalsPage = () => {
                         }}
                         showRefresh
                         onRefresh={()=> activeTab === 'pending_registration' ? fetchPendingRegistrationsData() : fetchPaymentsData(currentFilters)}
+                        onRowClick={activeTab === 'pending_payment' ? (row) => handlePaymentQuickView(row as PaymentApprovalData) : undefined}
+                        className={activeTab === 'pending_payment' ? 'table--clickable' : ''}
                     />
                 </div>
             </div>
@@ -598,6 +715,16 @@ const ApprovalsPage = () => {
                 onApproveUser={handleApproveUser}
                 onDeleteUser={() => console.log("DELETED USER")}
                 onRejectUser={handleRejectUser}
+                approveLoading={approveLoading}
+                rejectLoading={rejectLoading}
+            />
+
+            <layouts.PaymentQuickViewModal
+                isOpen={paymentQuickViewModal.isOpen}
+                onClose={handleClosePaymentQuickView}
+                memberData={paymentQuickViewModal.memberData}
+                onApprovePayment={handleApprovePayment}
+                onRejectPayment={handleRejectPayment}
                 approveLoading={approveLoading}
                 rejectLoading={rejectLoading}
             />

@@ -130,9 +130,26 @@ export interface PendingRegistrationData {
 export interface PaymentApprovalData extends MemberData {
   [key: string]: unknown;
   rent: number;
+  pgLocation: string;
+  pgName: string;
+  roomNo: string;
   currentMonthPaymentStatus: "PAID" | "PENDING" | "REJECTED" | "APPROVED" | "OVERDUE";
   currentMonthApprovalStatus: "APPROVED" | "PENDING" | "REJECTED";
-  currentMonthPayment: Payment;
+  currentMonthPayment: {
+    id: string;
+    paymentStatus: "PAID" | "PENDING" | "REJECTED" | "APPROVED" | "OVERDUE";
+    approvalStatus: "APPROVED" | "PENDING" | "REJECTED";
+    amount: number;
+    month: number;
+    year: number;
+    dueDate: string;
+    overdueDate: string;
+    paidDate: string | null;
+    rentBillScreenshot: string | null;
+    electricityBillScreenshot: string | null;
+    attemptNumber: number;
+    createdAt: string;
+  };
   hasCurrentMonthPayment: boolean;
 }
 
@@ -243,5 +260,42 @@ export interface QuickViewMemberData {
   rent?: number;
   joinedOn?: string;
   aadharUrl?: string;
+}
+
+// Payment QuickView Modal data structure
+export interface PaymentQuickViewData {
+  id: string;
+  memberId: string;
+  name: string;
+  age: number;
+  gender: "MALE" | "FEMALE";
+  location: string;
+  email: string;
+  phone: string;
+  work: string;
+  profileImage?: string;
+  rentType: "LONG_TERM" | "SHORT_TERM";
+  pgLocation: string;
+  pgName: string;
+  roomNo: string;
+  rent: number;
+  advanceAmount: number;
+  dateOfJoining: string;
+  paymentDetails: {
+    id: string;
+    paymentStatus: "PAID" | "PENDING" | "REJECTED" | "APPROVED" | "OVERDUE";
+    approvalStatus: "APPROVED" | "PENDING" | "REJECTED";
+    amount: number;
+    month: number;
+    year: number;
+    dueDate: string;
+    overdueDate: string;
+    paidDate: string | null;
+    rentBillScreenshot: string | null;
+    electricityBillScreenshot: string | null;
+    attemptNumber: number;
+    createdAt: string;
+  };
+  documents?: { name: string; url: string; }[];
 }
 
