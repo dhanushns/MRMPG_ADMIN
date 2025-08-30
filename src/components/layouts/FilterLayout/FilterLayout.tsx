@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import type { types } from "@/types";
 import ui from "@/components/ui";
 import "./FilterLayout.scss";
@@ -22,16 +22,54 @@ const FilterLayout = ({
     downloadReport = false,
     loading = false
 }: types["FilterLayoutProps"]): React.ReactElement => {
-    const [filterValues, setFilterValues] = useState<Record<string, FilterValue>>(() => {
-        const initialValues: Record<string, FilterValue> = {};
-        filters.forEach(filter => {
-            initialValues[filter.id] = filter.defaultValue || null;
-        });
-        return initialValues;
-    });
-
+    const isInitialized = useRef(false);
+    
+    const [filterValues, setFilterValues] = useState<Record<string, FilterValue>>({});
     const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
     const [errors, setErrors] = useState<Record<string, string>>({});
+
+
+    useEffect(() => {
+        if (filters.length === 0) return;
+        
+        console.log('FilterLayout: useEffect triggered', {
+            filtersLength: filters.length,
+            currentFilterValues: filterValues,
+            filters: filters.map(f => ({ id: f.id, defaultValue: f.defaultValue }))
+        });
+        
+        setFilterValues(prevValues => {
+            const newValues: Record<string, FilterValue> = { ...prevValues };
+            let hasChanges = false;
+            
+            filters.forEach(filter => {
+                
+                if (!(filter.id in prevValues) || 
+                    ((prevValues[filter.id] === null || prevValues[filter.id] === undefined || prevValues[filter.id] === '') 
+                     && filter.defaultValue !== undefined && filter.defaultValue !== null)) {
+                    newValues[filter.id] = filter.defaultValue || null;
+                    hasChanges = true;
+                    console.log(`FilterLayout: Setting default value for ${filter.id}:`, filter.defaultValue);
+                }
+            });
+            
+            Object.keys(prevValues).forEach(key => {
+                if (!filters.find(f => f.id === key)) {
+                    delete newValues[key];
+                    hasChanges = true;
+                }
+            });
+            
+            if (hasChanges) {
+                console.log('FilterLayout: Updated values', newValues);
+                return newValues;
+            }
+            
+            return prevValues;
+        });
+        
+        isInitialized.current = true;
+    }, [filters]);
 
     const handleFilterChange = useCallback((id: string, value: FilterValue) => {
         setFilterValues(prev => ({ ...prev, [id]: value }));
