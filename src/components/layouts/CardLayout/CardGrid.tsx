@@ -1,6 +1,6 @@
 import React from "react";
 import CardLayout from "./CardLayout";
-import type { IconName, types } from "@/types";
+import type { types } from "@/types";
 import ui from "@/components/ui";
 import "./CardGrid.scss";
 

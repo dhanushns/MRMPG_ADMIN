@@ -29,11 +29,11 @@ interface FilterValues {
 }
 
 const RoomPage = (): React.ReactElement => {
-    const [roomsData, setRoomsData] = useState<RoomData[]>([]);
+    const [roomsData,] = useState<RoomData[]>([]);
     const [loading, setLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalRooms, setTotalRooms] = useState(0);
+    const [totalPages,] = useState(1);
+    const [totalRooms,] = useState(0);
     const [sortState, setSortState] = useState<{ key: string | null; direction: "asc" | "desc" }>({
         key: null,
         direction: "asc"
@@ -44,7 +44,7 @@ const RoomPage = (): React.ReactElement => {
     });
 
     // Room statistics
-    const [roomStats, setRoomStats] = useState({
+    const [roomStats,] = useState({
         totalRooms: 0,
         occupiedRooms: 0,
         vacantRooms: 0,
@@ -56,32 +56,40 @@ const RoomPage = (): React.ReactElement => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedRoom, setSelectedRoom] = useState<RoomData | null>(null);
- 
 
-    const fetchRoomsData = useCallback(async (page: number, filterParams: FilterValues, sortKey: string | null = null, sortDirection: "asc" | "desc" = "asc") => {
+
+    // const fetchRoomsData = useCallback(async (page: number, filterParams: FilterValues, sortKey: string | null = null, sortDirection: "asc" | "desc" = "asc") => {
+    //     setLoading(true);
+
+    //     // api call
+    //     setTimeout(()=>{
+    //         setLoading(false);
+    //     },2000)
+
+    // }, []);
+
+    const fetchRoomData = useCallback(async () => {
         setLoading(true);
-
         // api call
-        setTimeout(()=>{
+        setTimeout(() => {
             setLoading(false);
-        },2000)
-        
+        }, 2000)
     }, []);
 
     const handleFilterChange = (newFilters: FilterValues) => {
         setFilters(newFilters);
         setCurrentPage(1);
-        fetchRoomsData(1, newFilters, sortState.key, sortState.direction);
+        fetchRoomData();
     };
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
-        fetchRoomsData(page, filters, sortState.key, sortState.direction);
+        fetchRoomData();
     };
 
     const handleSort = (key: string, direction: "asc" | "desc") => {
         setSortState({ key, direction });
-        fetchRoomsData(currentPage, filters, key, direction);
+        fetchRoomData();
     };
 
     // Room action handlers
@@ -110,19 +118,19 @@ const RoomPage = (): React.ReactElement => {
                 alert(`Cannot delete room ${selectedRoom.roomNo}. Please remove all ${selectedRoom.occupied} members first.`);
                 return;
             }
-            
+
             console.log(`Deleting room: ${selectedRoom.roomNo}`);
             // Here you would typically call an API to delete the room
             setIsDeleteModalOpen(false);
             setSelectedRoom(null);
             // Refresh data
-            fetchRoomsData(currentPage, filters, sortState.key, sortState.direction);
+            // fetchRoomsData(currentPage, filters, sortState.key, sortState.direction);
         }
     };
 
     useEffect(() => {
-        fetchRoomsData(currentPage, filters, sortState.key, sortState.direction);
-    }, [currentPage, fetchRoomsData, filters, sortState]);
+        fetchRoomData();
+    }, [currentPage, fetchRoomData, filters, sortState]);
 
     const roomCards = [
         {
@@ -279,20 +287,20 @@ const RoomPage = (): React.ReactElement => {
         <>
             <div className="room-page">
                 <div className="room-page__header">
-                    <layouts.HeaderLayout 
-                        title="Room Management" 
+                    <layouts.HeaderLayout
+                        title="Room Management"
                         subText="Manage and view detailed information of all PG rooms and their occupancy status"
                     />
                 </div>
 
                 <div className="room-page__content">
                     <div className="room-page__cards">
-                        <layouts.CardGrid 
-                            cards={roomCards} 
-                            loading={loading} 
-                            columns={4} 
-                            gap='md' 
-                            className='room-cards' 
+                        <layouts.CardGrid
+                            cards={roomCards}
+                            loading={loading}
+                            columns={4}
+                            gap='md'
+                            className='room-cards'
                         />
                     </div>
 
@@ -398,7 +406,7 @@ const RoomPage = (): React.ReactElement => {
                         setIsEditModalOpen(false);
                         setSelectedRoom(null);
                         // Refresh data
-                        fetchRoomsData(currentPage, filters, sortState.key, sortState.direction);
+                        // fetchRoomsData(currentPage, filters, sortState.key, sortState.direction);
                     }}
                 />
             )}
@@ -456,7 +464,7 @@ const AddEditRoomModal: React.FC<AddEditRoomModalProps> = ({
 
     const handleInputChange = (field: string, value: string | string[]) => {
         setFormData(prev => ({ ...prev, [field]: value }));
-        
+
         // Clear error when user starts typing
         if (formErrors[field as keyof typeof formErrors]) {
             setFormErrors(prev => ({ ...prev, [field]: '' }));
@@ -515,7 +523,7 @@ const AddEditRoomModal: React.FC<AddEditRoomModalProps> = ({
                         <ui.Icons name="close" size={20} />
                     </button>
                 </div>
-                
+
                 <div className="modal-content">
                     <div className="form-grid">
                         <div className="form-group">
