@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./PaymentQuickViewModal.scss";
 import ui from "@/components/ui";
 import type { PaymentQuickViewData } from "@/types/apiResponseTypes";
@@ -24,6 +24,31 @@ const PaymentQuickViewModal: React.FC<PaymentQuickViewModalProps> = ({
 }) => {
     const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
     const [documentViewerOpen, setDocumentViewerOpen] = useState(false);
+
+    // Lock/unlock body scroll when modal is open
+    useEffect(() => {
+        if (isOpen) {
+            // Store the current scroll position
+            const scrollY = window.scrollY;
+            
+            // Apply styles to lock scroll
+            document.body.style.position = 'fixed';
+            document.body.style.top = `-${scrollY}px`;
+            document.body.style.width = '100%';
+            document.body.style.overflow = 'hidden';
+            
+            return () => {
+                // Restore scroll position and unlock
+                document.body.style.position = '';
+                document.body.style.top = '';
+                document.body.style.width = '';
+                document.body.style.overflow = '';
+                
+                // Restore scroll position
+                window.scrollTo(0, scrollY);
+            };
+        }
+    }, [isOpen]);
 
     if (!isOpen || !memberData) return null;
 
@@ -334,7 +359,7 @@ const PaymentQuickViewModal: React.FC<PaymentQuickViewModalProps> = ({
                     </div>
 
                     {/* Action Buttons */}
-                    {memberData.paymentDetails.approvalStatus === 'PENDING' && (
+                    {memberData.paymentDetails.paymentStatus === 'PAID' && memberData.paymentDetails.approvalStatus === 'PENDING' && (
                         <div className="payment-quick-view-modal__actions">
                             <ui.Button
                                 variant="outline"

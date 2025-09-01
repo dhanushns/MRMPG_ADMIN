@@ -1,0 +1,1156 @@
+.member-profile-page {
+    min-height: 100vh;
+    background: var(--gray-50);
+    font-family: var(--font-family-primary);
+
+    // Loading State
+    &--loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .loading-spinner {
+            text-align: center;
+            padding: var(--spacing-2xl);
+            color: var(--gray-500);
+            font-size: var(--font-size-lg);
+
+            &::before {
+                content: '';
+                display: block;
+                width: 2rem;
+                height: 2rem;
+                margin: 0 auto var(--spacing-md);
+                border: 2px solid var(--gray-200);
+                border-top-color: var(--theme-primary);
+                border-radius: var(--border-radius-full);
+                animation: spin 1s linear infinite;
+            }
+        }
+    }
+
+    // Error State
+    &--error {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--spacing-2xl);
+
+        .error-message {
+            text-align: center;
+            max-width: 400px;
+
+            svg {
+                color: var(--danger);
+                margin-bottom: var(--spacing-lg);
+            }
+
+            h2 {
+                color: var(--gray-800);
+                font-size: var(--font-size-2xl);
+                font-weight: var(--font-weight-semibold);
+                margin-bottom: var(--spacing-sm);
+            }
+
+            p {
+                color: var(--gray-500);
+                margin-bottom: var(--spacing-lg);
+            }
+        }
+    }
+}
+
+// Professional Header Section
+.member-profile-header {
+    position: relative;
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-200);
+    overflow: hidden;
+
+    .header-backdrop {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 200px;
+        opacity: 0.4;
+        z-index: 0;
+
+        // Premium bright gradients - vibrant droplet effect
+        &.header-backdrop--LONG_TERM {
+            background: linear-gradient(135deg, #FF1744 0%, #FF4569 20%, #FF6B3D 40%, #FF8F00 60%, #FFB300 80%, #FFD54F 100%);
+        }
+
+        &.header-backdrop--SHORT_TERM {
+            background: linear-gradient(135deg, #1976D2 0%, #3F51B5 20%, #673AB7 40%, #9C27B0 60%, #E91E63 80%, #F06292 100%);
+        }
+    }
+
+    .header-content {
+        position: relative;
+        z-index: 1;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: var(--spacing-lg) var(--spacing-xl);
+
+        @media (max-width: 768px) {
+            padding: var(--spacing-md);
+        }
+    }
+
+    // Navigation Bar
+    .profile-nav {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        margin-bottom: var(--spacing-xl);
+
+        .back-button {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            color: var(--gray-600);
+
+            &:hover {
+                color: var(--theme-primary);
+            }
+        }
+    }
+
+    // Member Header Card
+    .member-header-card {
+        background: var(--white);
+        border-radius: var(--border-radius-xl);
+        box-shadow: var(--shadow-lg);
+        padding: var(--spacing-xl);
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: var(--spacing-xl);
+
+        @media (max-width: 1024px) {
+            flex-direction: column;
+            gap: var(--spacing-lg);
+        }
+
+        @media (max-width: 768px) {
+            padding: var(--spacing-lg);
+        }
+    }
+
+    // Profile Section
+    .profile-section {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--spacing-lg);
+        flex: 1;
+
+        @media (max-width: 640px) {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+
+    .profile-avatar {
+        position: relative;
+        flex-shrink: 0;
+
+        .avatar-image {
+            width: 100px;
+            height: 100px;
+            border-radius: var(--border-radius-2xl);
+            border: 4px solid var(--white);
+            box-shadow: var(--shadow-md);
+            object-fit: cover;
+        }
+
+        .status-indicator {
+            position: absolute;
+            bottom: -4px;
+            right: -4px;
+            background: var(--success);
+            color: var(--white);
+            width: 32px;
+            height: 32px;
+            border-radius: var(--border-radius-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid var(--white);
+            box-shadow: var(--shadow-sm);
+        }
+    }
+
+    .profile-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .member-title {
+        margin-bottom: var(--spacing-md);
+
+        .member-name {
+            font-size: var(--font-size-4xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--gray-800);
+            margin: 0 0 var(--spacing-sm) 0;
+            line-height: var(--line-height-tight);
+
+            @media (max-width: 640px) {
+                font-size: var(--font-size-3xl);
+            }
+        }
+
+        .member-badges {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            flex-wrap: wrap;
+
+            @media (max-width: 640px) {
+                justify-content: center;
+            }
+        }
+    }
+
+    .rent-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: var(--spacing-xs) var(--spacing-md);
+        border-radius: var(--border-radius-lg);
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-semibold);
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+
+        &--long_term {
+            background: var(--primary-lighter);
+            color: var(--primary-color);
+            border: 1px solid var(--primary-light);
+        }
+
+        &--short_term {
+            background: #F8F9FF;
+            color: #4f46e5;
+            border: 1px solid #c084fc;
+        }
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        padding: var(--spacing-xs) var(--spacing-md);
+        border-radius: var(--border-radius-lg);
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-medium);
+
+        &.status-active {
+            background: var(--success-light);
+            color: var(--success);
+            border: 1px solid var(--success-lighter);
+        }
+    }
+
+    .member-meta {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-sm);
+
+        @media (max-width: 640px) {
+            align-items: center;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            color: var(--gray-500);
+            font-size: var(--font-size-base);
+
+            svg {
+                width: 16px;
+                height: 16px;
+                flex-shrink: 0;
+            }
+
+            // Dynamic icon colors based on rent type
+            &.meta-item--LONG_TERM svg {
+                color: var(--primary-color);
+            }
+
+            &.meta-item--SHORT_TERM svg {
+                color: #4f46e5;
+            }
+        }
+    }
+
+    // Quick Stats
+    .quick-stats {
+        display: flex;
+        gap: var(--spacing-lg);
+
+        @media (max-width: 1024px) {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        @media (max-width: 640px) {
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+    }
+
+    .stat-item {
+        text-align: center;
+        min-width: 120px;
+
+        @media (max-width: 640px) {
+            min-width: auto;
+            padding: var(--spacing-md);
+            background: var(--gray-100);
+            border-radius: var(--border-radius-lg);
+        }
+
+        .stat-value {
+            font-size: var(--font-size-2xl);
+            font-weight: var(--font-weight-bold);
+            line-height: var(--line-height-tight);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .stat-label {
+            font-size: var(--font-size-sm);
+            color: var(--gray-500);
+            font-weight: var(--font-weight-medium);
+        }
+
+        &.stat-positive .stat-value {
+            color: var(--success);
+        }
+
+        &.stat-neutral .stat-value {
+            color: var(--gray-800);
+        }
+
+        &.stat-warning .stat-value {
+            color: var(--warning);
+        }
+    }
+}
+
+// Main Dashboard Content
+.profile-dashboard {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--spacing-xl);
+
+    @media (max-width: 768px) {
+        padding: var(--spacing-md);
+    }
+}
+
+.dashboard-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2xl);
+}
+
+// Section Headers
+.section-header {
+    margin-bottom: var(--spacing-xl);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+
+    h2 {
+        font-size: var(--font-size-3xl);
+        font-weight: var(--font-weight-bold);
+        color: var(--gray-800);
+        margin: 0 0 var(--spacing-xs) 0;
+    }
+
+    p {
+        color: var(--gray-500);
+        font-size: var(--font-size-base);
+        margin: 0;
+        max-width: 600px;
+    }
+
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+}
+
+// Overview Section
+.overview-section {
+    .overview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: var(--spacing-xl);
+
+        @media (max-width: 640px) {
+            grid-template-columns: 1fr;
+            gap: var(--spacing-lg);
+        }
+    }
+
+    .overview-card {
+        background: var(--white);
+        border-radius: var(--border-radius-xl);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+        transition: var(--transition-normal);
+
+        &:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--spacing-md);
+            padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-lg);
+            border-bottom: 1px solid var(--gray-100);
+
+            .header-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: var(--border-radius-lg);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+
+                svg {
+                    width: 20px;
+                    height: 20px;
+                }
+
+                // Dynamic background and icon colors based on rent type
+                &.header-icon--LONG_TERM {
+                    background: var(--primary-lighter);
+
+                    svg {
+                        color: var(--primary-color);
+                    }
+                }
+
+                &.header-icon--SHORT_TERM {
+                    background: #F8F9FF;
+
+                    svg {
+                        color: #4f46e5;
+                    }
+                }
+            }
+
+            .header-content {
+                flex: 1;
+
+                h3 {
+                    font-size: var(--font-size-xl);
+                    font-weight: var(--font-weight-semibold);
+                    color: var(--gray-800);
+                    margin: 0 0 var(--spacing-xs) 0;
+                }
+
+                p {
+                    color: var(--gray-500);
+                    font-size: var(--font-size-sm);
+                    margin: 0;
+                }
+            }
+        }
+
+        .card-body {
+            padding: var(--spacing-lg) var(--spacing-xl) var(--spacing-xl);
+        }
+
+        // Personal Card Specific Styles
+        &.personal-card {
+            .details-grid {
+                display: flex;
+                flex-direction: column;
+                gap: var(--spacing-md);
+
+                .detail-row {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: var(--spacing-sm) 0;
+                    border-bottom: 1px solid var(--gray-100);
+
+                    &:last-child {
+                        border-bottom: none;
+                    }
+
+                    .label {
+                        font-weight: var(--font-weight-medium);
+                        color: var(--gray-500);
+                        font-size: var(--font-size-sm);
+                    }
+
+                    .value {
+                        font-weight: var(--font-weight-semibold);
+                        color: var(--gray-800);
+                        text-align: right;
+
+                        &.member-id {
+                            font-family: 'Monaco', 'Menlo', monospace;
+                            background: var(--gray-100);
+                            padding: var(--spacing-xs) var(--spacing-sm);
+                            border-radius: var(--border-radius-md);
+                            font-size: var(--font-size-sm);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Contact Card Specific Styles
+        &.contact-card {
+            .contact-list {
+                display: flex;
+                flex-direction: column;
+                gap: var(--spacing-md);
+
+                .contact-item {
+                    display: flex;
+                    align-items: flex-start;
+                    gap: var(--spacing-md);
+                    padding: 10px;
+                    border-radius: var(--border-radius-lg);
+                    transition: var(--transition-fast);
+
+                    svg {
+                        width: 16px;
+                        height: 16px;
+                        margin-top: 2px;
+                        flex-shrink: 0;
+                    }
+
+                    &.contact-item--LONG_TERM {
+
+                        svg {
+                            color: var(--primary-color);
+                        }
+                    }
+
+                    &.contact-item--SHORT_TERM {
+                        svg {
+                            color: #4f46e5;
+                        }
+                    }
+
+                    .contact-info {
+                        flex: 1;
+                        min-width: 0;
+
+                        .contact-label {
+                            display: block;
+                            font-size: var(--font-size-xs);
+                            font-weight: var(--font-weight-medium);
+                            color: var(--gray-400);
+                            text-transform: uppercase;
+                            letter-spacing: 0.025em;
+                            margin-bottom: var(--spacing-xs);
+                        }
+
+                        .contact-value {
+                            font-weight: var(--font-weight-medium);
+                            color: var(--gray-800);
+                            word-break: break-word;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Accommodation Card Specific Styles
+        &.accommodation-card {
+            .accommodation-info {
+                .accommodation-main {
+                    margin-bottom: var(--spacing-lg);
+
+                    h4 {
+                        font-size: var(--font-size-xl);
+                        font-weight: var(--font-weight-semibold);
+                        color: var(--gray-800);
+                        margin: 0 0 var(--spacing-xs) 0;
+                    }
+
+                    .pg-location {
+                        color: var(--gray-500);
+                        font-size: var(--font-size-base);
+                        margin: 0;
+                        display: flex;
+                        align-items: center;
+                        gap: var(--spacing-xs);
+                    }
+                }
+
+                .accommodation-details {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: var(--spacing-md);
+
+                    @media (max-width: 480px) {
+                        grid-template-columns: 1fr;
+                    }
+
+                    .detail-group {
+                        .detail-label {
+                            display: block;
+                            font-size: var(--font-size-xs);
+                            font-weight: var(--font-weight-medium);
+                            color: var(--gray-400);
+                            text-transform: uppercase;
+                            letter-spacing: 0.025em;
+                            margin-bottom: var(--spacing-xs);
+                        }
+
+                        .detail-value {
+                            font-weight: var(--font-weight-semibold);
+                            color: var(--gray-800);
+
+                            // Dynamic rent amount colors based on rent type
+                            &.rent-amount--LONG_TERM {
+                                color: var(--primary-color);
+                                font-size: var(--font-size-lg);
+                            }
+
+                            &.rent-amount--SHORT_TERM {
+                                color: #4f46e5;
+                                font-size: var(--font-size-lg);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Analytics Section
+.analytics-section {
+    .analytics-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: var(--spacing-xl);
+
+        @media (max-width: 1024px) {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .analytics-card {
+        background: var(--white);
+        border-radius: var(--border-radius-xl);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-lg);
+            border-bottom: 1px solid var(--gray-100);
+
+            h3 {
+                font-size: var(--font-size-xl);
+                font-weight: var(--font-weight-semibold);
+                color: var(--gray-800);
+                margin: 0;
+            }
+
+            .header-badge {
+                display: flex;
+                align-items: center;
+                gap: var(--spacing-xs);
+                padding: var(--spacing-xs) var(--spacing-md);
+                background: var(--success-light);
+                color: var(--success);
+                border-radius: var(--border-radius-lg);
+                font-size: var(--font-size-sm);
+                font-weight: var(--font-weight-medium);
+
+                svg {
+                    width: 16px;
+                    height: 16px;
+                }
+            }
+        }
+
+        // Payment Summary Specific Styles
+        &.payment-summary {
+            .summary-metrics {
+                padding: var(--spacing-xl);
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: var(--spacing-lg);
+
+                @media (max-width: 640px) {
+                    grid-template-columns: 1fr;
+                    padding: var(--spacing-lg);
+                }
+
+                .metric-card {
+                    display: flex;
+                    align-items: center;
+                    gap: var(--spacing-md);
+                    border-radius: var(--border-radius-lg);
+                    transition: var(--transition-fast);
+
+                    .metric-icon {
+                        width: 48px;
+                        height: 48px;
+                        border-radius: var(--border-radius-lg);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        flex-shrink: 0;
+
+                        svg {
+                            width: 24px;
+                            height: 24px;
+                        }
+                    }
+
+                    .metric-info {
+                        flex: 1;
+                        min-width: 0;
+
+                        .metric-value {
+                            font-size: var(--font-size-xl);
+                            font-weight: var(--font-weight-bold);
+                            line-height: var(--line-height-tight);
+                            margin-bottom: var(--spacing-xs);
+                            word-break: break-word;
+                        }
+
+                        .metric-label {
+                            font-size: var(--font-size-sm);
+                            color: var(--gray-500);
+                            font-weight: var(--font-weight-medium);
+                        }
+                    }
+
+                    &.metric-paid {
+                        .metric-icon {
+                            background: var(--success-light);
+                            color: var(--success);
+                        }
+
+                        .metric-value {
+                            color: var(--success);
+                        }
+                    }
+
+                    &.metric-pending {
+                        .metric-icon {
+                            background: var(--warning-light);
+                            color: var(--warning);
+                        }
+
+                        .metric-value {
+                            color: var(--warning);
+                        }
+                    }
+
+                    // Dynamic hover and due metric colors based on rent type
+                    &.metric-card--LONG_TERM {
+
+                        &.metric-due {
+                            .metric-icon {
+                                background: var(--primary-lighter);
+                                color: var(--primary-color);
+                            }
+
+                            .metric-value {
+                                color: var(--gray-800);
+                            }
+                        }
+                    }
+
+                    &.metric-card--SHORT_TERM {
+
+                        &.metric-due {
+                            .metric-icon {
+                                background: #F8F9FF;
+                                color: #4f46e5;
+                            }
+
+                            .metric-value {
+                                color: var(--gray-800);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Documents Card Specific Styles
+        &.documents-card {
+            .documents-list {
+                display: flex;
+                gap:20px;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: center;
+                padding: var(--spacing-xl);
+
+                .document-item {
+                    display: flex;
+                    flex: 1;
+                    align-items: center;
+                    gap: var(--spacing-md);
+                    padding: var(--spacing-md);
+                    border-radius: var(--border-radius-lg);
+                    transition: var(--transition-fast);
+
+                    .document-icon {
+                        width: 40px;
+                        height: 40px;
+                        border-radius: var(--border-radius-lg);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        flex-shrink: 0;
+
+                        svg {
+                            width: 20px;
+                            height: 20px;
+                        }
+                    }
+
+                    .document-info {
+                        flex: 1;
+                        min-width: 0;
+
+                        .document-name {
+                            display: block;
+                            font-weight: var(--font-weight-medium);
+                            color: var(--gray-800);
+                            margin-bottom: var(--spacing-xs);
+                        }
+
+                        .document-status {
+                            font-size: var(--font-size-sm);
+                            font-weight: var(--font-weight-medium);
+
+                            &.verified {
+                                color: var(--success);
+                            }
+                        }
+                    }
+
+                    // Dynamic hover and icon colors based on rent type
+                    &.document-item--LONG_TERM {
+
+                        .document-icon {
+                            background: var(--primary-lighter);
+
+                            svg {
+                                color: var(--primary-color);
+                            }
+                        }
+                    }
+
+                    &.document-item--SHORT_TERM {
+
+                        .document-icon {
+                            background: #F8F9FF;
+
+                            svg {
+                                color: #4f46e5;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Payment History Section
+.history-section {
+    .payment-table-container {
+        background: var(--white);
+        border-radius: var(--border-radius-xl);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+
+        // Enhanced table styling
+        :global(.table-layout) {
+            .table-container {
+                overflow-x: auto;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+
+                th {
+                    background: var(--gray-100);
+                    padding: var(--spacing-md) var(--spacing-lg);
+                    text-align: left;
+                    font-weight: var(--font-weight-semibold);
+                    color: var(--gray-800);
+                    border-bottom: 1px solid var(--gray-200);
+                    font-size: var(--font-size-sm);
+                    white-space: nowrap;
+                }
+
+                td {
+                    padding: var(--spacing-md) var(--spacing-lg);
+                    border-bottom: 1px solid var(--gray-100);
+                    color: var(--gray-800);
+                    font-size: var(--font-size-base);
+
+                    &:last-child {
+                        width: 1%;
+                        white-space: nowrap;
+                    }
+                }
+
+                tr {
+                    transition: var(--transition-fast);
+
+                    &:hover {
+                        background: var(--gray-100);
+                    }
+
+                    &:last-child td {
+                        border-bottom: none;
+                    }
+                }
+            }
+        }
+
+        // Payment status styles
+        .payment-status {
+            display: inline-flex;
+            align-items: center;
+            padding: var(--spacing-xs) var(--spacing-md);
+            border-radius: var(--border-radius-lg);
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-medium);
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+
+            &--paid {
+                background: var(--success-light);
+                color: var(--success);
+                border: 1px solid var(--success-lighter);
+            }
+
+            &--pending {
+                background: var(--warning-light);
+                color: var(--warning);
+                border: 1px solid var(--warning-lighter);
+            }
+
+            &--overdue {
+                background: var(--error-light);
+                color: var(--error);
+                border: 1px solid var(--error-lighter);
+            }
+        }
+
+        .payment-documents {
+            display: flex;
+            gap: var(--spacing-xs);
+            align-items: center;
+        }
+    }
+}
+
+// Admin Section
+.admin-section {
+    .admin-card {
+        background: var(--white);
+        border-radius: var(--border-radius-xl);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+
+        &.danger-zone {
+            border: 1px solid var(--error-lighter);
+
+            .card-header {
+                display: flex;
+                align-items: flex-start;
+                gap: var(--spacing-md);
+                background: var(--error-light);
+                padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-lg);
+                border-bottom: 1px solid var(--error-lighter);
+
+                .header-icon {
+                    width: 48px;
+                    height: 48px;
+                    border-radius: var(--border-radius-lg);
+                    background: var(--error-lighter);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+
+                    &.danger svg {
+                        width: 20px;
+                        height: 20px;
+                        color: var(--error);
+                    }
+                }
+
+                .header-content {
+                    flex: 1;
+
+                    h3 {
+                        font-size: var(--font-size-xl);
+                        font-weight: var(--font-weight-semibold);
+                        color: var(--gray-800);
+                        margin: 0 0 var(--spacing-xs) 0;
+                    }
+
+                    p {
+                        color: var(--gray-500);
+                        font-size: var(--font-size-sm);
+                        margin: 0;
+                    }
+                }
+            }
+
+            .card-body {
+                padding: var(--spacing-xl);
+
+                .danger-action {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                    gap: var(--spacing-xl);
+
+                    @media (max-width: 768px) {
+                        flex-direction: column;
+                        gap: var(--spacing-lg);
+                    }
+
+                    .action-info {
+                        flex: 1;
+
+                        h4 {
+                            font-size: var(--font-size-lg);
+                            font-weight: var(--font-weight-semibold);
+                            color: var(--gray-800);
+                            margin: 0 0 var(--spacing-sm) 0;
+                        }
+
+                        p {
+                            color: var(--gray-500);
+                            line-height: var(--line-height-relaxed);
+                            margin: 0;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Responsive Design Enhancements
+@media (max-width: 1200px) {
+    .overview-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .overview-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .analytics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .quick-stats {
+        flex-direction: column;
+    }
+
+    .member-header-card {
+        padding: var(--spacing-lg);
+    }
+
+    .profile-dashboard {
+        padding: var(--spacing-md);
+    }
+
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-section {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .member-meta {
+        align-items: center;
+    }
+
+    .summary-metrics {
+        grid-template-columns: 1fr;
+    }
+
+    .accommodation-details {
+        grid-template-columns: 1fr;
+    }
+}
+
+// Animations
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+// Utility classes for enhanced styling
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+// Print styles
+@media print {
+    .member-profile-page {
+        background: var(--white) !important;
+        color: var(--black) !important;
+    }
+
+    .admin-section,
+    .payment-documents {
+        display: none !important;
+    }
+
+    .member-header-card {
+        box-shadow: none !important;
+        border: 1px solid var(--gray-300) !important;
+    }
+}

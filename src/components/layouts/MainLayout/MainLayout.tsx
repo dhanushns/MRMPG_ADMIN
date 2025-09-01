@@ -30,9 +30,11 @@ const MainLayout = () => {
     return (
         <>
             <layouts.TopNav selectedTab={getSelectedTab()} />
-            <main>
-                <Outlet />
-            </main>
+            <div className='main-layout'>
+                <main>
+                    <Outlet />
+                </main>
+            </div>
         </>
     )
 }

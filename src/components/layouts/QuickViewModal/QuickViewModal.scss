@@ -13,7 +13,7 @@
   padding: 20px;
   animation: fadeIn 0.3s ease-out;
   overflow-y: auto;
- 
+
   &::before {
     content: '';
     position: absolute;
@@ -27,7 +27,7 @@
 
 // Global styles to ensure dropdowns in quick view modal appear on top
 .quick-view-modal-overlay {
-  
+
   // Any dropdown content within this overlay should have maximum z-index
   .select-dropdown-menu,
   .dropdown-menu,
@@ -56,7 +56,7 @@
   &::-webkit-scrollbar {
     display: none;
   }
-  
+
   // Global rule to ensure all select dropdowns appear on top
   .select-dropdown,
   .select-dropdown-content,
@@ -111,6 +111,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -121,6 +122,7 @@
     transform: translateY(30px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -134,12 +136,12 @@
   color: white;
 
   // Dynamic background based on member type
-  &.header-banner--long-term {
-    background: linear-gradient(135deg, var(--primary-color, #667eea) 20%, #d8bbbc 100%);
+  &.header-banner--LONG_TERM {
+    background: linear-gradient(135deg, var(--primary-color, #FF4B52) 0%, #FF6B6B 25%, #FF8E53 50%, #FFA726 75%, #FFB74D 100%);
   }
 
-  &.header-banner--short-term {
-    background: linear-gradient(135deg, #3b82f6 20%, #b9c1d9 100%);
+  &.header-banner--SHORT_TERM {
+    background: linear-gradient(135deg, #3b82f6 0%, #4f46e5 30%, #7c3aed 60%, #a855f7 90%, #c084fc 100%);
   }
 
 
@@ -150,7 +152,7 @@
     right: -30%;
     width: 120%;
     height: 100%;
-    background: radial-gradient(ellipse, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 50%, transparent 70%);
+    background: radial-gradient(ellipse, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 50%, transparent 70%);
     pointer-events: none;
     z-index: 1;
   }
@@ -292,7 +294,8 @@
         text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
       }
 
-      .member-id, .member-room {
+      .member-id,
+      .member-room {
         font-size: 14px;
         opacity: 0.95;
         margin: 2px 0;
@@ -300,6 +303,40 @@
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
       }
     }
+
+    .banner-actions {
+      border: none;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      align-self: flex-end;
+      
+      button{
+        color: white;
+      }
+
+      button:hover{
+        color: white;
+      }
+
+      &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.05);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      svg {
+        color: white;
+      }
+    }
+
   }
 }
 
@@ -324,7 +361,7 @@
   &:has(.approval-form) {
     overflow: visible;
     z-index: 10;
-    
+
     // Ensure any dropdown content appears above everything else
     .select-wrapper.select-wrapper--open {
       z-index: 1000;
@@ -347,11 +384,11 @@
     }
 
     // Dynamic icon colors based on member type
-    &.section-title--long-term svg {
+    &.section-title--LONG_TERM svg {
       color: var(--primary-color, #667eea);
     }
 
-    &.section-title--short-term svg {
+    &.section-title--SHORT_TERM svg {
       color: #3b82f6;
     }
   }
@@ -383,11 +420,11 @@
     }
 
     // Dynamic left border colors based on member type
-    &.info-item--long-term {
+    &.info-item--LONG_TERM {
       border-left-color: var(--primary-color, #667eea);
     }
 
-    &.info-item--short-term {
+    &.info-item--SHORT_TERM {
       border-left-color: #3b82f6;
     }
   }
@@ -478,7 +515,7 @@
       gap: 6px;
       color: var(--primary-color, #667eea);
       font-weight: 500;
-      
+
       &:hover {
         color: #4f46e5;
         text-decoration: underline;
@@ -486,11 +523,11 @@
     }
 
     // Dynamic left border colors for documents based on member type
-    &.document-item--long-term {
+    &.document-item--LONG_TERM {
       border-left-color: var(--primary-color, #667eea);
     }
 
-    &.document-item--short-term {
+    &.document-item--SHORT_TERM {
       border-left-color: #3b82f6;
     }
   }
@@ -510,7 +547,7 @@
 .approval-form {
   position: relative;
   z-index: 1;
-  
+
   .form-grid {
     display: grid;
     gap: 16px;
@@ -518,37 +555,39 @@
     z-index: 1;
   }
 
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      position: relative;
-      z-index: 1;
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+    z-index: 1;
 
-      // Highest z-index for PG Location select (first form group)
-      &:has(#pgLocation) {
-        z-index: 200;
-      }
+    // Highest z-index for PG Location select (first form group)
+    &:has(#pgLocation) {
+      z-index: 200;
+    }
 
-      // High z-index for room number select
-      &:has(#roomNo) {
-        z-index: 150;
-      }
+    // High z-index for room number select
+    &:has(#roomNo) {
+      z-index: 150;
+    }
 
-      // Medium z-index for rent amount input (third form group)
-      &:nth-child(3) {
-        z-index: 100;
-      }
+    // Medium z-index for rent amount input (third form group)
+    &:nth-child(3) {
+      z-index: 100;
+    }
 
-      // Lower z-index for advance amount input (fourth form group)
-      &:nth-child(4) {
-        z-index: 50;
-      }
+    // Lower z-index for advance amount input (fourth form group)
+    &:nth-child(4) {
+      z-index: 50;
+    }
 
-      // Lowest z-index for date of joining input (fifth form group)
-      &:nth-child(5) {
-        z-index: 25;
-      }    .form-input {
+    // Lowest z-index for date of joining input (fifth form group)
+    &:nth-child(5) {
+      z-index: 25;
+    }
+
+    .form-input {
       transition: all 0.2s ease;
 
       &:focus-within {
@@ -556,14 +595,14 @@
       }
 
       // Dynamic focus colors based on member type
-      &.form-input--long-term {
+      &.form-input--LONG_TERM {
         &:focus-within {
           border-color: var(--primary-color, #667eea);
           box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
       }
 
-      &.form-input--short-term {
+      &.form-input--SHORT_TERM {
         &:focus-within {
           border-color: #3b82f6;
           box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
@@ -590,7 +629,7 @@
 
     // DateInput specific styling
     .date-input-wrapper {
-      &.form-input--long-term {
+      &.form-input--LONG_TERM {
         .date-input {
           &:focus {
             border-color: var(--primary-color, #667eea);
@@ -599,7 +638,7 @@
         }
       }
 
-      &.form-input--short-term {
+      &.form-input--SHORT_TERM {
         .date-input {
           &:focus {
             border-color: #3b82f6;
@@ -657,7 +696,7 @@
   }
 
 
-  &.approval-form--long-term {
+  &.approval-form--LONG_TERM {
     .form-group label {
       color: #1f2937;
 
@@ -667,7 +706,7 @@
     }
   }
 
-  &.approval-form--short-term {
+  &.approval-form--SHORT_TERM {
     .form-group label {
       color: #1f2937;
 
@@ -679,7 +718,7 @@
 }
 
 // Footer Layout
-.quick-view-footer { 
+.quick-view-footer {
   padding: 20px 24px;
   border-top: 1px solid #e5e7eb;
   background: #f9fafb;
@@ -734,24 +773,24 @@
   }
 }
 
-.approve-user-actions{
+.approve-user-actions {
   display: flex;
   align-items: center;
   justify-content: space-around;
-  
+
   .approve-user-btn {
     transition: all 0.2s ease;
-    
+
     &:disabled {
       opacity: 0.7;
       cursor: not-allowed;
       transform: none;
     }
-    
+
     // Loading state styling
     &:has(.animate-spin) {
       pointer-events: none;
-      
+
       .animate-spin {
         animation: spin 1s linear infinite;
       }
@@ -806,7 +845,8 @@
         margin-bottom: 6px;
       }
 
-      .member-id, .member-room {
+      .member-id,
+      .member-room {
         font-size: 13px;
       }
     }
@@ -830,7 +870,8 @@
       align-items: flex-start;
       gap: 4px;
 
-      .info-label, .info-value {
+      .info-label,
+      .info-value {
         font-size: 13px;
       }
     }
@@ -914,7 +955,8 @@
     }
   }
 
-  .status-badge, .approval-badge {
+  .status-badge,
+  .approval-badge {
     font-size: 10px;
     padding: 3px 8px;
     min-width: 60px;

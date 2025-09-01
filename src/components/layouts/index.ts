@@ -7,6 +7,7 @@ import MainLayout from "./MainLayout/MainLayout";
 import CardLayout, { CardGrid } from "./CardLayout";
 import QuickViewModal from "./QuickViewModal";
 import PaymentQuickViewModal from "./PaymentQuickViewModal";
+import { RoomModal } from "./RoomModal";
 
 const layouts = {
     AuthLayout,
@@ -18,7 +19,8 @@ const layouts = {
     CardLayout,
     CardGrid,
     QuickViewModal,
-    PaymentQuickViewModal
+    PaymentQuickViewModal,
+    RoomModal
 }
 
 export default layouts;

@@ -173,7 +173,10 @@ export type IconName =
   | "xCircle"
   | "alertTriangle"
   | "loader"
-  | "userCheck";
+  | "userCheck"
+  | "hash"
+  | "shield"
+  | "building"
 
 interface IconProps {
   name: IconName;

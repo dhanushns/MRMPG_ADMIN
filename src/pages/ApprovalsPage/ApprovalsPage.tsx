@@ -71,7 +71,7 @@ const ApprovalsPage = () => {
 
     // filter items
     const [filterItems, setFilterItems] = useState<types["FilterItemProps"][]>([]);
-    
+
     // Current filter values
     const [currentFilters, setCurrentFilters] = useState<ApprovalFilterParams>({
         page: 1,
@@ -187,17 +187,22 @@ const ApprovalsPage = () => {
                         width: "15%"
                     },
                     {
-                        key: "rent",
+                        key: "rentAmount",
                         label: "Rent",
                         sortable: true,
                         width: "12%",
                         align: "center" as const,
                         render: (value: unknown) => (
-                            <span className="amount">₹{(value as number).toLocaleString()}</span>
+                            <div className='currency-value'>
+                                <span className='currency-symbol'>
+                                    <ui.Icons name="indianRupee" size={14} />
+                                </span>
+                                <span className='currency-amount'>{value as string}</span>
+                            </div>
                         )
                     },
                     {
-                        key: "currentMonthPaymentStatus",
+                        key: "requestedMonthPaymentStatus",
                         label: "Payment",
                         sortable: false,
                         width: "10%",
@@ -209,7 +214,7 @@ const ApprovalsPage = () => {
                         )
                     },
                     {
-                        key: "currentMonthApprovalStatus",
+                        key: "requestedMonthApprovalStatus",
                         label: "Approval",
                         sortable: false,
                         width: "9%",
@@ -276,7 +281,7 @@ const ApprovalsPage = () => {
     // Build query parameters for approval filters
     const buildApprovalQueryParams = (filterParams: ApprovalFilterParams): string => {
         const params = new URLSearchParams();
-        
+
         // Add pagination
         if (filterParams.page) {
             params.append('page', filterParams.page.toString());
@@ -317,7 +322,6 @@ const ApprovalsPage = () => {
         try {
             const queryString = buildApprovalQueryParams(filterParams);
             const apiResponse = await ApiClient.get(`/approval/payments?${queryString}`) as PaymentApprovalResponse;
-            console.log(apiResponse);
             if (apiResponse && apiResponse.success) {
                 setPaymentTableData(apiResponse.data.tableData);
                 setCurrentPage(apiResponse.data.pagination.page);
@@ -436,9 +440,9 @@ const ApprovalsPage = () => {
             page: 1,
             limit: 10
         };
-        
+
         setCurrentFilters(resetFilters);
-        
+
         // Reload data with reset filters
         fetchPaymentsData(resetFilters);
         fetchApprovalStats(resetFilters);
@@ -474,7 +478,7 @@ const ApprovalsPage = () => {
             email: memberData.email,
             phone: memberData.phone,
             roomNo: '',
-            memberType: memberData.rentType === 'LONG_TERM' ? 'long-term' : 'short-term',
+            rentType: memberData.rentType,
             profileImage: memberData.photoUrl,
             paymentStatus: 'PENDING',
             paymentApprovalStatus: 'PENDING',
@@ -518,23 +522,23 @@ const ApprovalsPage = () => {
             pgLocation: memberData.pgLocation,
             pgName: memberData.pgName,
             roomNo: memberData.roomNo,
-            rent: memberData.rent,
+            rent: memberData.rentAmount,
             advanceAmount: memberData.advanceAmount,
             dateOfJoining: memberData.dateOfJoining,
             paymentDetails: {
-                id: memberData.currentMonthPayment.id,
-                paymentStatus: memberData.currentMonthPaymentStatus,
-                approvalStatus: memberData.currentMonthApprovalStatus,
-                amount: memberData.currentMonthPayment.amount,
-                month: memberData.currentMonthPayment.month,
-                year: memberData.currentMonthPayment.year,
-                dueDate: memberData.currentMonthPayment.dueDate,
-                overdueDate: memberData.currentMonthPayment.overdueDate,
-                paidDate: memberData.currentMonthPayment.paidDate,
-                rentBillScreenshot: memberData.currentMonthPayment.rentBillScreenshot,
-                electricityBillScreenshot: memberData.currentMonthPayment.electricityBillScreenshot,
-                attemptNumber: memberData.currentMonthPayment.attemptNumber,
-                createdAt: memberData.currentMonthPayment.createdAt
+                id: memberData.requestedMonthPayment?.id,
+                paymentStatus: memberData.requestedMonthPayment?.paymentStatus,
+                approvalStatus: memberData.requestedMonthPayment?.approvalStatus,
+                amount: memberData.requestedMonthPayment?.amount,
+                month: memberData.requestedMonthPayment?.month,
+                year: memberData.requestedMonthPayment?.year,
+                dueDate: memberData.requestedMonthPayment?.dueDate,
+                overdueDate: memberData.requestedMonthPayment?.overdueDate,
+                paidDate: memberData.requestedMonthPayment?.paidDate,
+                rentBillScreenshot: memberData.requestedMonthPayment?.rentBillScreenshot,
+                electricityBillScreenshot: memberData.requestedMonthPayment?.electricityBillScreenshot,
+                attemptNumber: memberData.requestedMonthPayment?.attemptNumber,
+                createdAt: memberData.requestedMonthPayment?.createdAt
             },
             documents: [
                 { name: 'Profile Photo', url: memberData.photoUrl },
@@ -608,7 +612,7 @@ const ApprovalsPage = () => {
         setApproveLoading(true);
         try {
             const approveForm = {
-                status: 'APPROVED'
+                approvalStatus: 'APPROVED'
             };
 
             const apiResponse = await ApiClient.put(`/approval/payments/${paymentId}`, approveForm) as BaseApiResponse;
@@ -696,7 +700,7 @@ const ApprovalsPage = () => {
                             onPageChange: handlePageChange
                         }}
                         showRefresh
-                        onRefresh={()=> activeTab === 'pending_registration' ? fetchPendingRegistrationsData() : fetchPaymentsData(currentFilters)}
+                        onRefresh={() => activeTab === 'pending_registration' ? fetchPendingRegistrationsData() : fetchPaymentsData(currentFilters)}
                         onRowClick={activeTab === 'pending_payment' ? (row) => handlePaymentQuickView(row as PaymentApprovalData) : undefined}
                         className={activeTab === 'pending_payment' ? 'table--clickable' : ''}
                     />

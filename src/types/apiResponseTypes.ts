@@ -10,6 +10,9 @@ export interface BaseApiResponse {
 
 // Login related types
 type PgType = "MENS" | "WOMENS";
+type PaymentStatusTypes = "PENDING" | "PAID" | "REJECTED" | "OVERDUE";
+type ApprovalStatusTypes = "PENDING" | "APPROVED" | "REJECTED";
+type RentType = "LONG_TERM" | "SHORT_TERM";
 
 export type PaginatedResponse<T> = BaseApiResponse & {
   data: T[];
@@ -51,28 +54,27 @@ export interface RoomInfo {
   capacity: number;
 }
 
-export interface PaymentStatus {
-  status: "PENDING" | "APPROVED" | "REJECTED";
-  month: string;
-  paymentDetails: Record<string, unknown> | null;
-}
-
 export interface Payment {
   id: string;
-  memberId: string;
-  member: MemberData;
-  pgId: string;
-  pg: Pg;
-  month: Date;
+  memberId?: string;
+  member?: MemberData;
+  pgId?: string;
+  pg?: Pg;
+  month: number;
   year: number;
   amount: number;
-  rentBillScreenshot: string;
-  electricityBillScreenshot: string;
-  paidDate: Date;
+  rentBillScreenshot?: string;
+  electricityBillScreenshot?: string;
+  paidDate?: string;
+  dueDate: string;
+  overdueDate?: string;
   attemptNumber: number;
-  status: "PENDING" | "APPROVED" | "REJECTED" | "OVERDUE";
-  approvedBy: string | null;
-  approvedAt: Date | null;
+  paymentStatus: PaymentStatusTypes;
+  approvalStatus: ApprovalStatusTypes;
+  approvedBy?: string;
+  approvedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Pg {
@@ -80,9 +82,9 @@ export interface Pg {
   name: string;
   type: PgType;
   location: string;
-  rooms: RoomInfo[];
-  members: MemberData[];
-  payment: Payment[];
+  rooms?: RoomInfo[];
+  members?: MemberData[];
+  payment?: Payment[];
 }
 
 export interface MemberData {
@@ -97,16 +99,33 @@ export interface MemberData {
   work: string;
   photoUrl: string;
   aadharUrl: string;
-  rentType: "LONG_TERM" | "SHORT_TERM";
+  rentType: RentType;
   advanceAmount: number;
   pgId: string;
   roomId: string;
   dateOfJoining: string;
   createdAt: string;
   updatedAt: string;
+  pgDetails: {
+    id: string;
+    name: string;
+    type: PgType;
+    location: string;
+  };
+  roomDetails: {
+    id: string;
+    roomNo: string;
+    rent: number;
+    capacity: number;
+  };
   room: RoomInfo;
   pg: Pg;
-  payments: Payment[];
+  payments?: Payment[];
+  tenure?: {
+    days: number;
+    months: number;
+    years: number;
+  }
 }
 
 export interface PendingRegistrationData {
@@ -121,7 +140,7 @@ export interface PendingRegistrationData {
   location: string;
   work: string;
   pgLocation: string;
-  rentType: string;
+  rentType: RentType;
   photoUrl: string;
   aadharUrl: string;
   pgType: PgType;
@@ -129,16 +148,16 @@ export interface PendingRegistrationData {
 
 export interface PaymentApprovalData extends MemberData {
   [key: string]: unknown;
-  rent: number;
+  rentAmount: number;
   pgLocation: string;
   pgName: string;
   roomNo: string;
-  currentMonthPaymentStatus: "PAID" | "PENDING" | "REJECTED" | "APPROVED" | "OVERDUE";
-  currentMonthApprovalStatus: "APPROVED" | "PENDING" | "REJECTED";
-  currentMonthPayment: {
+  requestedMonthPaymentStatus: PaymentStatusTypes;
+  requestedMonthApprovalStatus: ApprovalStatusTypes;
+  requestedMonthPayment: {
     id: string;
-    paymentStatus: "PAID" | "PENDING" | "REJECTED" | "APPROVED" | "OVERDUE";
-    approvalStatus: "APPROVED" | "PENDING" | "REJECTED";
+    paymentStatus: PaymentStatusTypes;
+    approvalStatus: ApprovalStatusTypes;
     amount: number;
     month: number;
     year: number;
@@ -150,7 +169,7 @@ export interface PaymentApprovalData extends MemberData {
     attemptNumber: number;
     createdAt: string;
   };
-  hasCurrentMonthPayment: boolean;
+  hasRequestedMonthPayment: boolean;
 }
 
 export type ApprovalMembersResponse = PaginatedResponse<PendingRegistrationData>;
@@ -166,10 +185,11 @@ export interface PaymentApprovalResponse extends BaseApiResponse {
 export interface TableMemberData extends MemberData {
   [key: string]: unknown;
   pgLocation: string;
+  pgName: string;
   roomNo: string;
-  rent: number;
-  paymentStatus: "PAID" | "PENDING" | "OVERDUE";
-  approvalStatus: "PENDING" | "APPROVED" | "REJECTED";
+  paymentStatus: PaymentStatusTypes;
+  rentAmount: number;
+  currentMonthPayment: Payment;
 }
 
 // Members API Response
@@ -245,12 +265,12 @@ export interface QuickViewMemberData {
   memberId?: string;
   name: string;
   roomNo: string;
-  memberType: "long-term" | "short-term";
+  rentType: RentType;
   profileImage?: string;
   phone?: string;
   email?: string;
-  paymentStatus: "PAID" | "PENDING" | "OVERDUE";
-  paymentApprovalStatus?: "PENDING" | "APPROVED" | "REJECTED";
+  paymentStatus: PaymentStatusTypes
+  paymentApprovalStatus?: ApprovalStatusTypes;
   documents?: { name: string; url: string; }[];
   age?: number;
   work?: string;
@@ -283,8 +303,8 @@ export interface PaymentQuickViewData {
   dateOfJoining: string;
   paymentDetails: {
     id: string;
-    paymentStatus: "PAID" | "PENDING" | "REJECTED" | "APPROVED" | "OVERDUE";
-    approvalStatus: "APPROVED" | "PENDING" | "REJECTED";
+    paymentStatus: PaymentStatusTypes;
+    approvalStatus: ApprovalStatusTypes;
     amount: number;
     month: number;
     year: number;
@@ -299,3 +319,79 @@ export interface PaymentQuickViewData {
   documents?: { name: string; url: string; }[];
 }
 
+export interface PaymentHistory extends Payment {
+  [key: string]: unknown;
+}
+
+export interface MemberProfileData {
+  member: MemberData
+  paymentHistory: {
+    data: PaymentHistory[]
+    pagination: Pagination
+  },
+  paymentSummary: {
+    totalPayments: number;
+    pendingPayments: number;
+    overduePayments: number;
+    totalAmountPaid: number;
+    totalAmountPending: number;
+    totalAmountOverdue: number;
+    lastPaymentDate: string | null;
+    nextDueDate: string | null;
+  }
+}
+
+export interface MemberProfileDataReponse extends BaseApiResponse {
+  data: MemberProfileData
+}
+
+
+export interface RoomsFilterResponse extends BaseApiResponse {
+  data: {
+    filters: types["FilterItemProps"][];
+    totalPGs: number;
+  };
+}
+
+export interface RoomsStatsResponse extends BaseApiResponse {
+  data: {
+    cards?: CardItem[];
+    lastUpdated: Date;
+  };
+}
+
+export interface RoomData {
+  [key: string]: unknown;
+  id: string;
+  roomNo: string;
+  occupied: number;
+  status: string;
+  statusValue: string;
+  rentAmount: number;
+  capacity: number;
+  currentOccupancy: number;
+  availableSlots: number;
+  isFullyOccupied: boolean;
+  members: [
+    {
+      id: string;
+      memberId: string;
+      name: string;
+      gender: "MALE" | "FEMALE";
+      rentType: RentType;
+    }
+  ]
+}
+
+export interface RoomsApiResponse extends BaseApiResponse {
+  data: {
+    rooms: RoomData[];
+    pgDetails: {
+      id: string;
+      name: string;
+      type: PgType;
+      location: string;
+    }
+    pagination: Pagination
+  };
+}

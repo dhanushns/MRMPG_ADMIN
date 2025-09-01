@@ -32,12 +32,6 @@ const FilterLayout = ({
     useEffect(() => {
         if (filters.length === 0) return;
         
-        console.log('FilterLayout: useEffect triggered', {
-            filtersLength: filters.length,
-            currentFilterValues: filterValues,
-            filters: filters.map(f => ({ id: f.id, defaultValue: f.defaultValue }))
-        });
-        
         setFilterValues(prevValues => {
             const newValues: Record<string, FilterValue> = { ...prevValues };
             let hasChanges = false;
@@ -49,7 +43,6 @@ const FilterLayout = ({
                      && filter.defaultValue !== undefined && filter.defaultValue !== null)) {
                     newValues[filter.id] = filter.defaultValue || null;
                     hasChanges = true;
-                    console.log(`FilterLayout: Setting default value for ${filter.id}:`, filter.defaultValue);
                 }
             });
             
@@ -61,7 +54,6 @@ const FilterLayout = ({
             });
             
             if (hasChanges) {
-                console.log('FilterLayout: Updated values', newValues);
                 return newValues;
             }
             
