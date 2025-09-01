@@ -310,9 +310,17 @@ const DashboardPage: React.FC = () => {
             sortable: true,
             width: "10%",
             align: "center" as const,
+            render: (value: unknown) => (
+                <div className='currency-value'>
+                    <span className='currency-symbol'>
+                        <ui.Icons name="indianRupee" size={14} />
+                    </span>
+                    <span className='currency-amount'>{value as string}</span>
+                </div>
+            )
         },
         {
-            key: "rent",
+            key: "rentAmount",
             label: "Rent",
             sortable: true,
             width: "10%",
@@ -327,7 +335,7 @@ const DashboardPage: React.FC = () => {
             )
         },
         {
-            key: "status",
+            key: "paymentStatus",
             label: "Status",
             sortable: false,
             width: "10%",
@@ -418,17 +426,17 @@ const DashboardPage: React.FC = () => {
                         memberId: selectedMember.memberId,
                         name: selectedMember.name,
                         roomNo: selectedMember.roomNo,
-                        memberType: selectedMember.rentType === 'LONG_TERM' ? "long-term" : "short-term",
+                        rentType: selectedMember.rentType,
                         profileImage: selectedMember.photoUrl,
                         phone: selectedMember.phone,
                         email: selectedMember.email,
                         paymentStatus: selectedMember.paymentStatus,
-                        paymentApprovalStatus: selectedMember.approvalStatus,
+                        paymentApprovalStatus: selectedMember.currentMonthPayment?.approvalStatus || "PENDING",
                         age: selectedMember.age,
                         work: selectedMember.work,
                         location: selectedMember.location,
                         advanceAmount: selectedMember.advanceAmount,
-                        rent: selectedMember.rent,
+                        rent: selectedMember.rentAmount,
                         joinedOn: new Date(selectedMember.dateOfJoining).toLocaleDateString('en-IN'),
                         documents: [{
                             name: 'Aadhar Card',

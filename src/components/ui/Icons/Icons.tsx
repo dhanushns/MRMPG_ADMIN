@@ -86,7 +86,10 @@ import {
   XCircleIcon,
   AlertTriangleIcon,
   Loader2,
-  UserCheck
+  UserCheck,
+  Building,
+  Hash,
+  Shield
 } from "lucide-react";
 import type { types } from "@/types";
 
@@ -206,7 +209,10 @@ const iconMap = {
   
   // Loading
   loader: Loader2,
-  userCheck: UserCheck
+  userCheck: UserCheck,
+  building: Building,
+  shield: Shield,
+  hash: Hash
 
 } as const;
 

@@ -105,11 +105,11 @@ const TopNav = ({ selectedTab }: TopNavProps): React.ReactElement => {
             ]
         },
         {
-            id: "review",
+            id: "enquiry",
             layout: "entity",
-            label: "Review",
-            path: "/review",
-            class: "review-nav"
+            label: "Enquiry",
+            path: "/enquiry",
+            class: "enquiry-nav"
 
         },
         {

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./QuickViewModal.scss";
 import ui from "@/components/ui";
 import type { QuickViewMemberData } from "@/types/apiResponseTypes";
@@ -84,6 +85,9 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
 
     // To handle the notification
     const notification = useNotification();
+
+    // Navigation hook
+    const navigate = useNavigate();
 
     // Reset form when modal opens/closes
     useEffect(() => {
@@ -277,12 +281,12 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                 )}
                 
                 {/* Combined Header and Banner Layout */}
-                <div className={`quick-view-header-banner header-banner--${memberData.memberType}`}>
+                <div className={`quick-view-header-banner header-banner--${memberData.rentType}`}>
                     {/* Header Section */}
                     <div className="header-content">
                         <div className="member-type-badge">
                             <span className="type-badge">
-                                {memberData.memberType === 'long-term' ? 'Long-Term Member' : 'Short-Term Member'}
+                                {memberData.rentType === 'LONG_TERM' ? 'Long-Term Member' : 'Short-Term Member'}
                             </span>
                         </div>
                         <button 
@@ -320,23 +324,34 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                             <p className="member-id">ID: {memberData.memberId ? memberData.memberId : 'N/A'}</p>
                             <p className="member-room">Room: {memberData.roomNo ? memberData.roomNo : 'N/A'}</p>
                         </div>
+                        <div className="banner-actions">
+                            <ui.Button
+                                variant="transparent"
+                                size="small"
+                                onClick={() => navigate(`/members/${memberData.id}`)}
+                                className="view-profile-btn"
+                                leftIcon={<ui.Icons name="user" size={16} />}
+                            >
+                                View Profile
+                            </ui.Button>
+                        </div>
                     </div>
                 </div>
 
                 {/* Info Layout */}
-                <div className={`quick-view-content content--${memberData.memberType}`}>
+                <div className={`quick-view-content content--${memberData.rentType}`}>
                     {/* Contact Info */}
                     <div className="info-section">
-                        <h3 className={`section-title section-title--${memberData.memberType}`}>
+                        <h3 className={`section-title section-title--${memberData.rentType}`}>
                             <ui.Icons name="phone" size={16} />
                             Contact Information
                         </h3>
                         <div className="info-grid">
-                            <div className={`info-item info-item--${memberData.memberType}`}>
+                            <div className={`info-item info-item--${memberData.rentType}`}>
                                 <span className="info-label">Phone Number:</span>
                                 <span className="info-value">{memberData.phone || 'Not provided'}</span>
                             </div>
-                            <div className={`info-item info-item--${memberData.memberType}`}>
+                            <div className={`info-item info-item--${memberData.rentType}`}>
                                 <span className="info-label">Email ID:</span>
                                 <span className="info-value">{memberData.email || 'Not provided'}</span>
                             </div>
@@ -346,18 +361,18 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                     {/* Payment Info */}
                     {modelLayouts.paymentInfo && (
                         <div className="info-section">
-                            <h3 className={`section-title section-title--${memberData.memberType}`}>
+                            <h3 className={`section-title section-title--${memberData.rentType}`}>
                                 <ui.Icons name="creditCard" size={16} />
                                 Payment Information
                             </h3>
                             <div className="info-grid">
-                                <div className={`info-item info-item--${memberData.memberType}`}>
+                                <div className={`info-item info-item--${memberData.rentType}`}>
                                     <span className="info-label">Payment Status:</span>
                                     <span className={`status-badge status-badge--${memberData.paymentStatus.toLowerCase()}`}>
                                         {memberData.paymentStatus}
                                     </span>
                                 </div>
-                                <div className={`info-item info-item--${memberData.memberType}`}>
+                                <div className={`info-item info-item--${memberData.rentType}`}>
                                     <span className="info-label">Approval Status:</span>
                                     <span className={`approval-badge approval-badge--${memberData.paymentApprovalStatus?.toLowerCase() || 'pending'}`}>
                                         {memberData.paymentApprovalStatus || 'Pending'}
@@ -369,14 +384,14 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
 
                     {/* Documents */}
                     <div className="info-section">
-                        <h3 className={`section-title section-title--${memberData.memberType}`}>
+                        <h3 className={`section-title section-title--${memberData.rentType}`}>
                             <ui.Icons name="fileText" size={16} />
                             Documents
                         </h3>
                         <div className="documents-list">
                             {memberData.documents && memberData.documents.length > 0 ? (
                                 memberData.documents.map((document, index) => (
-                                    <div key={index} className={`document-item document-item--${memberData.memberType}`}>
+                                    <div key={index} className={`document-item document-item--${memberData.rentType}`}>
                                         <span className="document-name">{document.name}</span>
                                         <ui.Button
                                             variant="transparent"
@@ -398,11 +413,11 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                     {/* Approval Form */}
                     {modelLayouts.approvalForm && (
                         <div className="info-section">
-                            <h3 className={`section-title section-title--${memberData.memberType}`}>
+                            <h3 className={`section-title section-title--${memberData.rentType}`}>
                                 <ui.Icons name="edit" size={16} />
                                 Approval Details
                             </h3>
-                            <div className={`approval-form approval-form--${memberData.memberType}`}>
+                            <div className={`approval-form approval-form--${memberData.rentType}`}>
                                 <div className="form-grid">
 
                                     <div className="form-group">
@@ -415,7 +430,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                                             defaultValue={formData.pgLocation}
                                             onChange={(value) => handleFormChange('pgLocation', value)}
                                             placeholder="Select PG location"
-                                            className={`form-input form-input--${memberData.memberType}`}
+                                            className={`form-input form-input--${memberData.rentType}`}
                                             options={[
                                                 { value: '', label: 'Select PG location' },
                                                 { value: 'Chennai', label: 'Chennai' },
@@ -437,7 +452,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                                             value={formData.roomNo}
                                             onChange={(value) => handleFormChange('roomNo', value)}
                                             placeholder={roomsLoading ? "Loading rooms..." : !formData.pgLocation ? "Select PG location first" : "Select room number"}
-                                            className={`form-input form-input--${memberData.memberType}`}
+                                            className={`form-input form-input--${memberData.rentType}`}
                                             disabled={roomsLoading || !formData.pgLocation || roomData.length === 0}
                                             options={[
                                                 { value: '', label: roomsLoading ? 'Loading rooms...' : !formData.pgLocation ? 'Select PG location first' : 'Select room number' },
@@ -461,7 +476,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                                             onChange={(e) => handleFormChange('rentAmount', e.target.value)}
                                             placeholder="Enter rent amount"
                                             error={formErrors.rentAmount}
-                                            className={`form-input form-input--${memberData.memberType}`}
+                                            className={`form-input form-input--${memberData.rentType}`}
                                             readOnly={!!formData.roomNo && roomData.some(room => room.roomNo.toString() === formData.roomNo)}
                                         />
                                         {formData.roomNo && roomData.some(room => room.roomNo.toString() === formData.roomNo) && (
@@ -479,7 +494,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                                             value={formData.advanceAmount}
                                             onChange={(e) => handleFormChange('advanceAmount', e.target.value)}
                                             placeholder="Enter advance amount (optional)"
-                                            className={`form-input form-input--${memberData.memberType}`}
+                                            className={`form-input form-input--${memberData.rentType}`}
                                         />
                                     </div>
 
@@ -489,7 +504,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                                             id="dateOfJoining"
                                             value={formData.dateOfJoining}
                                             onChange={(value) => handleFormChange('dateOfJoining', value)}
-                                            className={`form-input form-input--${memberData.memberType}`}
+                                            className={`form-input form-input--${memberData.rentType}`}
                                         />
                                     </div>
                                 </div>
