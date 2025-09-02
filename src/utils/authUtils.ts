@@ -210,44 +210,6 @@ export class AuthManager {
     return {};
   }
 
-  // Refresh token if needed (implement based on your API)
-  static async refreshTokenIfNeeded(): Promise<boolean> {
-    const timeUntilExpiry = this.getTimeUntilExpiry();
-    const refreshThreshold = 30 * 60 * 1000; // 30 minutes in milliseconds
-    
-    if (timeUntilExpiry < refreshThreshold && timeUntilExpiry > 0) {
-      console.log(`Token expires in ${this.getFormattedTimeUntilExpiry()}, attempting refresh...`);
-      
-      try {
-        // Implement your token refresh logic here
-        // Example:
-        // const token = this.getToken();
-        // const response = await fetch('/api/auth/refresh', {
-        //   method: 'POST',
-        //   headers: { Authorization: `Bearer ${token}` }
-        // });
-        // const result = await response.json();
-        // if (result.success) {
-        //   this.setAuthData({
-        //     token: result.data.token,
-        //     staff: this.getStaffData(),
-        //     expiresIn: result.data.expiresIn
-        //   });
-        //   return true;
-        // }
-        
-        console.warn('Token refresh not implemented, please implement refresh logic');
-        return true;
-      } catch (error) {
-        console.error('Token refresh failed:', error);
-        this.clearAuthData();
-        return false;
-      }
-    }
-    
-    return this.isTokenValid();
-  }
-
   // Get authentication status with detailed info
   static getAuthStatus(): {
     isAuthenticated: boolean;

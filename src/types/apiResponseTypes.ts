@@ -395,3 +395,145 @@ export interface RoomsApiResponse extends BaseApiResponse {
     pagination: Pagination
   };
 }
+
+export interface EnquiryData {
+  [key: string]: unknown;
+  id: string;
+  name: string;
+  phone: string;
+  message: string;
+  status: "NOT_RESOLVED" | "RESOLVED";
+  resolvedBy: string | null;
+  resolvedAt: Date | null;
+  resolver: {
+    id: string;
+    name: string;
+    email: string;
+    pgType: string;
+  } | null;
+}
+
+export interface EnquiryDataResponse extends BaseApiResponse {
+  data: {
+    enquiries: EnquiryData[];
+    pagination: Pagination;
+  };
+}
+
+export interface EnquiryStatsResponse extends BaseApiResponse {
+  data: {
+    cards?: CardItem[];
+    lastUpdated: Date;
+  };
+}
+
+export interface EnquiryFiltersResponse extends BaseApiResponse {
+  data: {
+    filters: types["FilterItemProps"][];
+  };
+}
+
+// Reports apiResponse
+
+export interface ReportsPageCardsResponse extends BaseApiResponse {
+  data: {
+    cards: CardItem[];
+    weekRange: {
+      start: Date;
+      end: Date;
+    };
+    lastUpdated: Date;
+  };
+}
+
+export interface ReportsMemberData {
+  [key: string]: unknown;
+  memberId: string;
+  memberName: string;
+  memberAge: number;
+  memberGender: "MALE" | "FEMALE";
+  memberLocation: string;
+  memberWork: string;
+  rentType: RentType;
+  advanceAmount: number;
+  pgName: string;
+  pgLocation: string;
+  roomNo: string;
+  roomRent: number;
+  daysSinceJoining: number;
+  memberStatus: string;
+  isNewThisWeek: boolean;
+  totalPaymentsMade: number;
+  pendingPaymentsCount: number;
+  overduePaymentsCount: number;
+  lastPaymentDate: string;
+  lastPaymentAmount: number;
+  lastPaymentStatus: ApprovalStatusTypes;
+  joinedDate: string;
+}
+
+export interface ReportsPagePaymentData {
+  [key: string]: unknown;
+  memberId: string;
+  memberName: string;
+  memberEmail: string;
+  memberPhone: string;
+  pgName: string;
+  pgLocation: string;
+  roomNo: string;
+  joinedDate: string;
+  currentWeekPayments: number;
+  currentWeekTotal: number;
+  previousWeekPayments: number;
+  previousWeekTotal: number;
+  paymentTrend: "up" | "down";
+  paymentTrendAmount: number;
+  paymentTrendPercentage: number;
+  totalApprovedAmount: number;
+  totalApprovedCount: number;
+  totalPendingAmount: number;
+  totalPendingCount: number;
+  totalOverdueAmount: number;
+  totalOverdueCount: number;
+}
+
+export interface ReportsPageRoomData {
+  [key: string]: unknown;
+  roomId: string;
+  roomNo: string;
+  rent: number;
+  capacity: number;
+  pgName: string;
+  pgLocation: string;
+  currentOccupants: number;
+  occupancyRate: number;
+  roomStatus: string;
+  isAvailable: boolean;
+  membersCount: number;
+  weeklyRevenue: number;
+  pendingPayments: number;
+  overduePayments: number;
+  potentialMonthlyRevenue: number;
+  actualUtilization: number;
+}
+
+export interface ReportsPageTableDataResponse<T> extends BaseApiResponse {
+  data: {
+    tableData: T[];
+    weekRange: {
+      start: Date;
+      end: Date;
+    };
+    pagination: Pagination;
+  };
+}
+
+export interface ReportsPageMemberData extends ReportsPageTableDataResponse<ReportsMemberData> { }
+export interface ReportsPagePaymentDataResponse extends ReportsPageTableDataResponse<ReportsPagePaymentData> { }
+export interface ReportsPageRoomDataResponse extends ReportsPageTableDataResponse<ReportsPageRoomData> { }
+
+export interface ReportsPageFilterResponse extends BaseApiResponse {
+  data: {
+    filters: types["FilterItemProps"][];
+  };
+}

@@ -239,7 +239,7 @@ const ApprovalsPage = () => {
         switch (activeTab) {
             case "pending_registration":
                 fetchPendingRegistrationsData();
-                fetchApprovalStats();
+                handleRefreshStats();
                 break;
             case "pending_payment":
                 fetchPaymentsData();
@@ -670,7 +670,6 @@ const ApprovalsPage = () => {
                         <layouts.FilterLayout
                             filters={filterItems}
                             loading={filterItemsLoading}
-                            className="approvals-page__filters"
                             columns={4}
                             showApplyButton
                             showResetButton
@@ -683,7 +682,7 @@ const ApprovalsPage = () => {
                         cards={approvalCards ? getTabCards() : [{ icon: "clock" }, { icon: "clock" }, { icon: "clock" }, { icon: "clock" }]}
                         columns={4} gap="md"
                         loading={fetchingStats}
-                        showRefresh
+                        showRefresh={activeTab === 'pending_registration'}
                         onRefresh={handleRefreshStats}
                         lastUpdated={lastUpdated ? (activeTab === 'pending_registration' ? lastUpdated.registration : lastUpdated.payment) : undefined}
                         className="approvals-page__card-grid" />

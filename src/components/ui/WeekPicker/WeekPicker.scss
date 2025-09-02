@@ -1,0 +1,624 @@
+.week-picker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  width: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  // Label styles
+  &__label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.125rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  &__required {
+    color: #ef4444;
+    font-weight: 400;
+  }
+
+  // Input wrapper
+  &__input-wrapper {
+    position: relative;
+    width: 100%;
+  }
+
+  // Input container - modern button-like design
+  &__input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 2.75rem;
+    padding: 0 0.75rem;
+    background: #ffffff;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+
+    &:hover {
+      border-color: #d1d5db;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  &__input-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__input-icon {
+    color: #6b7280;
+    flex-shrink: 0;
+  }
+
+  &__input-text {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__placeholder {
+    color: #9ca3af;
+    font-weight: 400;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  &__clear-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: none;
+    background: #f3f4f6;
+    color: #6b7280;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: #e5e7eb;
+      color: #374151;
+    }
+  }
+
+  &__chevron {
+    color: #6b7280;
+    transition: transform 0.2s ease;
+  }
+
+  // Dropdown styles
+  &__dropdown {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 1rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    animation: fadeInScale 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  // Header section
+  &__dropdown-header {
+    padding: 1.25rem 1.5rem 1rem;
+    border-bottom: 1px solid #f3f4f6;
+    background: linear-gradient(to bottom, #f9fafb, #ffffff);
+  }
+
+  &__month-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  &__nav-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: none;
+    background: #f3f4f6;
+    color: #6b7280;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: #e5e7eb;
+      color: #374151;
+      transform: scale(1.05);
+    }
+  }
+
+  &__month-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+    letter-spacing: -0.025em;
+  }
+
+  &__today-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: #ffffff;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+    }
+  }
+
+  // Calendar container
+  &__calendar-container {
+    padding: 1rem 1.5rem;
+  }
+
+  &__weekdays {
+    display: grid;
+    grid-template-columns: 2.5rem repeat(7, 1fr);
+    gap: 0.25rem;
+    margin-bottom: 0.75rem;
+    padding: 0 0.25rem;
+  }
+
+  &__weekday {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 2rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+
+    &.week-picker__week-col {
+      color: #9ca3af;
+      font-size: 0.6875rem;
+    }
+  }
+
+  &__weeks-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  // Week row styles
+  &__week-row {
+    display: grid;
+    grid-template-columns: 2.5rem repeat(7, 1fr);
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    position: relative;
+
+    &:hover:not(&--disabled) {
+      background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    &--selected {
+      background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+      box-shadow: 0 0 0 2px #3b82f6, 0 4px 12px rgba(59, 130, 246, 0.2);
+      transform: translateY(-1px);
+    }
+
+    &--current {
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      box-shadow: 0 0 0 2px #f59e0b;
+    }
+
+    &--disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      filter: grayscale(0.5);
+    }
+  }
+
+  &__week-number-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__week-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: #6b7280;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+  }
+
+  &__day-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 1.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #374151;
+    border-radius: 0.25rem;
+    transition: all 0.1s ease;
+
+    &--other-month {
+      color: #d1d5db;
+    }
+
+    &--today {
+      background: #ef4444;
+      color: #ffffff;
+      font-weight: 700;
+      box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+    }
+  }
+
+  // Footer
+  &__footer {
+    padding: 0.75rem 1.5rem;
+    background: #f9fafb;
+    border-top: 1px solid #f3f4f6;
+  }
+
+  &__footer-text {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 500;
+  }
+
+  // Error message
+  &__error-message {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-top: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    background: #fef2f2;
+    color: #dc2626;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    border: 1px solid #fecaca;
+  }
+
+  // Size variants
+  &--small {
+    .week-picker__input-container {
+      min-height: 2.25rem;
+      padding: 0 0.625rem;
+    }
+
+    .week-picker__input-text {
+      font-size: 0.75rem;
+    }
+
+    .week-picker__dropdown-header {
+      padding: 1rem 1.25rem 0.75rem;
+    }
+
+    .week-picker__calendar-container {
+      padding: 0.75rem 1.25rem;
+    }
+  }
+
+  &--large {
+    .week-picker__input-container {
+      min-height: 3.25rem;
+      padding: 0 1rem;
+    }
+
+    .week-picker__input-text {
+      font-size: 1rem;
+    }
+
+    .week-picker__month-title {
+      font-size: 1.25rem;
+    }
+  }
+
+  // State styles
+  &--open {
+    .week-picker__input-container {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .week-picker__chevron {
+      transform: rotate(180deg);
+    }
+  }
+
+  &--disabled {
+    .week-picker__input-container {
+      background: #f9fafb;
+      border-color: #e5e7eb;
+      cursor: not-allowed;
+    }
+
+    .week-picker__input-text,
+    .week-picker__input-icon {
+      color: #9ca3af;
+    }
+
+    .week-picker__label {
+      color: #9ca3af;
+    }
+  }
+
+  &--error {
+    .week-picker__input-container {
+      border-color: #ef4444;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+  }
+
+  // Variant styles
+  &--filled {
+    .week-picker__input-container {
+      background: #f9fafb;
+      border-color: #e5e7eb;
+
+      &:hover {
+        background: #ffffff;
+      }
+    }
+  }
+}
+
+// Animations
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+// Mobile responsive styles
+@media (max-width: 768px) {
+  .week-picker {
+    &__dropdown {
+      position: fixed;
+      top: 50%;
+      left: 1rem;
+      right: 1rem;
+      transform: translateY(-50%);
+      max-height: 85vh;
+      overflow-y: auto;
+      border-radius: 1.25rem;
+    }
+
+    &__dropdown-header {
+      padding: 1rem 1.25rem 0.75rem;
+    }
+
+    &__month-title {
+      font-size: 1rem;
+    }
+
+    &__nav-btn {
+      width: 2rem;
+      height: 2rem;
+    }
+
+    &__calendar-container {
+      padding: 0.75rem 1.25rem;
+    }
+
+    &__weekdays {
+      grid-template-columns: 2rem repeat(7, 1fr);
+      gap: 0.125rem;
+    }
+
+    &__week-row {
+      grid-template-columns: 2rem repeat(7, 1fr);
+      gap: 0.125rem;
+    }
+
+    &__week-num {
+      width: 1.5rem;
+      height: 1.5rem;
+      font-size: 0.625rem;
+    }
+
+    &__day-cell {
+      height: 1.5rem;
+      font-size: 0.6875rem;
+    }
+
+    &__footer {
+      padding: 0.625rem 1.25rem;
+    }
+
+    &__today-btn {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.75rem;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .week-picker {
+    &__dropdown {
+      left: 0.75rem;
+      right: 0.75rem;
+      border-radius: 1rem;
+    }
+
+    &__input-container {
+      min-height: 2.5rem;
+      padding: 0 0.625rem;
+    }
+
+    &__input-text {
+      font-size: 0.8125rem;
+    }
+
+    &__weekdays {
+      grid-template-columns: 1.75rem repeat(7, 1fr);
+      font-size: 0.625rem;
+    }
+
+    &__week-row {
+      grid-template-columns: 1.75rem repeat(7, 1fr);
+    }
+
+    &__week-num {
+      width: 1.25rem;
+      height: 1.25rem;
+      font-size: 0.5625rem;
+    }
+
+    &__day-cell {
+      height: 1.25rem;
+      font-size: 0.625rem;
+    }
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .week-picker {
+    &__label {
+      color: #e5e7eb;
+    }
+
+    &__input-container {
+      background: #1f2937;
+      border-color: #374151;
+      color: #e5e7eb;
+
+      &:hover {
+        border-color: #4b5563;
+      }
+    }
+
+    &__input-text {
+      color: #e5e7eb;
+    }
+
+    &__placeholder {
+      color: #9ca3af;
+    }
+
+    &__dropdown {
+      background: #1f2937;
+      border-color: #374151;
+    }
+
+    &__dropdown-header {
+      background: linear-gradient(to bottom, #374151, #1f2937);
+      border-color: #4b5563;
+    }
+
+    &__month-title {
+      color: #e5e7eb;
+    }
+
+    &__nav-btn {
+      background: #374151;
+      color: #9ca3af;
+
+      &:hover {
+        background: #4b5563;
+        color: #e5e7eb;
+      }
+    }
+
+    &__weekday {
+      color: #9ca3af;
+    }
+
+    &__week-row {
+      &:hover:not(&--disabled) {
+        background: linear-gradient(135deg, #1e3a8a, #1e40af);
+      }
+
+      &--selected {
+        background: linear-gradient(135deg, #1e40af, #1d4ed8);
+      }
+
+      &--current {
+        background: linear-gradient(135deg, #92400e, #b45309);
+      }
+    }
+
+    &__week-num {
+      background: #374151;
+      border-color: #4b5563;
+      color: #9ca3af;
+    }
+
+    &__day-cell {
+      color: #d1d5db;
+
+      &--other-month {
+        color: #6b7280;
+      }
+    }
+
+    &__footer {
+      background: #374151;
+      border-color: #4b5563;
+    }
+
+    &__footer-text {
+      color: #9ca3af;
+    }
+
+    &__error-message {
+      background: #1f2937;
+      border-color: #dc2626;
+      color: #fca5a5;
+    }
+  }
+}

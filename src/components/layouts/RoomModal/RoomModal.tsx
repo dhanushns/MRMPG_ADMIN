@@ -53,6 +53,7 @@ const RoomModal: React.FC<RoomModalProps> = ({
 
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(false);
+    const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
 
     // Initialize form data
     useEffect(() => {
@@ -74,6 +75,7 @@ const RoomModal: React.FC<RoomModalProps> = ({
             }
             setFormErrors({ roomNo: '', capacity: '', rent: '', pgLocation: '' });
             setShowDeleteConfirmation(false);
+            setDeleteConfirmationText('');
         }
     }, [isOpen, isEdit, roomData]);
 
@@ -157,7 +159,7 @@ const RoomModal: React.FC<RoomModalProps> = ({
     };
 
     const handleDelete = async () => {
-        if (roomData && roomData.id) {
+        if (roomData && roomData.id && deleteConfirmationText === roomData.roomNo) {
             setDeleteLoading(true);
             try {
                 await onDelete(roomData.id);
@@ -166,16 +168,23 @@ const RoomModal: React.FC<RoomModalProps> = ({
             } finally {
                 setDeleteLoading(false);
                 setShowDeleteConfirmation(false);
+                setDeleteConfirmationText('');
             }
         }
     };
+
+    const handleDeleteConfirmationChange = (value: string) => {
+        setDeleteConfirmationText(value);
+    };
+
+    const isDeleteConfirmed = deleteConfirmationText === roomData?.roomNo;
 
     // Get PG location options from filters
     const pgLocationOptions = filterItems.length > 1 ? filterItems[1].options || [] : [];
 
     if (!isOpen) return null;
 
-    const isDeleteDisabled = roomData?.currentOccupancy && roomData.currentOccupancy > 0;
+    const isDeleteDisabled = (roomData?.currentOccupancy ?? 0) > 0;
 
     return (
         <div className="modal-overlay" onClick={() => !loading && !deleteLoading && onClose()}>
@@ -455,14 +464,29 @@ const RoomModal: React.FC<RoomModalProps> = ({
                                             </ui.Button>
                                         ) : (
                                             <div className="delete-confirmation">
-                                                <p className="confirmation-text">
-                                                    Type <strong>{roomData.roomNo}</strong> to confirm deletion:
-                                                </p>
+                                                <div className="confirmation-prompt">
+                                                    <p className="confirmation-text">
+                                                        To confirm deletion, type <strong>{roomData.roomNo}</strong> in the field below:
+                                                    </p>
+                                                    <div className="confirmation-input">
+                                                        <ui.Input
+                                                            type="text"
+                                                            value={deleteConfirmationText}
+                                                            onChange={(e) => handleDeleteConfirmationChange(e.target.value)}
+                                                            placeholder={`Type "${roomData.roomNo}" to confirm`}
+                                                            disabled={deleteLoading}
+                                                            className="delete-confirmation-field"
+                                                        />
+                                                    </div>
+                                                </div>
                                                 <div className="confirmation-actions">
                                                     <ui.Button
                                                         variant="secondary"
                                                         size="small"
-                                                        onClick={() => setShowDeleteConfirmation(false)}
+                                                        onClick={() => {
+                                                            setShowDeleteConfirmation(false);
+                                                            setDeleteConfirmationText('');
+                                                        }}
                                                         disabled={deleteLoading}
                                                     >
                                                         Cancel
@@ -471,7 +495,7 @@ const RoomModal: React.FC<RoomModalProps> = ({
                                                         variant="danger"
                                                         size="small"
                                                         onClick={handleDelete}
-                                                        disabled={deleteLoading}
+                                                        disabled={!isDeleteConfirmed || deleteLoading}
                                                         loading={deleteLoading}
                                                     >
                                                         {deleteLoading ? 'Deleting...' : 'Confirm Delete'}

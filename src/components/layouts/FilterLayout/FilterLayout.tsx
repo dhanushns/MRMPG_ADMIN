@@ -20,7 +20,8 @@ const FilterLayout = ({
     collapsible = false,
     defaultCollapsed = false,
     downloadReport = false,
-    loading = false
+    loading = false,
+    onDownloadReport
 }: types["FilterLayoutProps"]): React.ReactElement => {
     const isInitialized = useRef(false);
     
@@ -452,6 +453,7 @@ const FilterLayout = ({
                         className="filter-button filter-button__download-report" 
                         rightIcon={<ui.Icons name="download" />}
                         disabled={loading}
+                        onClick={onDownloadReport}
                     >
                         Download Report
                     </ui.Button>

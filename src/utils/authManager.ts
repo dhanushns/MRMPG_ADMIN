@@ -74,6 +74,16 @@ export class ApiClient {
     return response.json();
   }
 
+  // PATCH request
+  static async patch(endpoint: string, data: unknown): Promise<unknown> {
+    const response = await this.makeAuthenticatedRequest(endpoint, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+
+    return response.json();
+  }
+
   // DELETE request
   static async delete(endpoint: string): Promise<unknown> {
     const response = await this.makeAuthenticatedRequest(endpoint, {

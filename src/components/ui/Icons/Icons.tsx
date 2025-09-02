@@ -89,7 +89,11 @@ import {
   UserCheck,
   Building,
   Hash,
-  Shield
+  Shield,
+  MessageCircle,
+  XIcon,
+  Target
+
 } from "lucide-react";
 import type { types } from "@/types";
 
@@ -212,7 +216,10 @@ const iconMap = {
   userCheck: UserCheck,
   building: Building,
   shield: Shield,
-  hash: Hash
+  hash: Hash,
+  messageCircle: MessageCircle,
+  x: XIcon,
+  target: Target
 
 } as const;
 

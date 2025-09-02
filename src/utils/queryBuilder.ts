@@ -190,3 +190,29 @@ export const buildReportsQueryParams = (
 
     return buildQueryParams(params, limit);
 };
+
+export interface EnquiryFilterParams extends BaseFilterParams {
+    status?: string;
+    resolvedBy?: string;
+}
+
+export const buildEnquiryQueryParams = (
+    page: number,
+    filterParams: Omit<EnquiryFilterParams, 'page' | 'limit'>,
+    sortKey?: string | null,
+    sortDirection: 'asc' | 'desc' = 'asc',
+    limit: number = 10
+): string => {
+    const params: EnquiryFilterParams = {
+        page,
+        limit,
+        ...filterParams,
+    };
+
+    if (sortKey) {
+        params.sortBy = sortKey;
+        params.sortOrder = sortDirection;
+    }
+
+    return buildQueryParams(params, limit);
+};

@@ -248,12 +248,12 @@ const DashboardPage: React.FC = () => {
     // Initial data loading - only runs once when component mounts
     useEffect(() => {
         if (AuthManager.isAuthenticated() && isInitialLoad.current) {
-            fetchDashboardCards();
+            refreshDashboardCards();
             fetchFilterOptions();
             fetchMembersData(1, filters, null, "asc");
             isInitialLoad.current = false;
         }
-    }, [fetchDashboardCards, fetchFilterOptions, fetchMembersData, filters]);
+    }, [refreshDashboardCards, fetchFilterOptions, fetchMembersData, filters]);
 
     // QuickView Modal Handlers
     const handleRowClick = (row: TableMemberData) => {

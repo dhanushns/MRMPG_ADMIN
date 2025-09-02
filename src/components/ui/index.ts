@@ -13,6 +13,8 @@ import Tabs from "./Tabs";
 import AuthenticatedImage from "./AuthenticatedImage";
 import DocumentViewer from "./DocumentViewer";
 import Notification from "./Notification";
+import WeekPicker from "./WeekPicker";
+import MonthPicker from "./MonthPicker";
 
 const ui = {
     Label,
@@ -29,7 +31,9 @@ const ui = {
     Tabs,
     AuthenticatedImage,
     DocumentViewer,
-    Notification
+    Notification,
+    WeekPicker,
+    MonthPicker
 }
 
 export default ui;

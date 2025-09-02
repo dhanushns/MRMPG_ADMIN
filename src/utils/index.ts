@@ -5,14 +5,16 @@ export {
     buildDashboardQueryParams,
     buildMembersQueryParams,
     buildRoomsQueryParams,
-    buildReportsQueryParams
+    buildReportsQueryParams,
+    buildEnquiryQueryParams
 } from "./queryBuilder";
 export type { 
     BaseFilterParams,
     DashboardFilterParams,
     MembersFilterParams,
     RoomsFilterParams,
-    ReportsFilterParams
+    ReportsFilterParams,
+    EnquiryFilterParams
 } from "./queryBuilder";
 export { 
     getImage, 

@@ -243,18 +243,6 @@
                 }
             }
         }
-
-        .section-content {
-            padding-left: 30px;
-
-            @media (max-width: 768px) {
-                padding-left: 0;
-            }
-
-            @media (max-width: 480px) {
-                padding-left: 0;
-            }
-        }
     }
 
     // Info grid
@@ -941,8 +929,9 @@
             .warning-content {
                 display: flex;
                 justify-content: space-between;
+                flex-direction: column;
                 align-items: flex-start;
-                gap: 20px;
+                gap: 10px;
 
                 @media (max-width: 768px) {
                     flex-direction: column;
@@ -1048,46 +1037,92 @@
                     flex-shrink: 0;
                     display: flex;
                     flex-direction: column;
-                    gap: 12px;
+                    gap: 16px;
+                    min-width: 300px;
 
                     @media (max-width: 768px) {
                         width: 100%;
+                        min-width: auto;
+                        gap: 14px;
                     }
 
                     @media (max-width: 480px) {
-                        gap: 10px;
+                        gap: 12px;
                     }
 
-                    .confirmation-text {
-                        font-size: 14px;
-                        color: #7f1d1d;
-                        margin: 0;
-
-                        @media (max-width: 768px) {
-                            font-size: 13px;
-                        }
+                    .confirmation-prompt {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 12px;
 
                         @media (max-width: 480px) {
-                            font-size: 12px;
+                            gap: 10px;
                         }
 
-                        strong {
-                            color: #991b1b;
-                            font-weight: 700;
+                        .confirmation-text {
+                            font-size: 14px;
+                            color: #7f1d1d;
+                            margin: 0;
+                            line-height: 1.4;
+
+                            @media (max-width: 768px) {
+                                font-size: 13px;
+                            }
+
+                            @media (max-width: 480px) {
+                                font-size: 12px;
+                            }
+
+                            strong {
+                                color: #991b1b;
+                                font-weight: 700;
+                                padding: 2px 4px;
+                                background: rgba(185, 28, 28, 0.1);
+                                border-radius: 4px;
+                                font-family: monospace;
+                            }
+                        }
+
+                        .confirmation-input {
+                            .delete-confirmation-field {
+                                border: 2px solid #fca5a5 !important;
+                                background: white;
+                                font-family: monospace;
+                                font-weight: 600;
+                                text-align: center;
+
+                                &:focus {
+                                    border-color: #dc2626 !important;
+                                    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+                                }
+
+                                &::placeholder {
+                                    font-family: inherit;
+                                    font-weight: normal;
+                                    text-align: center;
+                                    color: #9ca3af;
+                                }
+                            }
                         }
                     }
 
                     .confirmation-actions {
                         display: flex;
-                        gap: 8px;
+                        gap: 10px;
+                        justify-content: flex-end;
 
                         @media (max-width: 768px) {
-                            flex-direction: column;
-                            gap: 6px;
+                            flex-direction: column-reverse;
+                            gap: 8px;
+
+                            .ui-button {
+                                width: 100%;
+                                justify-content: center;
+                            }
                         }
 
                         @media (max-width: 480px) {
-                            gap: 4px;
+                            gap: 6px;
                         }
                     }
                 }

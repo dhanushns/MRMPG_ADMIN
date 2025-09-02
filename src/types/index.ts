@@ -81,6 +81,7 @@ interface FilterLayoutProps {
   collapsible?: boolean;
   defaultCollapsed?: boolean;
   downloadReport?: boolean;
+  onDownloadReport?: () => void;
   loading?: boolean;
 }
 
@@ -177,6 +178,8 @@ export type IconName =
   | "hash"
   | "shield"
   | "building"
+  | "x"
+  | "target"
 
 interface IconProps {
   name: IconName;
