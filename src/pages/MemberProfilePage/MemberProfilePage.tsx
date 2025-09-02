@@ -1,33 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-    User,
-    Phone,
-    Mail,
-    MapPin,
-    Trash2,
-    Eye,
-    Calendar,
-    AlertTriangle,
-    ArrowLeft,
-    Clock,
-    Building,
-    FileText,
-    Download,
-    Filter,
-    CheckCircle,
-    TrendingUp,
-    Home,
-    UserCheck,
-    Shield
-} from 'lucide-react';
-
-// Components
-import AuthenticatedImage from '../../components/ui/AuthenticatedImage';
-import DocumentViewer from '../../components/ui/DocumentViewer';
-import { TableLayout } from '../../components/layouts/TableLayout';
-import { Button } from '../../components/ui/Button';
-import { useNotification } from '../../hooks/useNotification';
+import ui from '@/components/ui';
+import layouts from '@/components/layouts';
+import { useNotification } from '@/hooks/useNotification';
 
 // Types
 import type { MemberProfileData, MemberProfileDataReponse, Payment } from '../../types/apiResponseTypes';
@@ -45,7 +20,7 @@ const MemberProfilePage: React.FC = () => {
     // State
     const [memberData, setMemberData] = useState<MemberProfileData | null>(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [error,] = useState<string | null>(null);
     const [documentViewer, setDocumentViewer] = useState<{
         isOpen: boolean;
         imageUrl: string;
@@ -108,25 +83,25 @@ const MemberProfilePage: React.FC = () => {
                 return (
                     <div className="payment-documents">
                         {payment.rentBillScreenshot && (
-                            <Button
+                            <ui.Button
                                 variant="ghost"
                                 size="small"
                                 onClick={() => payment.rentBillScreenshot && handleDocumentView(payment.rentBillScreenshot, 'Rent Bill')}
-                                leftIcon={<Eye size={16} />}
+                                leftIcon={<ui.Icons name="eye" size={16} />}
                             >
-                               
+
                                 Rent Bill
-                            </Button>
+                            </ui.Button>
                         )}
                         {payment.electricityBillScreenshot && (
-                            <Button
+                            <ui.Button
                                 variant="ghost"
                                 size="small"
                                 onClick={() => payment.electricityBillScreenshot && handleDocumentView(payment.electricityBillScreenshot, 'Electricity Bill')}
-                                leftIcon={<Eye size={16} />}
+                                leftIcon={<ui.Icons name="eye" size={16} />}
                             >
                                 Electricity Bill
-                            </Button>
+                            </ui.Button>
                         )}
                     </div>
                 );
@@ -210,13 +185,13 @@ const MemberProfilePage: React.FC = () => {
         return (
             <div className="member-profile-page member-profile-page--error">
                 <div className="error-message">
-                    <AlertTriangle size={48} />
+                    <ui.Icons name="alertTriangle" size={48} />
                     <h2>Error Loading Profile</h2>
                     <p>{error || 'Member not found'}</p>
-                    <Button onClick={() => navigate('/members')}>
-                        <ArrowLeft size={16} />
+                    <ui.Button onClick={() => navigate('/members')}>
+                        <ui.Icons name="arrowLeft" size={16} />
                         Back to Members
-                    </Button>
+                    </ui.Button>
                 </div>
             </div>
         );
@@ -233,22 +208,22 @@ const MemberProfilePage: React.FC = () => {
                 <div className="header-content">
                     {/* Navigation Bar */}
                     <div className="profile-nav">
-                        <Button
+                        <ui.Button
                             variant="transparent"
                             size="small"
                             className="back-button"
                             onClick={() => navigate('/members')}
-                            leftIcon={<ArrowLeft size={16} />}
+                            leftIcon={<ui.Icons name="arrowLeft" size={16} />}
                         >
                             <span>Back to Members</span>
-                        </Button>
+                        </ui.Button>
                     </div>
 
                     {/* Member Header Card */}
                     <div className="member-header-card">
                         <div className="profile-section">
                             <div className="profile-avatar">
-                                <AuthenticatedImage
+                                <ui.AuthenticatedImage
                                     src={memberData.member.photoUrl}
                                     alt={memberData.member.name}
                                     className="avatar-image"
@@ -267,15 +242,15 @@ const MemberProfilePage: React.FC = () => {
 
                                 <div className="member-meta">
                                     <div className={`meta-item meta-item--${rentTypeClass}`}>
-                                        <Building size={16} />
+                                        <ui.Icons name="building" size={16} />
                                         <span>{memberData.member.pgDetails.name}</span>
                                     </div>
                                     <div className={`meta-item meta-item--${rentTypeClass}`}>
-                                        <Home size={16} />
+                                        <ui.Icons name="home" size={16} />
                                         <span>Room {memberData.member.roomDetails.roomNo}</span>
                                     </div>
                                     <div className={`meta-item meta-item--${rentTypeClass}`}>
-                                        <Calendar size={16} />
+                                        <ui.Icons name="calendar" size={16} />
                                         <span>Joined {formatDate(memberData.member.dateOfJoining)}</span>
                                     </div>
                                 </div>
@@ -315,7 +290,7 @@ const MemberProfilePage: React.FC = () => {
                             <div className="overview-card personal-card">
                                 <div className="card-header">
                                     <div className={`header-icon header-icon--${rentTypeClass}`}>
-                                        <User size={20} />
+                                        <ui.Icons name="user" size={20} />
                                     </div>
                                     <div className="header-content">
                                         <h3>Personal Information</h3>
@@ -352,7 +327,7 @@ const MemberProfilePage: React.FC = () => {
                             <div className="overview-card contact-card">
                                 <div className="card-header">
                                     <div className={`header-icon header-icon--${rentTypeClass}`}>
-                                        <Phone size={20} />
+                                        <ui.Icons name="phone" size={20} />
                                     </div>
                                     <div className="header-content">
                                         <h3>Contact Information</h3>
@@ -362,21 +337,21 @@ const MemberProfilePage: React.FC = () => {
                                 <div className="card-body">
                                     <div className="contact-list">
                                         <div className={`contact-item contact-item--${rentTypeClass}`}>
-                                            <Mail size={16} />
+                                            <ui.Icons name="mail" size={16} />
                                             <div className="contact-info">
                                                 <span className="contact-label">Email</span>
                                                 <span className="contact-value">{memberData.member.email}</span>
                                             </div>
                                         </div>
                                         <div className={`contact-item contact-item--${rentTypeClass}`}>
-                                            <Phone size={16} />
+                                            <ui.Icons name="phone" size={16} />
                                             <div className="contact-info">
                                                 <span className="contact-label">Phone</span>
                                                 <span className="contact-value">{memberData.member.phone}</span>
                                             </div>
                                         </div>
                                         <div className={`contact-item contact-item--${rentTypeClass}`}>
-                                            <MapPin size={16} />
+                                            <ui.Icons name="location" size={16} />
                                             <div className="contact-info">
                                                 <span className="contact-label">Location</span>
                                                 <span className="contact-value">{memberData.member.location}</span>
@@ -390,7 +365,7 @@ const MemberProfilePage: React.FC = () => {
                             <div className="overview-card accommodation-card">
                                 <div className="card-header">
                                     <div className={`header-icon header-icon--${rentTypeClass}`}>
-                                        <Building size={20} />
+                                        <ui.Icons name="building" size={20} />
                                     </div>
                                     <div className="header-content">
                                         <h3>Accommodation Details</h3>
@@ -438,14 +413,14 @@ const MemberProfilePage: React.FC = () => {
                                 <div className="card-header">
                                     <h3>Payment Summary</h3>
                                     <div className="header-badge">
-                                        <Calendar size={16} />
+                                        <ui.Icons name="calendar" size={16} />
                                         Up to date
                                     </div>
                                 </div>
                                 <div className="summary-metrics">
                                     <div className={`metric-card metric-paid metric-card--${rentTypeClass}`}>
                                         <div className="metric-icon">
-                                            <CheckCircle size={24} />
+                                            <ui.Icons name="checkCircle" size={24} />
                                         </div>
                                         <div className="metric-info">
                                             <div className="metric-value">{formatCurrency(memberData.paymentSummary.totalAmountPaid)}</div>
@@ -454,7 +429,7 @@ const MemberProfilePage: React.FC = () => {
                                     </div>
                                     <div className={`metric-card metric-pending metric-card--${rentTypeClass}`}>
                                         <div className="metric-icon">
-                                            <Clock size={24} />
+                                            <ui.Icons name="lock" size={24} />
                                         </div>
                                         <div className="metric-info">
                                             <div className="metric-value">{formatCurrency(memberData.paymentSummary.totalAmountPending)}</div>
@@ -463,7 +438,7 @@ const MemberProfilePage: React.FC = () => {
                                     </div>
                                     <div className={`metric-card metric-due metric-card--${rentTypeClass}`}>
                                         <div className="metric-icon">
-                                            <Calendar size={24} />
+                                            <ui.Icons name="calendar" size={24} />
                                         </div>
                                         <div className="metric-info">
                                             <div className="metric-value">
@@ -480,44 +455,44 @@ const MemberProfilePage: React.FC = () => {
                                 <div className="card-header">
                                     <h3>Documents</h3>
                                     <div className="header-badge">
-                                        <Shield size={16} />
+                                        <ui.Icons name="shield" size={16} />
                                         Verified
                                     </div>
                                 </div>
                                 <div className="documents-list">
                                     <div className={`document-item document-item--${rentTypeClass}`}>
                                         <div className="document-icon">
-                                            <FileText size={20} />
+                                            <ui.Icons name="fileText" size={20} />
                                         </div>
                                         <div className="document-info">
                                             <span className="document-name">Aadhar Card</span>
                                             <span className="document-status verified">Verified</span>
                                         </div>
-                                        <Button
+                                        <ui.Button
                                             variant="ghost"
                                             size="small"
                                             onClick={() => handleDocumentView(memberData.member.aadharUrl, 'Aadhar Card')}
-                                            leftIcon={<Eye size={16} />}
+                                            leftIcon={<ui.Icons name="eye" size={16} />}
                                         >
-                                           View
-                                        </Button>
+                                            View
+                                        </ui.Button>
                                     </div>
                                     <div className={`document-item document-item--${rentTypeClass}`}>
                                         <div className="document-icon">
-                                            <User size={20} />
+                                            <ui.Icons name="user" size={20} />
                                         </div>
                                         <div className="document-info">
                                             <span className="document-name">Profile Photo</span>
                                             <span className="document-status verified">Verified</span>
                                         </div>
-                                        <Button
+                                        <ui.Button
                                             variant="ghost"
                                             size="small"
                                             onClick={() => handleDocumentView(memberData.member.photoUrl, 'Profile Photo')}
-                                            leftIcon={<Eye size={16} />}
+                                            leftIcon={<ui.Icons name="eye" size={16} />}
                                         >
                                             View
-                                        </Button>
+                                        </ui.Button>
                                     </div>
                                 </div>
                             </div>
@@ -531,7 +506,7 @@ const MemberProfilePage: React.FC = () => {
                         </div>
 
                         <div className="payment-table-container">
-                            <TableLayout
+                            <layouts.TableLayout
                                 data={memberData.paymentHistory.data}
                                 columns={paymentColumns}
                                 pagination={{
@@ -549,7 +524,7 @@ const MemberProfilePage: React.FC = () => {
                         <div className="admin-card danger-zone">
                             <div className="card-header">
                                 <div className="header-icon danger">
-                                    <AlertTriangle size={20} />
+                                    <ui.Icons name="alertTriangle" size={20} />
                                 </div>
                                 <div className="header-content">
                                     <h3>Administrative Actions</h3>
@@ -562,15 +537,15 @@ const MemberProfilePage: React.FC = () => {
                                         <h4>Delete Member Account</h4>
                                         <p>Permanently remove this member and all associated data. This action cannot be undone and will affect payment history, room assignments, and other related records.</p>
                                     </div>
-                                    <Button
+                                    <ui.Button
                                         variant="danger"
                                         size="small"
                                         onClick={handleDeleteMember}
                                         disabled={deleteLoading}
                                     >
-                                        <Trash2 size={16} />
+                                        <ui.Icons name="trash" size={16} />
                                         {deleteLoading ? 'Deleting...' : 'Delete Member'}
-                                    </Button>
+                                    </ui.Button>
                                 </div>
                             </div>
                         </div>
@@ -579,7 +554,7 @@ const MemberProfilePage: React.FC = () => {
             </div>
 
             {/* Document Viewer Modal */}
-            <DocumentViewer
+            <ui.DocumentViewer
                 isOpen={documentViewer.isOpen}
                 imageUrl={documentViewer.imageUrl}
                 title={documentViewer.title}
