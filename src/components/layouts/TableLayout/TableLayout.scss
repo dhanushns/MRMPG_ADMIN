@@ -116,21 +116,46 @@
     position: relative;
     box-shadow: 0px 4px 4px 0px #00000040, 0px 4px 4px 0px #00000040 inset;
     border-radius: 8px;
+    
+    // Ensure padding is maintained when scrolling horizontally
+    &::-webkit-scrollbar {
+      height: 8px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: var(--gray-100);
+      border-radius: 4px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: var(--gray-400);
+      border-radius: 4px;
+      
+      &:hover {
+        background: var(--gray-500);
+      }
+    }
 
     .table-wrapper {
       min-width: 100%;
-      padding: 40px;
+      padding: 20px 24px;
+      box-sizing: border-box;
+      
+      // Ensure the wrapper maintains padding even when table is wider
+      overflow-x: visible;
 
       // Reduce padding when header is present
       .table-layout:has(.table-header) & {
-        padding: 20px 40px 40px;
+        padding: 12px 24px 20px;
       }
 
       .data-table {
         width: 100%;
         font-size: 14px;
-        border-spacing: 0 8px;
+        border-spacing: 0 4px;
         border-collapse: separate;
+        min-width: fit-content;
+        margin: 0; // Ensure no margin that could affect padding
         thead {
           background: #f6f6f6;
           border-radius: 12px;
@@ -140,13 +165,15 @@
 
           tr {
             th {
-              padding: 16px 12px;
+              padding: 12px 8px;
               font-weight: 600;
               color: var(--gray-800);
               white-space: nowrap;
               user-select: none;
               border: none;
               background: transparent;
+              font-size: 13px;
+              min-width: 80px;
 
               &:first-child {
                 border-top-left-radius: 12px;
@@ -227,9 +254,9 @@
               }
 
               &.checkbox-column {
-                width: 5%;
-                min-width: 20px;
-                padding: 16px 8px;
+                width: 40px;
+                min-width: 40px;
+                padding: 12px 6px;
                 text-align: center;
 
                 .checkbox-wrapper {
@@ -264,9 +291,11 @@
             }
 
             td {
-              padding: 16px 12px;
+              padding: 12px 8px;
               color: var(--gray-800);
               vertical-align: middle;
+              font-size: 13px;
+              min-width: 80px;
 
               &:first-child {
                 border-top-left-radius: 12px;
@@ -327,9 +356,9 @@
 
               // Checkbox column styles
               &.checkbox-column {
-                width: 5%;
-                min-width: 20px;
-                padding: 16px 8px;
+                width: 40px;
+                min-width: 40px;
+                padding: 12px 6px;
                 text-align: center;
                 cursor: pointer;
 
@@ -402,6 +431,11 @@
     border-top: 1px solid var(--gray-200);
     background: var(--gray-50);
     gap: 16px;
+    // Ensure pagination doesn't get cut off when table overflows
+    min-width: fit-content;
+    position: sticky;
+    left: 0;
+    right: 0;
 
     .pagination-info {
       color: var(--gray-600);
@@ -467,11 +501,75 @@
   align-items: center;
   justify-content: center;
   gap: 2px;
+  font-size: inherit;
+  
   .currency-symbol {
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--gray-600);
+  }
+}
+
+// Additional rules to ensure proper overflow handling
+.table-layout {
+  // Ensure the main container doesn't allow content to overflow
+  overflow: hidden;
+  
+  .table-container {
+    // Create a proper scrolling context
+    overflow-x: auto;
+    overflow-y: visible;
+    
+    // Ensure smooth scrolling on supported browsers
+    scroll-behavior: smooth;
+    
+    // Add momentum scrolling for iOS
+    -webkit-overflow-scrolling: touch;
+    
+    .table-wrapper {
+      // Prevent the wrapper from shrinking below its content
+      min-width: max-content;
+      
+      .data-table {
+        // Ensure table maintains its structure
+        table-layout: auto;
+        
+        // Prevent cells from collapsing
+        th, td {
+          box-sizing: border-box;
+          flex-shrink: 0;
+        }
+      }
+    }
+  }
+}
+.table-layout {
+  .data-table {
+    // Numeric columns should be narrower and right-aligned
+    .numeric-column {
+      min-width: 70px !important;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    // Text columns can be wider
+    .text-column {
+      min-width: 100px !important;
+    }
+
+    // Action columns should be compact
+    .action-column {
+      min-width: 60px !important;
+      max-width: 80px !important;
+      text-align: center;
+    }
+
+    // Status/badge columns
+    .status-column {
+      min-width: 80px !important;
+      text-align: center;
+    }
   }
 }
 
@@ -485,6 +583,72 @@
 }
 
 // Responsive Design
+@media (max-width: 1200px) {
+  .table-layout {
+    .table-container {
+      .table-wrapper {
+        padding: 16px 20px;
+        min-width: calc(100% - 40px); // Account for container padding
+
+        // Reduce padding when header is present
+        .table-layout:has(.table-header) & {
+          padding: 10px 20px 16px;
+          min-width: calc(100% - 40px);
+        }
+
+        .data-table {
+          thead th {
+            padding: 10px 6px;
+            font-size: 12px;
+            min-width: 70px;
+
+            &.checkbox-column {
+              padding: 10px 4px;
+              width: 35px;
+              min-width: 35px;
+            }
+          }
+
+          tbody td {
+            padding: 10px 6px;
+            font-size: 12px;
+            min-width: 70px;
+
+            &.checkbox-column {
+              padding: 10px 4px;
+              width: 35px;
+              min-width: 35px;
+            }
+
+            // Adjust buttons for smaller screens
+            .btn {
+              font-size: 11px;
+              padding: 3px 6px;
+              min-height: 24px;
+
+              &--small {
+                padding: 2px 4px;
+                font-size: 10px;
+                min-height: 20px;
+              }
+
+              .btn__icon {
+                width: 12px;
+                min-width: 12px;
+
+                svg {
+                  width: 10px;
+                  height: 10px;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 @media (max-width: 1024px) {
   .table-layout {
     .table-header {
@@ -496,51 +660,34 @@
 
     .table-container {
       .table-wrapper {
-        padding: 30px;
-
-        // Reduce padding when header is present
-        .table-layout:has(.table-header) & {
-          padding: 15px 30px 30px;
-        }
+        padding: 14px 18px;
+        min-width: calc(100% - 36px); // Account for container padding
 
         .data-table {
+          // Allow horizontal scrolling for many columns
+          min-width: 900px;
+          
           thead th {
-            padding: 12px 8px;
-            font-size: 13px;
+            padding: 8px 5px;
+            font-size: 11px;
+            min-width: 60px;
 
             &.checkbox-column {
-              padding: 12px 4px;
+              padding: 8px 3px;
+              width: 30px;
+              min-width: 30px;
             }
           }
 
           tbody td {
-            padding: 12px 8px;
-            font-size: 13px;
+            padding: 8px 5px;
+            font-size: 11px;
+            min-width: 60px;
 
             &.checkbox-column {
-              padding: 12px 4px;
-            }
-
-            // Adjust buttons for tablet view
-            .btn {
-              font-size: 12px;
-              padding: 4px 8px;
-
-              &--small {
-                padding: 3px 6px;
-                font-size: 11px;
-                min-height: 22px;
-              }
-
-              .btn__icon {
-                width: 14px;
-                min-width: 14px;
-
-                svg {
-                  width: 12px;
-                  height: 12px;
-                }
-              }
+              padding: 8px 3px;
+              width: 30px;
+              min-width: 30px;
             }
           }
         }
@@ -580,40 +727,49 @@
 
     .table-container {
       .table-wrapper {
-        padding: 20px;
+        padding: 12px 16px;
+        min-width: calc(100% - 32px); // Account for container padding
 
         // Reduce padding when header is present
         .table-layout:has(.table-header) & {
-          padding: 10px 20px 20px;
+          padding: 8px 16px 12px;
+          min-width: calc(100% - 32px);
         }
 
         .data-table {
-          min-width: 700px;
+          // Force larger minimum width for reports with many columns
+          min-width: 1000px;
 
           thead th {
-            padding: 10px 6px;
-            font-size: 12px;
+            padding: 8px 4px;
+            font-size: 10px;
+            min-width: 50px;
 
             &.checkbox-column {
-              padding: 10px 2px;
+              padding: 8px 2px;
+              width: 25px;
+              min-width: 25px;
             }
           }
 
           tbody {
             tr td {
-              padding: 10px 6px;
-              font-size: 12px;
+              padding: 8px 4px;
+              font-size: 10px;
+              min-width: 50px;
 
               &.checkbox-column {
-                padding: 10px 2px;
+                padding: 8px 2px;
+                width: 25px;
+                min-width: 25px;
                 max-width: none;
                 overflow: visible;
                 text-overflow: unset;
                 white-space: normal;
               }
 
-              // Handle long content
-              max-width: 120px;
+              // Handle long content with ellipsis for tight spaces
+              max-width: 100px;
               overflow: hidden;
               text-overflow: ellipsis;
               white-space: nowrap;
@@ -714,35 +870,44 @@
 
     .table-container {
       .table-wrapper {
-        padding: 12px;
+        padding: 8px 12px;
+        min-width: calc(100% - 24px); // Account for container padding
 
         // Reduce padding when header is present
         .table-layout:has(.table-header) & {
-          padding: 6px 12px 12px;
+          padding: 4px 12px 8px;
+          min-width: calc(100% - 24px);
         }
 
         .data-table {
-          min-width: 600px;
+          // Even larger minimum width for small screens to ensure readability
+          min-width: 1200px;
 
           thead {
             tr th {
-              padding: 15px 12px;
-              font-size: 10px;
+              padding: 6px 3px;
+              font-size: 9px;
+              min-width: 45px;
 
               &.checkbox-column {
-                padding: 8px 2px;
+                padding: 6px 2px;
+                width: 20px;
+                min-width: 20px;
               }
             }
           }
 
           tbody {
             tr td {
-              padding: 15px 12px;
-              font-size: 10px;
-              max-width: 100px;
+              padding: 6px 3px;
+              font-size: 9px;
+              max-width: 80px;
+              min-width: 45px;
 
               &.checkbox-column {
-                padding: 8px 2px;
+                padding: 6px 2px;
+                width: 20px;
+                min-width: 20px;
                 max-width: none;
                 overflow: visible;
                 text-overflow: unset;

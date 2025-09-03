@@ -63,6 +63,13 @@
     padding: 8px 18px 12px;
     gap: 10px;
 
+    .refresh-section{
+      width: 100%;
+      button{
+        width: 100%;
+      }
+    }
+
     .last-updated {
       font-size: 12px;
       gap: 4px;

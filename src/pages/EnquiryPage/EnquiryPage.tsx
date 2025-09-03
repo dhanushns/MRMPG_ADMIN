@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import layouts from "@/components/layouts";
 import type { CardItem, EnquiryData, EnquiryDataResponse, EnquiryFiltersResponse, EnquiryStatsResponse } from '@/types/apiResponseTypes';
 import { ApiClient, AuthManager, buildEnquiryQueryParams } from '@/utils';
-import type { EnquiryFilterParams } from '@/utils';
 import { useNavigate } from 'react-router-dom';
 import { useNotification } from '@/hooks/useNotification';
 import "./EnquiryPage.scss";
@@ -220,7 +219,7 @@ const EnquiryPage = (): React.ReactElement => {
             align: "center",
             sortable: false,
             width: "15%",
-            render: (value: unknown, row: unknown) => {
+            render: (_, row: unknown) => {
                 const enquiry = row as EnquiryData;
                 return enquiry.resolver ? (
                     <span className="resolver-name">{enquiry.resolver.name}</span>

@@ -22,15 +22,12 @@ export interface WeekPickerProps {
   required?: boolean;
   minDate?: Date;
   maxDate?: Date;
-  showWeekNumbers?: boolean;
   showToday?: boolean;
   size?: 'small' | 'medium' | 'large';
   variant?: 'outline' | 'filled';
   clearable?: boolean;
   onOpen?: () => void;
   onClose?: () => void;
-  onFocus?: (event: React.FocusEvent<HTMLInputElement>) => void;
-  onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void;
 }
 
 const WeekPicker: React.FC<WeekPickerProps> = ({
@@ -46,23 +43,18 @@ const WeekPicker: React.FC<WeekPickerProps> = ({
   required = false,
   minDate,
   maxDate,
-  showWeekNumbers = true,
   showToday = true,
   size = 'medium',
   variant = 'outline',
   clearable = true,
   onOpen,
-  onClose,
-  onFocus,
-  onBlur
+  onClose
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedWeek, setSelectedWeek] = useState<WeekRange | null>(value || null);
-  const [hoveredWeek, setHoveredWeek] = useState<number | null>(null);
   
   const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   // Update selected week when value prop changes
   useEffect(() => {
@@ -334,7 +326,7 @@ const WeekPicker: React.FC<WeekPickerProps> = ({
               </div>
 
               <div className="week-picker__weeks-container">
-                {weeks.map((week, index) => {
+                {weeks.map((week) => {
                   const isSelected = selectedWeek && 
                     selectedWeek.weekNumber === week.weekNumber && 
                     selectedWeek.year === week.year;

@@ -82,12 +82,10 @@ const ApprovalsPage = () => {
         {
             id: "pending_registration",
             label: "Registration Pending",
-            count: registrationTableData.length,
         },
         {
             id: "pending_payment",
             label: "Payment Pending",
-            count: paymentTableData.length,
         }
     ]
 
@@ -559,7 +557,7 @@ const ApprovalsPage = () => {
         });
     };
 
-    const handleApproveUser = async (userId: string, pgId: string, formData: { roomNo: string; rentAmount: string; advanceAmount?: string; pgLocation: string; dateOfJoining?: string }) => {
+    const handleApproveUser = async (userId: string, pgId: string, formData: { roomId: string; rentAmount: string; advanceAmount?: string; pgLocation: string; dateOfJoining?: string }) => {
         setApproveLoading(true);
         try {
             const approveForm = {
@@ -713,7 +711,8 @@ const ApprovalsPage = () => {
                 modelLayouts={{
                     paymentInfo: false,
                     documents: true,
-                    approvalForm: true
+                    approvalForm: true,
+                    showViewProfile: false
                 }}
                 onApproveUser={handleApproveUser}
                 onDeleteUser={() => console.log("DELETED USER")}

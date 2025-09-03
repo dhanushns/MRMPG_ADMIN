@@ -23,7 +23,6 @@ export interface MonthPickerProps {
   required?: boolean;
   minDate?: Date;
   maxDate?: Date;
-  showCurrentMonth?: boolean;
   showQuickSelect?: boolean;
   size?: 'small' | 'medium' | 'large';
   variant?: 'outline' | 'filled';
@@ -31,8 +30,6 @@ export interface MonthPickerProps {
   yearRange?: { start: number; end: number };
   onOpen?: () => void;
   onClose?: () => void;
-  onFocus?: (event: React.FocusEvent<HTMLDivElement>) => void;
-  onBlur?: (event: React.FocusEvent<HTMLDivElement>) => void;
 }
 
 const MonthPicker: React.FC<MonthPickerProps> = ({
@@ -48,16 +45,13 @@ const MonthPicker: React.FC<MonthPickerProps> = ({
   required = false,
   minDate,
   maxDate,
-  showCurrentMonth = true,
   showQuickSelect = true,
   size = 'medium',
   variant = 'outline',
   clearable = true,
   yearRange,
   onOpen,
-  onClose,
-  onFocus,
-  onBlur
+  onClose
 }) => {
   const currentDate = new Date();
   const [isOpen, setIsOpen] = useState(false);
@@ -151,14 +145,6 @@ const MonthPicker: React.FC<MonthPickerProps> = ({
       return Math.max(range.start, Math.min(range.end, newYear));
     });
   }, [yearRange]);
-
-  // Handle current month selection
-  const handleCurrentMonth = useCallback(() => {
-    const today = new Date();
-    const currentMonthRange = createMonthRange(today.getMonth(), today.getFullYear());
-    setCurrentYear(today.getFullYear());
-    handleMonthSelect(today.getMonth(), today.getFullYear());
-  }, [createMonthRange, handleMonthSelect]);
 
   // Quick select options
   const getQuickSelectOptions = useCallback(() => {

@@ -1,6 +1,6 @@
 import layouts from "@/components/layouts";
 import ui from "@/components/ui";
-import { ApiClient, AuthManager, buildReportsQueryParams } from "@/utils";
+import { ApiClient, AuthManager } from "@/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useNotification } from "@/hooks/useNotification";
@@ -8,13 +8,14 @@ import type { types } from "@/types";
 import type {
     CardItem,
     ReportsPageCardsResponse,
-    ReportsPageFilterResponse,
-    ReportsPageMemberData,
-    ReportsPagePaymentDataResponse,
-    ReportsPageRoomDataResponse,
-    ReportsMemberData,
-    ReportsPagePaymentData,
-    ReportsPageRoomData
+    PgReportData,
+    RoomReportData,
+    PaymentReportData,
+    FinancialReportData,
+    PgReportResponse,
+    RoomReportResponse,
+    PaymentReportResponse,
+    FinancialReportResponse
 } from "@/types/apiResponseTypes";
 import type { WeekRange } from "@/components/ui/WeekPicker";
 import type { MonthRange } from "@/components/ui/MonthPicker";
@@ -29,7 +30,52 @@ const ReportsPage = (): React.ReactElement => {
     const params = useMemo(() => new URLSearchParams(search), [search]);
     const reportType = params.get('type') || 'weekly';
 
-    const [activeTab, setActiveTab] = useState<string>("member-data");
+    // Helper function to get current week
+    const getCurrentWeek = useCallback((): WeekRange => {
+        const today = new Date();
+        const startOfWeek = new Date(today);
+        const dayOfWeek = today.getDay();
+        startOfWeek.setDate(today.getDate() - dayOfWeek);
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        endOfWeek.setHours(23, 59, 59, 999);
+
+        const weekNumber = Math.ceil((today.getDate() - startOfWeek.getDate() + 1) / 7);
+
+        return {
+            start: startOfWeek,
+            end: endOfWeek,
+            weekNumber,
+            year: today.getFullYear()
+        };
+    }, []);
+
+    // Helper function to get current month
+    const getCurrentMonth = useCallback((): MonthRange => {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = today.getMonth();
+
+        const startDate = new Date(year, month, 1);
+        const endDate = new Date(year, month + 1, 0, 23, 59, 59, 999);
+
+        const monthNames = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+
+        return {
+            month,
+            year,
+            startDate,
+            endDate,
+            displayName: `${monthNames[month]} ${year}`
+        };
+    }, []);
+
+    const [activeTab, setActiveTab] = useState<string>("pg-report");
     const [selectedWeek, setSelectedWeek] = useState<WeekRange | null>(null);
     const [selectedMonth, setSelectedMonth] = useState<MonthRange | null>(null);
 
@@ -40,7 +86,7 @@ const ReportsPage = (): React.ReactElement => {
     const [cardsResponse, setCardsResponse] = useState<ReportsPageCardsResponse | null>(null);
 
     // table data state
-    const [tableData, setTableData] = useState<(ReportsMemberData | ReportsPagePaymentData | ReportsPageRoomData)[]>([]);
+    const [tableData, setTableData] = useState<(PgReportData | RoomReportData | PaymentReportData | FinancialReportData)[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [sortKey, setSortKey] = useState<string | null>(null);
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -73,7 +119,23 @@ const ReportsPage = (): React.ReactElement => {
     const fetchReportsStatsCard = useCallback(async () => {
         setCardsLoading(true);
         try {
-            const apiResponse = await ApiClient.get(`/report/${reportType}/cards`) as ReportsPageCardsResponse;
+            let queryParams = '';
+
+            // For weekly reports
+            if (reportType === 'weekly') {
+                const weekToUse = selectedWeek || getCurrentWeek();
+                const startDate = weekToUse.start.toISOString().split('T')[0];
+                const endDate = weekToUse.end.toISOString().split('T')[0];
+                queryParams = `?startDate=${startDate}&endDate=${endDate}`;
+            }
+
+            // For monthly reports
+            if (reportType === 'monthly') {
+                const monthToUse = selectedMonth || getCurrentMonth();
+                queryParams = `?month=${monthToUse.month + 1}&year=${monthToUse.year}`;
+            }
+
+            const apiResponse = await ApiClient.get(`/report/${reportType}/cards${queryParams}`) as ReportsPageCardsResponse;
             if (apiResponse.success && apiResponse.data) {
                 setCardsResponse(apiResponse);
                 setCardData(apiResponse.data.cards);
@@ -86,7 +148,7 @@ const ReportsPage = (): React.ReactElement => {
         } finally {
             setCardsLoading(false);
         }
-    }, [reportType, notification]);
+    }, [reportType, selectedWeek, selectedMonth, notification, getCurrentWeek, getCurrentMonth]);
 
     // Fetch table data based on active tab
     const fetchTableData = useCallback(async (resetPage = false) => {
@@ -95,51 +157,75 @@ const ReportsPage = (): React.ReactElement => {
 
         try {
             let queryParams = `page=${page}&limit=10`;
-            
-            // Add week filter if selected
-            if (selectedWeek) {
-                const startDate = selectedWeek.start.toISOString().split('T')[0];
-                const endDate = selectedWeek.end.toISOString().split('T')[0];
-                queryParams += `&startDate=${startDate}&endDate=${endDate}`;
-            }
-            
-            // Add month filter if selected (and no week filter)
-            if (selectedMonth && !selectedWeek) {
-                const startDate = selectedMonth.startDate.toISOString().split('T')[0];
-                const endDate = selectedMonth.endDate.toISOString().split('T')[0];
+
+            // For weekly reports
+            if (reportType === 'weekly') {
+                const weekToUse = selectedWeek || getCurrentWeek();
+                const startDate = weekToUse.start.toISOString().split('T')[0];
+                const endDate = weekToUse.end.toISOString().split('T')[0];
                 queryParams += `&startDate=${startDate}&endDate=${endDate}`;
             }
 
-            let apiResponse;
+            // For monthly reports
+            if (reportType === 'monthly') {
+                const monthToUse = selectedMonth || getCurrentMonth();
+                queryParams += `&month=${monthToUse.month + 1}&year=${monthToUse.year}`;
+            }
+
+            let apiResponse: PgReportResponse | RoomReportResponse | PaymentReportResponse | FinancialReportResponse;
             switch (activeTab) {
-                case "member-data":
-                    apiResponse = await ApiClient.get(`/report/${reportType}/${activeTab}?${queryParams}`) as ReportsPageMemberData;
+                case "pg-report":
+                    apiResponse = await ApiClient.get(`/report/${reportType}/${activeTab}?${queryParams}`) as PgReportResponse;
                     break;
-                case "payment-data":
-                    apiResponse = await ApiClient.get(`/report/${reportType}/${activeTab}?${queryParams}`) as ReportsPagePaymentDataResponse;
+                case "room-report":
+                    apiResponse = await ApiClient.get(`/report/${reportType}/${activeTab}?${queryParams}`) as RoomReportResponse;
                     break;
-                case "room-data":
-                    apiResponse = await ApiClient.get(`/report/${reportType}/${activeTab}?${queryParams}`) as ReportsPageRoomDataResponse;
+                case "payment-report":
+                    apiResponse = await ApiClient.get(`/report/${reportType}/${activeTab}?${queryParams}`) as PaymentReportResponse;
+                    break;
+                case "financial-report":
+                    apiResponse = await ApiClient.get(`/report/${reportType}/${activeTab}?${queryParams}`) as FinancialReportResponse;
                     break;
                 default:
                     throw new Error("Invalid tab");
             }
 
             if (apiResponse.success && apiResponse.data) {
-                setTableData(apiResponse.data.tableData);
-                setPagination(apiResponse.data.pagination);
+                setTableData(apiResponse.data.tableData || []);
+                setPagination(apiResponse.data.pagination || {
+                    page: 1,
+                    limit: 10,
+                    total: 0,
+                    totalPages: 1
+                });
                 if (resetPage) {
                     setCurrentPage(1);
                 }
             } else {
                 notification.showError(apiResponse.error || "Failed to fetch table data", apiResponse.message, 5000);
+                // Reset data on error
+                setTableData([]);
+                setPagination({
+                    page: 1,
+                    limit: 10,
+                    total: 0,
+                    totalPages: 1
+                });
             }
         } catch (error) {
             notification.showError("Failed to fetch table data", error instanceof Error ? error.message : String(error), 5000);
+            // Reset data on error
+            setTableData([]);
+            setPagination({
+                page: 1,
+                limit: 10,
+                total: 0,
+                totalPages: 1
+            });
         } finally {
             setTableLoading(false);
         }
-    }, [activeTab, currentPage, selectedWeek, selectedMonth, sortKey, sortDirection, reportType, notification]);
+    }, [activeTab, currentPage, selectedWeek, selectedMonth, reportType, notification, getCurrentWeek, getCurrentMonth]);
 
     // Handle pagination
     const handlePageChange = (page: number) => {
@@ -161,73 +247,37 @@ const ReportsPage = (): React.ReactElement => {
     // Get table columns based on active tab
     const getTableColumns = (): types["TableColumn"][] => {
         switch (activeTab) {
-            case "member-data":
+            case "pg-report":
                 return [
-                    { key: "memberId", label: "Member ID", width: "10%", align: "center" },
-                    { key: "memberName", label: "Name", width: "10%" },
-                    { key: "memberAge", label: "Age", width: "5%", align: "center" },
-                    { key: "pgName", label: "PG Name", width: "20%", align: "left" },
-                    { key: "roomNo", label: "Room", align: "left", width: "10%" },
-                    { key: "roomRent", label: "Rent", align: "left", render: (value) => `₹${value}`, width: "10%" },
-                    { key: "daysSinceJoining", label: "Days", align: "center", width: "5%" },
-                    { key: "totalPaymentsMade", label: "Payments", align: "center", width: "5%" },
-                    { key: "pendingPaymentsCount", label: "Pending", align: "center", width: "5%" },
-                    { key: "overduePaymentsCount", label: "Overdue", align: "center", width: "5%" }
+                    { key: "pgName", label: "PG Name", sortable: false },
+                    { key: "pgLocation", label: "Location", sortable: false },
+                    { key: "pgType", label: "Type", align: "center", sortable: false },
+                    { key: "totalMembers", label: "Total Members", align: "center", sortable: false },
+                    { key: "newMembersThisWeek", label: "New Members", align: "center", sortable: false },
+                    { key: "totalRooms", label: "Total Rooms", align: "center", sortable: false },
+                    { key: "occupiedRooms", label: "Occupied", align: "center", sortable: false },
+                    { key: "vacantRooms", label: "Vacant", align: "center", sortable: false },
+                    { key: "occupancyRate", label: "Occupancy %", align: "center", render: (value) => `${value}%`, sortable: false },
+                    { key: "weeklyRevenue", label: "Weekly Revenue", align: "right", render: (value) => `₹${value}`, sortable: false },
+                    { key: "pendingPayments", label: "Pending", align: "center", sortable: false },
+                    { key: "overduePayments", label: "Overdue", align: "center", sortable: false },
+                    { key: "paymentApprovalRate", label: "Approval Rate %", align: "center", render: (value) => `${value}%`, sortable: false },
+                    { key: "revenuePerMember", label: "Revenue/Member", align: "right", render: (value) => `₹${value}`, sortable: false }
                 ];
-            case "payment-data":
+
+            case "room-report":
                 return [
-                    { key: "memberId", label: "Member ID", sortable: true },
-                    { key: "memberName", label: "Name", sortable: true },
-                    { key: "pgName", label: "PG Name", sortable: true },
-                    { key: "roomNo", label: "Room", align: "center" },
-                    { key: "currentWeekPayments", label: "Current Week Payments", align: "center" },
-                    { key: "currentWeekTotal", label: "Current Week Total", align: "right", render: (value) => `₹${value}` },
-                    { key: "previousWeekPayments", label: "Previous Week Payments", align: "center" },
-                    { key: "previousWeekTotal", label: "Previous Week Total", align: "right", render: (value) => `₹${value}` },
+                    { key: "pgName", label: "PG Name", sortable: false },
+                    { key: "pgLocation", label: "Location", sortable: false },
+                    { key: "roomNo", label: "Room No", sortable: false },
+                    { key: "capacity", label: "Capacity", align: "center", sortable: false },
+                    { key: "currentOccupants", label: "Current Occupants", align: "center", sortable: false },
+                    { key: "utilizationRate", label: "Utilization %", align: "center", render: (value) => `${Number(value).toFixed(1)}%`, sortable: false },
+                    { key: "rentAmount", label: "Rent Amount", align: "right", render: (value) => `₹${value}`, sortable: false },
+                    { key: "weeklyRevenue", label: "Weekly Revenue", align: "right", render: (value) => `₹${value}`, sortable: false },
                     {
-                        key: "paymentTrend",
-                        label: "Trend",
-                        align: "center",
-                        render: (value, row) => (
-                            <div className={`trend-indicator trend-${value}`}>
-                                <ui.Icons
-                                    name={value === 'up' ? "trendingUp" : "trendingDown"}
-                                    size={16}
-                                />
-                                <span>{(row as ReportsPagePaymentData).paymentTrendPercentage}%</span>
-                            </div>
-                        )
-                    },
-                    { key: "totalApprovedAmount", label: "Total Approved", align: "right", render: (value) => `₹${value}` },
-                    { key: "totalPendingAmount", label: "Total Pending", align: "right", render: (value) => `₹${value}` },
-                    { key: "totalOverdueAmount", label: "Total Overdue", align: "right", render: (value) => `₹${value}` }
-                ];
-            case "room-data":
-                return [
-                    { key: "roomNo", label: "Room No", sortable: true },
-                    { key: "pgName", label: "PG Name", sortable: true },
-                    { key: "capacity", label: "Capacity", align: "center" },
-                    { key: "currentOccupants", label: "Current Occupants", align: "center" },
-                    {
-                        key: "occupancyRate",
-                        label: "Occupancy Rate",
-                    
-                        align: "center",
-                        render: (value) => `${value}%`
-                    },
-                    {
-                        key: "roomStatus",
-                        label: "Status",
-                        align: "center",
-                        render: (value) => (
-                            <span className={`status-badge status-${String(value).toLowerCase().replace(' ', '-')}`}>
-                                {String(value)}
-                            </span>
-                        )
-                    },
-                    {
-                        key: "isAvailable",
-                        label: "Available",
+                        key: "isFullyOccupied",
+                        label: "Fully Occupied",
                         align: "center",
                         render: (value) => (
                             <ui.Icons
@@ -235,18 +285,53 @@ const ReportsPage = (): React.ReactElement => {
                                 size={16}
                                 className={value ? "text-success" : "text-error"}
                             />
-                        )
+                        ),
+                        sortable: false
                     },
-                    { key: "weeklyRevenue", label: "Weekly Revenue", align: "right", render: (value) => `₹${value}` },
-                    { key: "potentialMonthlyRevenue", label: "Potential Monthly", align: "right", render: (value) => `₹${value}` },
-                    {
-                        key: "actualUtilization",
-                        label: "Utilization",
-                    
-                        align: "center",
-                        render: (value) => `${value}%`
-                    }
+                    { key: "revenueEfficiency", label: "Revenue Efficiency", align: "center", sortable: false }
                 ];
+
+            case "payment-report":
+                return [
+                    { key: "pgName", label: "PG Name", sortable: false },
+                    { key: "pgLocation", label: "Location", sortable: false },
+                    { key: "totalPaymentsDue", label: "Due", align: "center", sortable: false },
+                    { key: "paymentsReceived", label: "Received", align: "center", sortable: false },
+                    { key: "paymentsApproved", label: "Approved", align: "center", sortable: false },
+                    { key: "paymentsPending", label: "Pending", align: "center", sortable: false },
+                    { key: "paymentsOverdue", label: "Overdue", align: "center", sortable: false },
+                    { key: "totalAmountDue", label: "Amount Due", align: "right", render: (value) => `₹${value}`, sortable: false },
+                    { key: "totalAmountReceived", label: "Amount Received", align: "right", render: (value) => `₹${value}`, sortable: false },
+                    { key: "collectionEfficiency", label: "Collection %", align: "center", render: (value) => `${value}%`, sortable: false },
+                    { key: "avgApprovalTime", label: "Avg Approval Time", align: "center", render: (value) => `${value} hrs`, sortable: false },
+                    { key: "paymentSubmissionRate", label: "Submission %", align: "center", render: (value) => `${value}%`, sortable: false }
+                ];
+
+            case "financial-report":
+                return [
+                    { key: "pgName", label: "PG Name", sortable: false },
+                    { key: "pgLocation", label: "Location", sortable: false },
+                    { key: "expectedRevenue", label: "Expected Revenue", align: "right", render: (value) => `₹${value}`, sortable: false },
+                    { key: "actualRevenue", label: "Actual Revenue", align: "right", render: (value) => `₹${value}`, sortable: false },
+                    { key: "pendingRevenue", label: "Pending Revenue", align: "right", render: (value) => `₹${value}`, sortable: false },
+                    { key: "overdueRevenue", label: "Overdue Revenue", align: "right", render: (value) => `₹${value}`, sortable: false },
+                    { key: "advanceCollected", label: "Advance Collected", align: "right", render: (value) => `₹${value}`, sortable: false },
+                    { key: "totalCashInflow", label: "Total Cash Inflow", align: "right", render: (value) => `₹${value}`, sortable: false },
+                    { key: "revenueVariance", label: "Revenue Variance", align: "right", render: (value) => `₹${value}`, sortable: false },
+                    {
+                        key: "cashFlowStatus",
+                        label: "Cash Flow Status",
+                        align: "center",
+                        render: (value) => (
+                            <span className={`status-badge ${value === 'Positive' ? 'status-badge--success' : 'status-badge--danger'}`}>
+                                {String(value)}
+                            </span>
+                        ),
+                        sortable: false
+                    },
+                    { key: "collectionTrend", label: "Collection Trend %", align: "center", render: (value) => `${value}%`, sortable: false }
+                ];
+
             default:
                 return [];
         }
@@ -255,16 +340,20 @@ const ReportsPage = (): React.ReactElement => {
     // Reports page tabs
     const tabsItem = [
         {
-            id: "member-data",
-            label: "Member's Data",
+            id: "pg-report",
+            label: "PG's Report",
         },
         {
-            id: "payment-data",
-            label: "Payment's Data",
+            id: "room-report",
+            label: "Room's Report",
         },
         {
-            id: "room-data",
-            label: "Room's Data",
+            id: "payment-report",
+            label: "Payment's Report",
+        },
+        {
+            id: "financial-report",
+            label: "Financial Report",
         }
     ]
 
@@ -280,31 +369,48 @@ const ReportsPage = (): React.ReactElement => {
     const handleWeekChange = useCallback((weekRange: WeekRange | null) => {
         setSelectedWeek(weekRange);
         if (weekRange) {
-            setSelectedMonth(null); // Clear month selection when week is selected
+            setSelectedMonth(null);
         }
-        setCurrentPage(1); // Reset to first page when week changes
+        setCurrentPage(1);
     }, []);
 
     // Handle month selection
     const handleMonthChange = useCallback((monthRange: MonthRange | null) => {
         setSelectedMonth(monthRange);
         if (monthRange) {
-            setSelectedWeek(null); // Clear week selection when month is selected
+            setSelectedWeek(null);
         }
-        
-        setCurrentPage(1); // Reset to first page when month changes
+
+        setCurrentPage(1);
     }, []);
 
     const handleDownloadReport = useCallback(async () => {
         setDownloadLoading(true);
         try {
-            // Use the makeAuthenticatedRequest method directly for blob response
-            const response = await ApiClient.makeAuthenticatedRequest(
-                `/report/download?reportType=${reportType}`,
-                {
-                    method: 'GET'
-                }
-            );
+            let downloadUrl = `/report/download/${reportType}`;
+            let queryParams = new URLSearchParams();
+
+            // For weekly reports
+            if (reportType === 'weekly') {
+                const weekToUse = selectedWeek || getCurrentWeek();
+                const startDate = weekToUse.start.toISOString().split('T')[0];
+                const endDate = weekToUse.end.toISOString().split('T')[0];
+                queryParams.append('startDate', startDate);
+                queryParams.append('endDate', endDate);
+            }
+
+            // For monthly reports
+            if (reportType === 'monthly') {
+                const monthToUse = selectedMonth || getCurrentMonth();
+                queryParams.append('month', String(monthToUse.month + 1));
+                queryParams.append('year', String(monthToUse.year));
+            }
+
+            const fullUrl = `${downloadUrl}?${queryParams.toString()}`;
+
+            const response = await ApiClient.makeAuthenticatedRequest(fullUrl, {
+                method: 'GET'
+            });
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -321,7 +427,20 @@ const ReportsPage = (): React.ReactElement => {
             // Generate filename based on current context
             const timestamp = new Date().toISOString().split('T')[0];
             const tabName = activeTab.replace('-', '_');
-            link.download = `${reportType}_${tabName}_report_${timestamp}.xlsx`;
+
+            // Create a more descriptive filename
+            let dateInfo = '';
+            if (reportType === 'weekly') {
+                const weekToUse = selectedWeek || getCurrentWeek();
+                const startDate = weekToUse.start.toISOString().split('T')[0];
+                const endDate = weekToUse.end.toISOString().split('T')[0];
+                dateInfo = `${startDate}_to_${endDate}`;
+            } else if (reportType === 'monthly') {
+                const monthToUse = selectedMonth || getCurrentMonth();
+                dateInfo = `${monthToUse.year}_${String(monthToUse.month + 1).padStart(2, '0')}`;
+            }
+
+            link.download = `${reportType}_${tabName}_report_${dateInfo}_${timestamp}.xlsx`;
 
             // Trigger download
             document.body.appendChild(link);
@@ -335,54 +454,56 @@ const ReportsPage = (): React.ReactElement => {
         } finally {
             setDownloadLoading(false);
         }
-    }, [reportType, activeTab, notification]);
+    }, [reportType, activeTab, selectedWeek, selectedMonth, notification, getCurrentWeek, getCurrentMonth]);
 
     // Effect to fetch data when reportType changes
-    // useEffect(() => {
-    //     if (AuthManager.isAuthenticated() && !isInitialLoad.current) {
-    //         setCurrentPage(1);
-    //         setSortKey(null);
-    //         setSortDirection('asc');
+    useEffect(() => {
+        if (AuthManager.isAuthenticated() && !isInitialLoad.current) {
+            setCurrentPage(1);
+            setSortKey(null);
+            setSortDirection('asc');
 
-    //         // Fetch new data for the changed report type
-    //         fetchReportsStatsCard();
-    //         fetchTableData(true);
-    //     }
-    // }, [reportType]);
+            // Fetch new data for the changed report type
+            fetchReportsStatsCard();
+            fetchTableData(true);
+        }
+    }, [reportType]);
 
-    // // Effect to fetch data when tab changes
-    // useEffect(() => {
-    //     if (AuthManager.isAuthenticated() && activeTab && !isInitialLoad.current) {
-    //         fetchTableData(true);
-    //     }
-    // }, [activeTab]);
+    // Effect to fetch data when tab changes
+    useEffect(() => {
+        if (AuthManager.isAuthenticated() && activeTab && !isInitialLoad.current) {
+            fetchTableData(true);
+        }
+    }, [activeTab]);
 
-    // // Effect to fetch data when selected week changes
-    // useEffect(() => {
-    //     if (AuthManager.isAuthenticated() && !isInitialLoad.current) {
-    //         fetchTableData(true);
-    //     }
-    // }, [selectedWeek]);
+    // Effect to fetch data when selected week changes
+    useEffect(() => {
+        if (AuthManager.isAuthenticated() && !isInitialLoad.current) {
+            fetchReportsStatsCard();
+            fetchTableData(true);
+        }
+    }, [selectedWeek]);
 
-    // // Effect to handle page changes
-    // useEffect(() => {
-    //     if (AuthManager.isAuthenticated() && currentPage > 1 && !isInitialLoad.current) {
-    //         fetchTableData();
-    //     }
-    // }, [currentPage]);
+    // Effect to handle page changes
+    useEffect(() => {
+        if (AuthManager.isAuthenticated() && currentPage > 1 && !isInitialLoad.current) {
+            fetchTableData();
+        }
+    }, [currentPage]);
 
     // Initial data fetch
-    // useEffect(() => {
-    //     if (AuthManager.isAuthenticated() && isInitialLoad.current) {
-    //         fetchReportsStatsCard();
-    //         fetchTableData();
-    //         isInitialLoad.current = false;
-    //     }
-    // }, []);
+    useEffect(() => {
+        if (AuthManager.isAuthenticated() && isInitialLoad.current) {
+            fetchReportsStatsCard();
+            fetchTableData();
+            isInitialLoad.current = false;
+        }
+    }, []);
 
     // Effect to fetch data when selected month changes
     useEffect(() => {
         if (AuthManager.isAuthenticated() && !isInitialLoad.current) {
+            fetchReportsStatsCard();
             fetchTableData(true);
         }
     }, [selectedMonth]);
@@ -393,6 +514,45 @@ const ReportsPage = (): React.ReactElement => {
                 <layouts.HeaderLayout title={`${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Reports`} subText={`View and generate your ${reportType} reports`} />
             </div>
             <div className="reports-page__content">
+
+                <div className="reports-page__date-pickers-section">
+                    <div className="reports-page__picker-container">
+                        {reportType === 'weekly' && (
+                            <div className="reports-page__week-picker">
+                                <ui.WeekPicker
+                                    value={selectedWeek}
+                                    onChange={handleWeekChange}
+                                    placeholder="Select a week to filter reports"
+                                    size="small"
+                                />
+                            </div>
+                        )}
+
+                        {reportType === 'monthly' && (
+                            <div className="reports-page__month-picker">
+                                <ui.MonthPicker
+                                    value={selectedMonth}
+                                    onChange={handleMonthChange}
+                                    placeholder="Select a month to filter reports"
+                                    size="small"
+                                    showQuickSelect={true}
+                                    clearable={true}
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="reports-page__downloadReport-section">
+                        <ui.Button
+                            onClick={handleDownloadReport}
+                            disabled={downloadLoading || tableLoading}
+                            leftIcon={downloadLoading ? <ui.Icons name="loader" className="animate-spin" /> : <ui.Icons name="download" />}
+                        >
+                            {downloadLoading ? "Downloading..." : "Download Report"}
+                        </ui.Button>
+                    </div>
+                </div>
+
                 <div className="reports-page__cards-section">
                     <layouts.CardGrid
                         cards={cardData}
@@ -408,50 +568,18 @@ const ReportsPage = (): React.ReactElement => {
                     <ui.Tabs tabs={tabsItem} activeTab={activeTab} onTabChange={handleTabChange} />
                 </div>
 
-                <div className="reports-page__date-pickers-section">
-                    <div className="reports-page__week-picker">
-                        <ui.WeekPicker
-                            value={selectedWeek}
-                            onChange={handleWeekChange}
-                            placeholder="Select a week to filter reports"
-                            size="small"
-                        />
-                    </div>
-                    
-                    <div className="reports-page__month-picker">
-                        <ui.MonthPicker
-                            value={selectedMonth}
-                            onChange={handleMonthChange}
-                            placeholder="Select a month to filter reports"
-                            size="small"
-                            showQuickSelect={true}
-                            clearable={true}
-                        />
-                    </div>
-                </div>
-
-                <div className="reports-page__downloadReport-section">
-                    <ui.Button
-                        onClick={handleDownloadReport}
-                        disabled={downloadLoading || tableLoading}
-                        leftIcon={downloadLoading ? <ui.Icons name="loader" className="animate-spin" /> : <ui.Icons name="download" />}
-                    >
-                        {downloadLoading ? "Downloading..." : "Download Report"}
-                    </ui.Button>
-                </div>
-
                 <div className="reports-page__table-section">
                     <layouts.TableLayout
                         columns={getTableColumns()}
-                        data={tableData}
+                        data={tableData || []}
                         loading={tableLoading}
                         pagination={{
-                            currentPage: pagination.page,
-                            totalItems: pagination.total,
-                            totalPages: pagination.totalPages,
+                            currentPage: pagination?.page || currentPage,
+                            totalItems: pagination?.total || 0,
+                            totalPages: pagination?.totalPages || 1,
                             onPageChange: handlePageChange
                         }}
-                        pageSize={pagination.limit}
+                        pageSize={pagination?.limit || 10}
                         sortable
                         currentSort={{ key: sortKey, direction: sortDirection }}
                         onSort={handleSort}
@@ -459,7 +587,7 @@ const ReportsPage = (): React.ReactElement => {
                         showLastUpdated
                         lastUpdated={cardsResponse?.data.lastUpdated}
                         onRefresh={handleRefresh}
-                        emptyMessage={`No ${activeTab.replace('_', ' ')} data available`}
+                        emptyMessage={`No ${activeTab.replace('-', ' ')} data available`}
                     />
                 </div>
             </div>

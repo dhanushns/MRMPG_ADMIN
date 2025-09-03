@@ -248,6 +248,10 @@ export interface ApprovalStats extends BaseApiResponse {
     lastUpdated: {
       registration: Date,
       payment: Date
+    },
+    count:{
+      registrationPending: number,
+      pendingApprovals: number
     }
   }
 }
@@ -446,94 +450,91 @@ export interface ReportsPageCardsResponse extends BaseApiResponse {
   };
 }
 
-export interface ReportsMemberData {
+// PG Report Data
+export interface PgReportData {
   [key: string]: unknown;
-  memberId: string;
-  memberName: string;
-  memberAge: number;
-  memberGender: "MALE" | "FEMALE";
-  memberLocation: string;
-  memberWork: string;
-  rentType: RentType;
-  advanceAmount: number;
+  pgId: string;
   pgName: string;
   pgLocation: string;
-  roomNo: string;
-  roomRent: number;
-  daysSinceJoining: number;
-  memberStatus: string;
-  isNewThisWeek: boolean;
-  totalPaymentsMade: number;
-  pendingPaymentsCount: number;
-  overduePaymentsCount: number;
-  lastPaymentDate: string;
-  lastPaymentAmount: number;
-  lastPaymentStatus: ApprovalStatusTypes;
-  joinedDate: string;
-}
-
-export interface ReportsPagePaymentData {
-  [key: string]: unknown;
-  memberId: string;
-  memberName: string;
-  memberEmail: string;
-  memberPhone: string;
-  pgName: string;
-  pgLocation: string;
-  roomNo: string;
-  joinedDate: string;
-  currentWeekPayments: number;
-  currentWeekTotal: number;
-  previousWeekPayments: number;
-  previousWeekTotal: number;
-  paymentTrend: "up" | "down";
-  paymentTrendAmount: number;
-  paymentTrendPercentage: number;
-  totalApprovedAmount: number;
-  totalApprovedCount: number;
-  totalPendingAmount: number;
-  totalPendingCount: number;
-  totalOverdueAmount: number;
-  totalOverdueCount: number;
-}
-
-export interface ReportsPageRoomData {
-  [key: string]: unknown;
-  roomId: string;
-  roomNo: string;
-  rent: number;
-  capacity: number;
-  pgName: string;
-  pgLocation: string;
-  currentOccupants: number;
+  pgType: PgType;
+  totalMembers: number;
+  newMembersThisWeek: number;
+  totalRooms: number;
+  occupiedRooms: number;
+  vacantRooms: number;
   occupancyRate: number;
-  roomStatus: string;
-  isAvailable: boolean;
-  membersCount: number;
   weeklyRevenue: number;
   pendingPayments: number;
   overduePayments: number;
-  potentialMonthlyRevenue: number;
-  actualUtilization: number;
+  paymentApprovalRate: number;
+  avgPaymentAmount: number;
+  revenuePerMember: number;
 }
 
-export interface ReportsPageTableDataResponse<T> extends BaseApiResponse {
+export interface PgReportResponse extends BaseApiResponse {
   data: {
-    tableData: T[];
-    weekRange: {
-      start: Date;
-      end: Date;
-    };
+    tableData: PgReportData[];
     pagination: Pagination;
   };
 }
 
-export interface ReportsPageMemberData extends ReportsPageTableDataResponse<ReportsMemberData> { }
-export interface ReportsPagePaymentDataResponse extends ReportsPageTableDataResponse<ReportsPagePaymentData> { }
-export interface ReportsPageRoomDataResponse extends ReportsPageTableDataResponse<ReportsPageRoomData> { }
+// Room Report Data
+export interface RoomReportData {
+  [key: string]: unknown;
+  pgName: string;
+  pgLocation: string;
+  roomNo: string;
+  roomId: string;
+  capacity: number;
+  currentOccupants: number;
+  utilizationRate: number;
+  rentAmount: number;
+  weeklyRevenue: number;
+  isFullyOccupied: boolean;
+  revenueEfficiency: number;
+  daysSinceLastOccupancy: number | null;
+}
 
-export interface ReportsPageFilterResponse extends BaseApiResponse {
+export interface RoomReportResponse extends BaseApiResponse {
   data: {
-    filters: types["FilterItemProps"][];
+    tableData: RoomReportData[];
+    pagination: Pagination;
+  };
+}
+
+// Payment Report Data
+export interface PaymentReportData {
+  [key: string]: unknown;
+  pgName: string;
+  pgLocation: string;
+  totalPaymentsDue: number;
+  paymentsReceived: number;
+  paymentsApproved: number;
+  paymentsPending: number;
+  paymentsOverdue: number;
+  totalAmountDue: number;
+  totalAmountReceived: number;
+  collectionEfficiency: number;
+  avgApprovalTime: number;
+  paymentSubmissionRate: number;
+}
+
+export interface PaymentReportResponse extends BaseApiResponse {
+  data: {
+    tableData: PaymentReportData[];
+    pagination: Pagination;
+  };
+}
+
+// Financial Report Data (you can add this structure later when available)
+export interface FinancialReportData {
+  [key: string]: unknown;
+  // Add fields as needed when API structure is available
+}
+
+export interface FinancialReportResponse extends BaseApiResponse {
+  data: {
+    tableData: FinancialReportData[];
+    pagination: Pagination;
   };
 }

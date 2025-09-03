@@ -145,28 +145,6 @@ const DashboardPage: React.FC = () => {
         }
     }, [notification]);
 
-    // Fetch dashboard cards
-    const fetchDashboardCards = useCallback(async () => {
-        setCardLoading(true);
-
-        try {
-            const apiResponse = await ApiClient.get('/dashboard/stats') as DashboardStatsResponse;
-            if (apiResponse.success && apiResponse.data) {
-                setCards(apiResponse.data.cards || []);
-                setLastUpdated(apiResponse.data.lastUpdated);
-            } else {
-                setCards([]);
-                notification.showError(apiResponse.error || "Failed to fetch dashboard cards", "Contact support", 5000);
-            }
-
-        } catch (error) {
-            notification.showError('Error fetching dashboard cards', "Check your network connection", 5000);
-            setCards([]);
-        } finally {
-            setCardLoading(false);
-        }
-    }, [notification]);
-
     const refreshDashboardCards = useCallback(async () => {
         setCardLoading(true);
 
@@ -417,7 +395,8 @@ const DashboardPage: React.FC = () => {
                         {
                             paymentInfo: true,
                             documents: true,
-                            approvalForm: false
+                            approvalForm: false,
+                            showViewProfile: true
                         }
                     }
                     onClose={handleCloseModal}

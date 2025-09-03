@@ -6,10 +6,31 @@ import type { QuickViewMemberData } from "@/types/apiResponseTypes";
 import { ApiClient } from "@/utils";
 import { useNotification } from "@/hooks/useNotification";
 
+// Type for PG location option from API
+interface PgLocationOption {
+    value: string;
+    label: string;
+    pgName: string;
+    pgType: string;
+}
+
+// Type for PG locations API response
+interface PgLocationsApiResponse {
+    success: boolean;
+    message?: string;
+    data?: {
+        options: PgLocationOption[];
+    }
+}
+
 // Type for room data from API
 interface RoomData {
-    roomNo: number;
+    value: string;
+    label: string;
+    capacity: number;
+    currentOccupancy: number;
     rent: number;
+    isAvailable: boolean;
 }
 
 // Type for room API response
@@ -17,8 +38,13 @@ interface RoomApiResponse {
     success: boolean;
     message?: string;
     data?: {
-        pgId: string;
-        rooms: RoomData[];
+        options: RoomData[];
+        pgInfo: {
+            id: string;
+            name: string;
+            location: string;
+            type: string;
+        };
     }
 }
 
@@ -29,10 +55,11 @@ interface QuickViewModalProps {
         paymentInfo?: boolean,
         documents?: boolean,
         approvalForm?: boolean,
+        showViewProfile?: boolean,
     };
     memberData: QuickViewMemberData | null;
     onDeleteUser?: (userId: string) => void;
-    onApproveUser?: (userId: string, pgId: string, formData: { roomNo: string; rentAmount: string; advanceAmount?: string; pgLocation: string; dateOfJoining?: string }) => void;
+    onApproveUser?: (userId: string, pgId: string, formData: { roomId: string; rentAmount: string; advanceAmount?: string; pgLocation: string; dateOfJoining?: string }) => void;
     onRejectUser?: (userId: string) => void;
     approveLoading?: boolean;
     rejectLoading?: boolean;
@@ -73,15 +100,19 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
     const [formErrors, setFormErrors] = useState({
         roomNo: '',
         rentAmount: '',
-        pgLocation: memberData?.pgLocation || ''
+        pgLocation: ''
     });
+
+    // PG locations data and loading state
+    const [pgLocations, setPgLocations] = useState<PgLocationOption[]>([]);
+    const [pgLocationsLoading, setPgLocationsLoading] = useState(false);
 
     // Room data and loading state
     const [roomData, setRoomData] = useState<RoomData[]>([]);
     const [roomsLoading, setRoomsLoading] = useState(false);
 
-    // Store the pgid
-    const [pgId, setPgId] = useState<string>('');
+    // Store the selected pgId
+    const [selectedPgId, setSelectedPgId] = useState<string>('');
 
     // To handle the notification
     const notification = useNotification();
@@ -104,9 +135,15 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                 rentAmount: '',
                 pgLocation: ''
             });
-            // Clear room data when modal opens
+            // Clear data when modal opens
             setRoomData([]);
+            setPgLocations([]);
+            setSelectedPgId('');
             setRoomsLoading(false);
+            setPgLocationsLoading(false);
+            
+            // Fetch PG locations when modal opens
+            fetchPgLocations();
         }
     }, [isOpen, modelLayouts.approvalForm, memberData?.roomNo]);
     // Lock/unlock body scroll when modal opens/closes
@@ -125,20 +162,44 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
         }
     }, [isOpen]);
 
-    // Function to fetch room data based on PG location
-    const fetchRoomData = async (pgLocation: string) => {
-        if (!pgLocation.trim()) {
+    // Function to fetch PG location options based on memberData
+    const fetchPgLocations = async () => {
+        if (!memberData) return;
+        
+        // Determine pgType based on memberData (you might need to adjust this logic based on your data structure)
+        const pgType = memberData.rentType === 'LONG_TERM' ? 'MENS' : 'MENS'; // Adjust this logic as needed
+        
+        setPgLocationsLoading(true);
+        try {
+            const response = await ApiClient.get(`/admin/pg-locations?pgType=${pgType}`) as PgLocationsApiResponse;
+            
+            if (response && response.success && response.data) {
+                setPgLocations(response.data.options);
+            } else {
+                setPgLocations([]);
+                notification.showError(response.message || 'Failed to fetch PG locations');
+            }
+        } catch (error) {
+            notification.showError("Failed to fetch PG locations", error instanceof Error ? error.message : "Contact support", 5000);
+            setPgLocations([]);
+        } finally {
+            setPgLocationsLoading(false);
+        }
+    };
+
+    // Function to fetch room data based on selected PG ID
+    const fetchRoomData = async (pgId: string) => {
+        if (!pgId.trim()) {
             setRoomData([]);
             return;
         }
 
         setRoomsLoading(true);
         try {
-            const response = await ApiClient.get(`/rooms/location/${pgLocation}`) as RoomApiResponse;
+            const response = await ApiClient.get(`/admin/rooms?pgId=${pgId}`) as RoomApiResponse;
             
             if (response && response.success && response.data) {
-                setRoomData(response.data.rooms);
-                setPgId(response.data.pgId);
+                setRoomData(response.data.options);
             } else {
                 setRoomData([]);
                 notification.showError(response.message || 'Failed to fetch room data');
@@ -160,6 +221,9 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
         }
 
         if (field === 'pgLocation') {
+            // Find the selected PG location to get its ID
+            const selectedPgLocation = pgLocations.find(pg => pg.value === value);
+            
             setFormData(prev => ({
                 ...prev,
                 [field]: value,
@@ -167,13 +231,19 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                 rentAmount: ''
             }));
             
-            // Fetch room data for the new PG location
-            fetchRoomData(value);
+            // Set the selected PG ID and fetch room data
+            if (selectedPgLocation) {
+                setSelectedPgId(selectedPgLocation.value);
+                fetchRoomData(selectedPgLocation.value);
+            } else {
+                setSelectedPgId('');
+                setRoomData([]);
+            }
         }
 
         // Special handling for room selection
         if (field === 'roomNo' && value) {
-            const selectedRoom = roomData.find(room => room.roomNo.toString() === value);
+            const selectedRoom = roomData.find(room => room.value === value);
             if (selectedRoom) {
                 // Auto-fill rent amount based on selected room
                 setFormData(prev => ({
@@ -217,8 +287,8 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
 
     const handleApproveUser = () => {
         if (validateForm() && onApproveUser && memberData?.id) {
-            onApproveUser(memberData.id.toString(), pgId, {
-                roomNo: formData.roomNo,
+            onApproveUser(memberData.id.toString(), selectedPgId, {
+                roomId: formData.roomNo,
                 rentAmount: formData.rentAmount,
                 advanceAmount: formData.advanceAmount || undefined,
                 pgLocation: formData.pgLocation,
@@ -324,17 +394,19 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                             <p className="member-id">ID: {memberData.memberId ? memberData.memberId : 'N/A'}</p>
                             <p className="member-room">Room: {memberData.roomNo ? memberData.roomNo : 'N/A'}</p>
                         </div>
-                        <div className="banner-actions">
-                            <ui.Button
-                                variant="transparent"
-                                size="small"
-                                onClick={() => navigate(`/members/${memberData.id}`)}
-                                className="view-profile-btn"
-                                leftIcon={<ui.Icons name="user" size={16} />}
-                            >
-                                View Profile
-                            </ui.Button>
-                        </div>
+                        {modelLayouts.showViewProfile && (
+                            <div className="banner-actions">
+                                <ui.Button
+                                    variant="transparent"
+                                    size="small"
+                                    onClick={() => navigate(`/members/${memberData.id}`)}
+                                    className="view-profile-btn"
+                                    leftIcon={<ui.Icons name="user" size={16} />}
+                                >
+                                    View Profile
+                                </ui.Button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -429,14 +501,15 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                                             searchable
                                             defaultValue={formData.pgLocation}
                                             onChange={(value) => handleFormChange('pgLocation', value)}
-                                            placeholder="Select PG location"
+                                            placeholder={pgLocationsLoading ? "Loading PG locations..." : "Select PG location"}
                                             className={`form-input form-input--${memberData.rentType}`}
+                                            disabled={pgLocationsLoading}
                                             options={[
-                                                { value: '', label: 'Select PG location' },
-                                                { value: 'Chennai', label: 'Chennai' },
-                                                { value: 'Erode', label: 'Erode' },
-                                                { value: 'Guindy', label: 'Guindy' },
-                                                { value: 'Salem', label: 'Salem' },
+                                                { value: '', label: pgLocationsLoading ? 'Loading PG locations...' : 'Select PG location' },
+                                                ...pgLocations.map(pg => ({
+                                                    value: pg.value,
+                                                    label: `${pg.label} - ${pg.pgName}`
+                                                }))
                                             ]}
                                         />
                                         {formErrors.pgLocation && (
@@ -457,8 +530,8 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                                             options={[
                                                 { value: '', label: roomsLoading ? 'Loading rooms...' : !formData.pgLocation ? 'Select PG location first' : 'Select room number' },
                                                 ...roomData.map(room => ({
-                                                    value: room.roomNo.toString(),
-                                                    label: `Room ${room.roomNo}`
+                                                    value: room.value,
+                                                    label: `Room ${room.label} (₹${room.rent}) - ${room.currentOccupancy}/${room.capacity} occupied`
                                                 }))
                                             ]}
                                         />
@@ -477,9 +550,9 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                                             placeholder="Enter rent amount"
                                             error={formErrors.rentAmount}
                                             className={`form-input form-input--${memberData.rentType}`}
-                                            readOnly={!!formData.roomNo && roomData.some(room => room.roomNo.toString() === formData.roomNo)}
+                                            readOnly={!!formData.roomNo && roomData.some(room => room.value === formData.roomNo)}
                                         />
-                                        {formData.roomNo && roomData.some(room => room.roomNo.toString() === formData.roomNo) && (
+                                        {formData.roomNo && roomData.some(room => room.value === formData.roomNo) && (
                                             <small className="auto-filled-note">
                                                 Auto-filled based on selected room
                                             </small>
