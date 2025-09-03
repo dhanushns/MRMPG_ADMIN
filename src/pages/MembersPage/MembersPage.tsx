@@ -96,7 +96,7 @@ const MembersPage = (): React.ReactElement => {
             }
 
         } catch (error) {
-            notification.showError('Error fetching members data', "Check your network connection", 5000);
+            notification.showError('Error fetching members data', error instanceof Error ? error.message : "Check your network connection", 5000);
             setMembersData([]);
             setTotalPages(1);
             setTotalMembers(0);
@@ -116,7 +116,7 @@ const MembersPage = (): React.ReactElement => {
                 notification.showError('Failed to fetch filter options', "Check your network connection", 5000);
             }
         } catch (error) {
-            notification.showError('Error fetching filter options', "Contact support", 5000);
+            notification.showError('Error fetching filter options', error instanceof Error ? error.message : "Contact support", 5000);
         } finally {
             setFiltersLoading(false);
         }
@@ -228,7 +228,7 @@ const MembersPage = (): React.ReactElement => {
             return [
                 ...baseColumns,
                 {
-                    key: "rent",
+                    key: "rentAmount",
                     label: "Rent",
                     sortable: true,
                     align: "center",

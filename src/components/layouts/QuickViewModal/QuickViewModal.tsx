@@ -143,8 +143,8 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                 setRoomData([]);
                 notification.showError(response.message || 'Failed to fetch room data');
             }
-        } catch (error: any) {
-            notification.showError(error.message || 'Error fetching room data');
+        } catch (error) {
+            notification.showError("Failed to fetch room data", error instanceof Error ? error.message : "Contact support", 5000);
             setRoomData([]);
         } finally {
             setRoomsLoading(false);
