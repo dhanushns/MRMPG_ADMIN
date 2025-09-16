@@ -92,7 +92,9 @@ import {
   Shield,
   MessageCircle,
   XIcon,
-  Target
+  Target,
+  IndianRupeeIcon,
+  ReceiptIndianRupeeIcon,
 
 } from "lucide-react";
 import type { types } from "@/types";
@@ -219,7 +221,11 @@ const iconMap = {
   hash: Hash,
   messageCircle: MessageCircle,
   x: XIcon,
-  target: Target
+  target: Target,
+
+  
+  indianRupeeIcon: IndianRupeeIcon,
+  receiptIndianRupeeIcon: ReceiptIndianRupeeIcon, 
 
 } as const;
 

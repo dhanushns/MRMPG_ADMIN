@@ -5,8 +5,8 @@ import { useNotification } from '@/hooks/useNotification';
 import type { PgListResponse, PgListOption } from '@/types/apiResponseTypes';
 import './CashEntryForm.scss';
 
-export type CashEntryType = 'cash-in' | 'cash-out';
-export type PaymentType = 'Cash' | 'Online';
+export type CashEntryType = 'CASH_IN' | 'CASH_OUT';
+export type PaymentType = 'CASH' | 'ONLINE';
 
 export interface CashEntryFormData {
     type: CashEntryType;
@@ -16,7 +16,7 @@ export interface CashEntryFormData {
     pgId: string;
     remarks: string;
     paymentType: PaymentType;
-    attachments?: string[]; // Array of uploaded image IDs
+    attachments?: File[]; // Array of uploaded files for form submission
 }
 
 export interface CashEntryFormProps {
@@ -32,7 +32,7 @@ const CashEntryForm: React.FC<CashEntryFormProps> = ({
     onClose,
     onSave,
     onSaveAndAddNew,
-    initialType = 'cash-in'
+    initialType = 'CASH_IN'
 }) => {
     const notification = useNotification();
     const [activeTab, setActiveTab] = useState<CashEntryType>(initialType);
@@ -49,9 +49,12 @@ const CashEntryForm: React.FC<CashEntryFormProps> = ({
         partyName: '',
         pgId: '',
         remarks: '',
-        paymentType: 'Cash',
+        paymentType: 'CASH',
         attachments: []
     });
+
+    // Store selected files for upload
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
     const handleTabChange = (tabId: string) => {
         const tab = tabId as CashEntryType;
@@ -67,20 +70,12 @@ const CashEntryForm: React.FC<CashEntryFormProps> = ({
         setFormData(prev => ({ ...prev, paymentType: value }));
     };
 
-    // Handle attachment uploads
-    const handleAttachmentsUpload = (images: any[]) => {
-        const imageIds = images.map(img => img.id);
+    // Handle attachment file changes
+    const handleFilesChange = (files: File[]) => {
+        setSelectedFiles(files);
         setFormData(prev => ({ 
             ...prev, 
-            attachments: [...(prev.attachments || []), ...imageIds] 
-        }));
-    };
-
-    // Handle attachment removal
-    const handleAttachmentRemove = (imageId: string) => {
-        setFormData(prev => ({ 
-            ...prev, 
-            attachments: (prev.attachments || []).filter(id => id !== imageId) 
+            attachments: files
         }));
     };
 
@@ -89,7 +84,7 @@ const CashEntryForm: React.FC<CashEntryFormProps> = ({
         setPgLoading(true);
         setPgLoadAttempted(true);
         try {
-            const response = await ApiClient.get('/admin/pg-locations') as PgListResponse;
+            const response = await ApiClient.get('/filters/pg-locations') as PgListResponse;
             if (response.success && response.data?.options) {
                 setPgOptions(response.data.options);
             } else {
@@ -117,6 +112,14 @@ const CashEntryForm: React.FC<CashEntryFormProps> = ({
         }
     }, [isOpen, pgLoadAttempted, fetchPgOptions]);
 
+    // Update active tab and form type when initialType prop changes
+    useEffect(() => {
+        if (isOpen) {
+            setActiveTab(initialType);
+            setFormData(prev => ({ ...prev, type: initialType }));
+        }
+    }, [isOpen, initialType]);
+
     const isFormValid = () => {
         return formData.date && 
                formData.amount && 
@@ -127,13 +130,23 @@ const CashEntryForm: React.FC<CashEntryFormProps> = ({
 
     const handleSave = () => {
         if (isFormValid()) {
-            onSave(formData);
+            // Include files in the form data for submission
+            const finalFormData = {
+                ...formData,
+                attachments: selectedFiles
+            };
+            onSave(finalFormData);
         }
     };
 
     const handleSaveAndAddNew = () => {
         if (isFormValid()) {
-            onSaveAndAddNew(formData);
+            // Include files in the form data for submission
+            const finalFormData = {
+                ...formData,
+                attachments: selectedFiles
+            };
+            onSaveAndAddNew(finalFormData);
             // Reset form for new entry
             setFormData({
                 type: activeTab,
@@ -142,9 +155,10 @@ const CashEntryForm: React.FC<CashEntryFormProps> = ({
                 partyName: '',
                 pgId: '',
                 remarks: '',
-                paymentType: 'Cash',
+                paymentType: 'CASH',
                 attachments: []
             });
+            setSelectedFiles([]);
         }
     };
 
@@ -174,11 +188,11 @@ const CashEntryForm: React.FC<CashEntryFormProps> = ({
                     <ui.Tabs
                         tabs={[
                             {
-                                id: 'cash-in',
+                                id: 'CASH_IN',
                                 label: 'Cash In'
                             },
                             {
-                                id: 'cash-out',
+                                id: 'CASH_OUT',
                                 label: 'Cash Out'
                             }
                         ]}
@@ -255,8 +269,8 @@ const CashEntryForm: React.FC<CashEntryFormProps> = ({
                                 id="paymentType"
                                 value={formData.paymentType}
                                 options={[
-                                    { label: 'Cash', value: 'Cash' },
-                                    { label: 'Online', value: 'Online' }
+                                    { label: 'Cash', value: 'CASH' },
+                                    { label: 'Online', value: 'ONLINE' }
                                 ]}
                                 onChange={(value: string) => handlePaymentTypeChange(value as PaymentType)}
                             />
@@ -287,18 +301,19 @@ const CashEntryForm: React.FC<CashEntryFormProps> = ({
                                     maxFiles={3}
                                     multiple={true}
                                     accept="image/*,.pdf"
-                                    onUploadSuccess={handleAttachmentsUpload}
+                                    onFilesChange={handleFilesChange}
                                     onUploadError={(error) => {
                                         console.error('Upload error:', error);
-                                        // You can integrate with notification system here
+                                        notification.showError(
+                                            'File Error',
+                                            error,
+                                            3000
+                                        );
                                     }}
-                                    onRemove={handleAttachmentRemove}
-                                    uploadEndpoint="/api/upload/bills"
-                                    deleteEndpoint="/api/upload/bills"
                                     className="cash-entry-form__image-upload"
                                 />
                                 <p className="cash-entry-form__upload-note">
-                                    Upload bills, receipts, or payment screenshots for this {activeTab === 'cash-in' ? 'income' : 'expense'} entry
+                                    Upload bills, receipts, or payment screenshots for this {activeTab === 'CASH_IN' ? 'income' : 'expense'} entry
                                 </p>
                             </div>
                         </div>

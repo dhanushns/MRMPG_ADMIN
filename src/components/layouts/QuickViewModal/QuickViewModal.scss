@@ -160,6 +160,7 @@
   // Header Content Section
   .header-content {
     display: flex;
+    flex-direction:row;
     justify-content: space-between;
     align-items: center;
     padding: 20px 24px 16px;
@@ -797,11 +798,14 @@
 
 .approve-user-actions {
   display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
   align-items: center;
   justify-content: space-around;
 
   .approve-user-btn {
     transition: all 0.2s ease;
+    flex: 1;
 
     &:disabled {
       opacity: 0.7;

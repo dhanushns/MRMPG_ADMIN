@@ -108,4 +108,12 @@
     font-weight: 600;
     color: #059669;
   }
+
+  // Utility classes
+  .text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px; // Adjust as needed
+  }
 }

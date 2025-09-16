@@ -89,13 +89,6 @@ const TopNav = ({ selectedTab }: TopNavProps): React.ReactElement => {
             class: "expenses-nav"
         },
         {
-            id: "staff",
-            layout: "entity",
-            label: "Staff",
-            path: "/staff",
-            class: "staff-nav"
-        },
-        {
             id: "report",
             layout: "root",
             label: "Report",

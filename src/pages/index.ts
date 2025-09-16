@@ -7,7 +7,6 @@ import EnquiryPage from "./EnquiryPage";
 import ReportsPage from "./ReportsPage";
 import MemberProfilePage from "./MemberProfilePage";
 import ExpensePage from "./ExpensePage/ExpensePage";
-import StaffPage from "./StaffPage/StaffPage";
 
 const pages = {
     LoginPage,
@@ -19,7 +18,6 @@ const pages = {
     ReportsPage,
     MemberProfilePage,
     ExpensePage,
-    StaffPage
 }
 
 export default pages;

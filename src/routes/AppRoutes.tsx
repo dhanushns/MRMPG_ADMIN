@@ -19,7 +19,6 @@ const AppRoutes = () => {
                 <Route path='/reports' element={<pages.ReportsPage/>} />
                 <Route path='/enquiry' element={<pages.EnquiryPage />} />
                 <Route path='/expenses' element={<pages.ExpensePage />} />
-                <Route path='/staff' element={<pages.StaffPage />} />
             </Route>
 
         </Routes>

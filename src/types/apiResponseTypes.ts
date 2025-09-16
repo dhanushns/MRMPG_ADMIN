@@ -255,10 +255,7 @@ export interface DashboardFiltersResponse extends BaseApiResponse {
 
 export interface ApprovalStats extends BaseApiResponse {
   data: {
-    cards: {
-      registration: CardItem[],
-      payment: CardItem[]
-    },
+    cards : CardItem[],
     lastUpdated: {
       registration: Date,
       payment: Date
@@ -355,6 +352,7 @@ export interface MemberProfileData {
     totalAmountPending: number;
     totalAmountOverdue: number;
     lastPaymentDate: string | null;
+    currentDueDate: string | null;
     nextDueDate: string | null;
   }
 }
@@ -576,38 +574,105 @@ export interface ExpenseEntry {
   date: string;
   partyName: string;
   remarks?: string;
-  paymentType: 'Cash' | 'Online';
-  attachments?: string[];
-  admin: {
-    id: string;
-    name: string;
-  };
-  pg: {
-    id: string;
-    name: string;
-    location: string;
-  };
+  paymentType: 'CASH' | 'ONLINE';
+  attachedBill1: string | null;
+  attachedBill2: string | null;
+  attachedBill3: string | null;
+  pgId: string;
+  pgName: string;
+  pgLocation: string;
+  pgType: PgType;
   createdAt: string;
+  createdBy: string;
+  adminId: string;
+  adminName: string;
+  adminEmail: string;
   updatedAt: string;
 }
 
-export interface ExpenseTableResponse extends BaseApiResponse {
+export interface ExpenseTableResponse extends PaginatedResponse<ExpenseEntry> {
+  data : ExpenseEntry[]
+}
+
+// Relieving Requests interfaces
+export interface RelievingRequestData {
+  id: string;
+  memberId: string;
+  pgId: string;
+  roomId: string;
+  requestedLeaveDate: string;
+  reason: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'COMPLETED';
+  approvedBy: string | null;
+  approvedAt: string | null;
+  pendingDues: number;
+  finalAmount: number;
+  settledDate: string | null;
+  settlementProof: string | null;
+  paymentMethod: 'CASH' | 'ONLINE' | null;
+  createdAt: string;
+  updatedAt: string;
+  // Flattened member fields
+  memberName: string;
+  memberMemberId: string;
+  memberPhone: string;
+  memberEmail: string;
+  memberGender: 'MALE' | 'FEMALE';
+  // Flattened PG fields
+  pgName: string;
+  pgType: PgType;
+  pgLocation: string;
+  // Flattened room fields
+  roomNo: string | null;
+  roomRent: number | null;
+}
+
+export interface RelievingRequestsResponse extends PaginatedResponse<RelievingRequestData> {
+  data: RelievingRequestData[];
+}
+
+// Week Options API Response
+export interface WeekOption {
+  week: number;
+  month: number;
+  year: number;
+  startDate: string;
+  endDate: string;
+  label: string;
+}
+
+export interface MonthInfo {
+  month: number;
+  year: number;
+  name: string;
+  label: string;
+}
+
+export interface WeekOptionsResponse extends BaseApiResponse {
   data: {
-    entries: ExpenseEntry[];
-    pagination: {
-      currentPage: number;
-      totalPages: number;
-      totalEntries: number;
-      entriesPerPage: number;
-      hasNextPage: boolean;
-      hasPrevPage: boolean;
-    };
-    filters?: {
-      entryType?: string;
-      dateFrom?: string;
-      dateTo?: string;
-      pgId?: string;
-      adminId?: string;
-    };
+    weeks: WeekOption[];
+    currentWeek: WeekOption;
+    monthInfo: MonthInfo;
+  };
+}
+
+// Month Options API Response
+export interface MonthOption {
+  value: string;
+  label: string;
+}
+
+export interface YearInfo {
+  year: number;
+  isCurrent: boolean;
+  isPast: boolean;
+  hasData: boolean;
+}
+
+export interface MonthOptionsResponse extends BaseApiResponse {
+  data: {
+    year: number;
+    months: MonthOption[];
+    maxMonth: number;
   };
 }

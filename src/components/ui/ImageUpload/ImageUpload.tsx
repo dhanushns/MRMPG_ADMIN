@@ -1,7 +1,15 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import ui from '@/components/ui';
-import { ApiClient } from '@/utils';
 import './ImageUpload.scss';
+
+export interface PendingFile {
+    id: string;
+    file: File;
+    preview: string;
+    name: string;
+    size: number;
+    type: string;
+}
 
 export interface UploadedImage {
     id: string;
@@ -18,12 +26,9 @@ export interface ImageUploadProps {
     maxSize?: number; // in bytes
     maxFiles?: number;
     multiple?: boolean;
-    onUploadSuccess?: (images: UploadedImage[]) => void;
+    onFilesChange?: (files: File[]) => void; // New callback for form integration
     onUploadError?: (error: string) => void;
-    onRemove?: (imageId: string) => void;
     initialImages?: UploadedImage[];
-    uploadEndpoint?: string;
-    deleteEndpoint?: string;
     disabled?: boolean;
     className?: string;
 }
@@ -33,19 +38,19 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     maxSize = 5 * 1024 * 1024, // 5MB default
     maxFiles = 10,
     multiple = true,
-    onUploadSuccess,
+    onFilesChange,
     onUploadError,
-    onRemove,
     initialImages = [],
-    uploadEndpoint = '/api/upload/images',
-    deleteEndpoint = '/api/upload/images',
     disabled = false,
     className = ''
 }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const [images, setImages] = useState<UploadedImage[]>(initialImages);
-    const [uploading, setUploading] = useState(false);
+    const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
+    const [existingImages] = useState<UploadedImage[]>(initialImages);
     const [dragOver, setDragOver] = useState(false);
+
+    // Generate unique ID for files
+    const generateId = () => `file_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     // File validation
     const validateFile = (file: File): string | null => {
@@ -61,62 +66,68 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             return `File size must be less than ${sizeMB}MB`;
         }
 
-        if (!multiple && images.length >= 1) {
+        const totalFiles = pendingFiles.length + existingImages.length;
+        
+        if (!multiple && totalFiles >= 1) {
             return 'Only one file is allowed';
         }
 
-        if (images.length >= maxFiles) {
+        if (totalFiles >= maxFiles) {
             return `Maximum ${maxFiles} files allowed`;
         }
 
         return null;
     };
 
-    // Upload files to server
-    const uploadFiles = useCallback(async (files: File[]) => {
-        if (files.length === 0) return;
-
-        setUploading(true);
-        const formData = new FormData();
-        
-        // Validate all files first
-        for (const file of files) {
-            const error = validateFile(file);
-            if (error) {
-                onUploadError?.(error);
-                setUploading(false);
-                return;
-            }
-            formData.append('images', file);
+    // Create preview URL for file
+    const createPreview = (file: File): string => {
+        if (file.type.startsWith('image/')) {
+            return URL.createObjectURL(file);
         }
-
-        try {
-            const response = await ApiClient.post(uploadEndpoint, formData) as any;
-
-            if (response.success && response.data) {
-                const newImages: UploadedImage[] = Array.isArray(response.data) 
-                    ? response.data 
-                    : [response.data];
-                
-                setImages(prev => multiple ? [...prev, ...newImages] : newImages);
-                onUploadSuccess?.(newImages);
-            } else {
-                throw new Error(response.message || 'Upload failed');
-            }
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Upload failed';
-            onUploadError?.(errorMessage);
-        } finally {
-            setUploading(false);
-        }
-    }, [uploadEndpoint, onUploadSuccess, onUploadError, validateFile, multiple]);
+        // For PDFs and other files, return empty string (we'll show icon instead)
+        return '';
+    };
 
     // Handle file selection
     const handleFileSelect = (files: FileList | null) => {
         if (!files || files.length === 0) return;
         
         const fileArray = Array.from(files);
-        uploadFiles(fileArray);
+        const validFiles: PendingFile[] = [];
+        
+        for (const file of fileArray) {
+            const error = validateFile(file);
+            if (error) {
+                onUploadError?.(error);
+                continue;
+            }
+
+            const pendingFile: PendingFile = {
+                id: generateId(),
+                file,
+                preview: createPreview(file),
+                name: file.name,
+                size: file.size,
+                type: file.type
+            };
+            
+            validFiles.push(pendingFile);
+        }
+
+        if (validFiles.length > 0) {
+            setPendingFiles(prev => {
+                const newFiles = multiple ? [...prev, ...validFiles] : validFiles;
+                // Notify parent component with the actual File objects
+                const allFiles = newFiles.map(f => f.file);
+                onFilesChange?.(allFiles);
+                return newFiles;
+            });
+        }
+
+        // Clear input
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
     };
 
     // Handle button click
@@ -147,22 +158,33 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         handleFileSelect(files);
     };
 
-    // Remove image
-    const handleRemove = async (image: UploadedImage) => {
-        try {
-            const response = await ApiClient.delete(`${deleteEndpoint}/${image.id}`) as any;
-            
-            if (response.success) {
-                setImages(prev => prev.filter(img => img.id !== image.id));
-                onRemove?.(image.id);
-            } else {
-                throw new Error(response.message || 'Failed to delete image');
+    // Remove pending file
+    const handleRemovePending = (fileId: string) => {
+        setPendingFiles(prev => {
+            const fileToRemove = prev.find(f => f.id === fileId);
+            if (fileToRemove?.preview) {
+                // Clean up object URL to prevent memory leaks
+                URL.revokeObjectURL(fileToRemove.preview);
             }
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Failed to delete image';
-            onUploadError?.(errorMessage);
-        }
+            
+            const newFiles = prev.filter(f => f.id !== fileId);
+            // Notify parent component
+            const allFiles = newFiles.map(f => f.file);
+            onFilesChange?.(allFiles);
+            return newFiles;
+        });
     };
+
+    // Clean up object URLs on unmount
+    useEffect(() => {
+        return () => {
+            pendingFiles.forEach(file => {
+                if (file.preview) {
+                    URL.revokeObjectURL(file.preview);
+                }
+            });
+        };
+    }, [pendingFiles]);
 
     // Format file size
     const formatFileSize = (bytes: number): string => {
@@ -192,7 +214,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                 <div className="image-upload__upload-area">
                     <ui.Icons name="image" className="image-upload__upload-icon" />
                     <h4 className="image-upload__upload-title">
-                        {dragOver ? 'Drop files here' : 'Upload Files'}
+                        {dragOver ? 'Drop files here' : 'Select Files'}
                     </h4>
                     <p className="image-upload__upload-description">
                         Drag and drop files here, or click to select files
@@ -204,12 +226,11 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                     <ui.Button
                         variant="primary"
                         onClick={handleUploadClick}
-                        disabled={disabled || uploading}
-                        loading={uploading}
+                        disabled={disabled}
                         className="image-upload__upload-btn"
                     >
                         <ui.Icons name="file" />
-                        {uploading ? 'Uploading...' : 'Choose Files'}
+                        Choose Files
                     </ui.Button>
                 </div>
 
@@ -225,15 +246,16 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                 />
             </div>
 
-            {/* Image Preview Grid */}
-            {images.length > 0 && (
+            {/* File Preview Grid */}
+            {(pendingFiles.length > 0 || existingImages.length > 0) && (
                 <div className="image-upload__preview-section">
                     <h5 className="image-upload__preview-title">
-                        Uploaded Files ({images.length})
+                        Selected Files ({pendingFiles.length + existingImages.length})
                     </h5>
                     <div className="image-upload__preview-grid">
-                        {images.map((image) => (
-                            <div key={image.id} className="image-upload__preview-item">
+                        {/* Existing Images */}
+                        {existingImages.map((image) => (
+                            <div key={`existing-${image.id}`} className="image-upload__preview-item">
                                 <div className="image-upload__preview-container">
                                     {image.mimeType === 'application/pdf' ? (
                                         <div className="image-upload__pdf-preview">
@@ -249,14 +271,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                                         />
                                     )}
                                     <div className="image-upload__preview-overlay">
-                                        <button
-                                            type="button"
-                                            className="image-upload__remove-btn"
-                                            onClick={() => handleRemove(image)}
-                                            title="Remove file"
-                                        >
-                                            <ui.Icons name="trash" />
-                                        </button>
+                                        <span className="image-upload__existing-badge">Existing</span>
                                     </div>
                                 </div>
                                 <div className="image-upload__preview-info">
@@ -265,6 +280,50 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                                     </p>
                                     <p className="image-upload__preview-size">
                                         {formatFileSize(image.fileSize)}
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
+
+                        {/* Pending Files */}
+                        {pendingFiles.map((file) => (
+                            <div key={file.id} className="image-upload__preview-item">
+                                <div className="image-upload__preview-container">
+                                    {file.type === 'application/pdf' ? (
+                                        <div className="image-upload__pdf-preview">
+                                            <ui.Icons name="file" className="image-upload__pdf-icon" />
+                                            <span className="image-upload__pdf-label">PDF</span>
+                                        </div>
+                                    ) : file.preview ? (
+                                        <img
+                                            src={file.preview}
+                                            alt={file.name}
+                                            className="image-upload__preview-image"
+                                            loading="lazy"
+                                        />
+                                    ) : (
+                                        <div className="image-upload__pdf-preview">
+                                            <ui.Icons name="file" className="image-upload__pdf-icon" />
+                                            <span className="image-upload__pdf-label">FILE</span>
+                                        </div>
+                                    )}
+                                    <div className="image-upload__preview-overlay">
+                                        <button
+                                            type="button"
+                                            className="image-upload__remove-btn"
+                                            onClick={() => handleRemovePending(file.id)}
+                                            title="Remove file"
+                                        >
+                                            <ui.Icons name="trash" />
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="image-upload__preview-info">
+                                    <p className="image-upload__preview-name" title={file.name}>
+                                        {file.name}
+                                    </p>
+                                    <p className="image-upload__preview-size">
+                                        {formatFileSize(file.size)}
                                     </p>
                                 </div>
                             </div>

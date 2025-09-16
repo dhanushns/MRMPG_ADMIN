@@ -80,7 +80,7 @@ const MembersPage = (): React.ReactElement => {
                 10
             );
 
-            const endpoint = `/members/${enrollmentType}/${queryString ? `?${queryString}` : ''}`;
+            const endpoint = `/members/rent/${enrollmentType}/${queryString ? `?${queryString}` : ''}`;
 
             const apiResponse = await ApiClient.get(endpoint) as MembersApiResponse;
             if (apiResponse.success && apiResponse.data) {
@@ -108,7 +108,7 @@ const MembersPage = (): React.ReactElement => {
     const fetchFilterOptions = useCallback(async () => {
         setFiltersLoading(true);
         try {
-            const apiResponse = await ApiClient.get('/members/filters') as DashboardFiltersResponse;
+            const apiResponse = await ApiClient.get('/filters/members') as DashboardFiltersResponse;
             if (apiResponse.success && apiResponse.data) {
                 setFilterItems(apiResponse.data.filters);
             } else {
@@ -358,7 +358,7 @@ const MembersPage = (): React.ReactElement => {
                             showResetButton
                             collapsible
                             className="members-filters"
-                            loading={filtersLoading}
+                            loading={filtersLoading}    
                         />
                     </div>
 

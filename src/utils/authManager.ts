@@ -1,4 +1,4 @@
-import { AuthManager } from './authUtils';
+  import { AuthManager } from './authUtils';
 
 export class ApiClient {
   private static baseURL = import.meta.env.VITE_APP_API_URL;
@@ -89,6 +89,31 @@ export class ApiClient {
     const response = await this.makeAuthenticatedRequest(endpoint, {
       method: 'DELETE',
     });
+    
+    return response.json();
+  }
+
+  // POST request with FormData (for file uploads)
+  static async postFormData(endpoint: string, formData: FormData): Promise<unknown> {
+    const authHeaders = AuthManager.getAuthHeader();
+    
+    const config: RequestInit = {
+      method: 'POST',
+      headers: {
+        // Don't set Content-Type for FormData, browser will set it with boundary
+        ...(authHeaders as Record<string, string>),
+      },
+      body: formData,
+    };
+
+    const response = await fetch(`${this.baseURL}${endpoint}`, config);
+    
+    // Handle token expiry
+    if (response.status === 401) {
+      AuthManager.clearAuthData();
+      window.location.href = '/login';
+      throw new Error('Authentication expired');
+    }
     
     return response.json();
   }

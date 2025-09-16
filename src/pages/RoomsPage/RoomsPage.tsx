@@ -109,7 +109,7 @@ const RoomPage = (): React.ReactElement => {
     const fetchFilters = useCallback(async () => {
         setFilterLoading(true);
         try {
-            const apiResponse = await ApiClient.get("/rooms/filters") as RoomsFilterResponse;
+            const apiResponse = await ApiClient.get("/filters/rooms") as RoomsFilterResponse;
             if (apiResponse.success && apiResponse.data) {
                 setFilterItems(apiResponse.data.filters);
             }
@@ -131,9 +131,9 @@ const RoomPage = (): React.ReactElement => {
 
             let endPoint;
             if (filters.pgId) {
-                endPoint = `/rooms/${filters.pgId}/stats`;
+                endPoint = `/stats/rooms/${filters.pgId}`;
             } else {
-                endPoint = '/rooms/stats';
+                endPoint = '/stats/rooms';
             }
 
             const apiResponse = await ApiClient.get(endPoint) as RoomsStatsResponse;
@@ -193,7 +193,7 @@ const RoomPage = (): React.ReactElement => {
         setSelectedRoom(room);
         setIsEditModalOpen(true);
     };
-    
+
     const handleRowClick = (room: RoomData) => {
         console.log("Room details:", room);
         // You can implement a detailed view modal here

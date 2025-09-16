@@ -2,20 +2,10 @@ import layouts from "@/components/layouts";
 import ui from "@/components/ui";
 import { useCallback, useEffect, useState } from "react";
 import type { types } from "@/types";
-import type { ApprovalFiltersResponse, ApprovalMembersResponse, ApprovalStats, BaseApiResponse, CardItem, PaymentApprovalData, PaymentApprovalResponse, PendingRegistrationData, QuickViewMemberData, PaymentQuickViewData } from "@/types/apiResponseTypes";
+import type { ApprovalFiltersResponse, ApprovalMembersResponse, ApprovalStats, BaseApiResponse, CardItem, PaymentApprovalData, PaymentApprovalResponse, PendingRegistrationData, QuickViewMemberData, PaymentQuickViewData, RelievingRequestData, RelievingRequestsResponse } from "@/types/apiResponseTypes";
 import { ApiClient } from "@/utils";
 import { useNotification } from "@/hooks/useNotification";
 import "./ApprovalsPage.scss";
-
-interface ApprovalCards {
-    registration: CardItem[];
-    payment: CardItem[];
-}
-
-interface lastUpdatedProps {
-    registration: Date;
-    payment: Date;
-}
 
 interface ApprovalFilterParams {
     search?: string;
@@ -34,6 +24,7 @@ const ApprovalsPage = () => {
     const [activeTab, setActiveTab] = useState("pending_registration");
     const [registrationTableData, setRegistrationTableData] = useState<PendingRegistrationData[]>([]);
     const [paymentTableData, setPaymentTableData] = useState<PaymentApprovalData[]>([]);
+    const [relievingRequestsData, setRelievingRequestsData] = useState<RelievingRequestData[]>([]);
 
     const [TableLoading, setTableLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
@@ -59,6 +50,15 @@ const ApprovalsPage = () => {
         memberData: null
     });
 
+    // Relieving Request Modal state
+    const [relievingRequestModal, setRelievingRequestModal] = useState<{
+        isOpen: boolean;
+        memberData: RelievingRequestData | null;
+    }>({
+        isOpen: false,
+        memberData: null
+    });
+
     // Loading states
     const [approveLoading, setApproveLoading] = useState(false);
     const [rejectLoading, setRejectLoading] = useState(false);
@@ -66,8 +66,8 @@ const ApprovalsPage = () => {
     const [filterItemsLoading, setFilterItemsLoading] = useState(false);
 
     // Cards stats
-    const [approvalCards, setApprovalCards] = useState<ApprovalCards | null>(null);
-    const [lastUpdated, setLastUpdated] = useState<lastUpdatedProps | null>(null);
+    const [cardItems, setCardItems] = useState<CardItem[] | null>(null);
+    const [lastUpdated, setLastUpdated] = useState<Date | string | null>(null);
 
     // filter items
     const [filterItems, setFilterItems] = useState<types["FilterItemProps"][]>([]);
@@ -86,6 +86,10 @@ const ApprovalsPage = () => {
         {
             id: "pending_payment",
             label: "Payment Pending",
+        },
+        {
+            id: "relieving_requests",
+            label: "Relieving Requests",
         }
     ]
 
@@ -192,13 +196,112 @@ const ApprovalsPage = () => {
                         )
                     }
                 ]
+            case "relieving_requests":
+                return [
+                    {
+                        key: "memberName",
+                        label: "Member Name",
+                        width: "12%",
+                        align: "left" as const,
+                    },
+                    {
+                        key: "memberMemberId",
+                        label: "Member ID",
+                        width: "10%",
+                        align: "center" as const,
+                    },
+                    {
+                        key: "pgName",
+                        label: "PG Name",
+                        width: "12%"
+                    },
+                    {
+                        key: "roomNo",
+                        label: "Room",
+                        width: "8%",
+                        align: "center" as const,
+                    },
+                    {
+                        key: "requestedLeaveDate",
+                        label: "Leave Date",
+                        width: "10%",
+                        align: "center" as const,
+                        render: (value: unknown) => {
+                            const date = new Date(value as string);
+                            return date.toLocaleDateString('en-IN');
+                        }
+                    },
+                    {
+                        key: "status",
+                        label: "Status",
+                        width: "8%",
+                        align: "center" as const,
+                        render: (value: unknown) => (
+                            <span className={`status-badge status-badge--${(value as string).toLowerCase()}`}>
+                                {value as string}
+                            </span>
+                        )
+                    },
+                    {
+                        key: "pendingDues",
+                        label: "Pending Dues",
+                        width: "10%",
+                        align: "center" as const,
+                        render: (value: unknown) => (
+                            <div className='currency-value'>
+                                <span className='currency-symbol'>
+                                    <ui.Icons name="indianRupee" size={14} />
+                                </span>
+                                <span className='currency-amount'>{value as string}</span>
+                            </div>
+                        )
+                    },
+                    {
+                        key: "finalAmount",
+                        label: "Final Amount",
+                        width: "10%",
+                        align: "center" as const,
+                        render: (value: unknown) => (
+                            <div className='currency-value'>
+                                <span className='currency-symbol'>
+                                    <ui.Icons name="indianRupee" size={14} />
+                                </span>
+                                <span className='currency-amount'>{value as string}</span>
+                            </div>
+                        )
+                    },
+                    {
+                        key: "reason",
+                        label: "Reason",
+                        width: "15%",
+                        render: (value: unknown) => (
+                            <div className="text-truncate" title={value as string}>
+                                {value as string}
+                            </div>
+                        )
+                    },
+                    {
+                        key: "memberPhone",
+                        label: "Phone",
+                        width: "10%"
+                    }
+                ]
             default:
                 return [];
         }
     }
 
-    const getTableData = (): PendingRegistrationData[] | PaymentApprovalData[] => {
-        return activeTab === 'pending_registration' ? registrationTableData : paymentTableData;
+    const getTableData = (): Record<string, unknown>[] => {
+        switch (activeTab) {
+            case 'pending_registration':
+                return registrationTableData as unknown as Record<string, unknown>[];
+            case 'pending_payment':
+                return paymentTableData as unknown as Record<string, unknown>[];
+            case 'relieving_requests':
+                return relievingRequestsData as unknown as Record<string, unknown>[];
+            default:
+                return [];
+        }
     }
 
     useEffect(() => {
@@ -210,6 +313,11 @@ const ApprovalsPage = () => {
             case "pending_payment":
                 fetchPaymentsData();
                 fetchPaymentApprovalFilters();
+                fetchApprovalStats();
+                break;
+            case "relieving_requests":
+                fetchRelievingRequestsData();
+                fetchApprovalStats();
                 break;
             default:
                 break;
@@ -221,7 +329,7 @@ const ApprovalsPage = () => {
         setTableLoading(true);
         try {
 
-            const apiResponse = await ApiClient.get("/approval/members") as ApprovalMembersResponse;
+            const apiResponse = await ApiClient.get("/approvals/members") as ApprovalMembersResponse;
             if (apiResponse && apiResponse.success) {
                 setRegistrationTableData(apiResponse.data);
                 setCurrentPage(apiResponse.pagination.page);
@@ -242,6 +350,29 @@ const ApprovalsPage = () => {
             setTableLoading(false);
         }
 
+    }
+
+    // Function to get relieving requests data
+    const fetchRelievingRequestsData = async () => {
+        setTableLoading(true);
+        try {
+            const apiResponse = await ApiClient.get("/approvals/leaving-requests") as RelievingRequestsResponse;
+            if (apiResponse && apiResponse.success) {
+                setRelievingRequestsData(apiResponse.data);
+                setCurrentPage(apiResponse.pagination.page);
+                setTotalPages(apiResponse.pagination.totalPages);
+            } else {
+                setRelievingRequestsData([]);
+                setCurrentPage(1);
+                setTotalPages(1);
+                notification.showError(apiResponse.error || 'Failed to fetch relieving requests', apiResponse.message || 'Contact support', 2000);
+            }
+        } catch (err) {
+            notification.showError('Error fetching relieving requests', "Check your network connection", 2000);
+            setRelievingRequestsData([]);
+        } finally {
+            setTableLoading(false);
+        }
     }
 
     // Build query parameters for approval filters
@@ -287,7 +418,7 @@ const ApprovalsPage = () => {
         setTableLoading(true);
         try {
             const queryString = buildApprovalQueryParams(filterParams);
-            const apiResponse = await ApiClient.get(`/approval/payments?${queryString}`) as PaymentApprovalResponse;
+            const apiResponse = await ApiClient.get(`/approvals/payments?${queryString}`) as PaymentApprovalResponse;
             if (apiResponse && apiResponse.success) {
                 setPaymentTableData(apiResponse.data.tableData);
                 setCurrentPage(apiResponse.data.pagination.page);
@@ -313,7 +444,7 @@ const ApprovalsPage = () => {
     const fetchPaymentApprovalFilters = async () => {
         setFilterItemsLoading(true);
         try {
-            const apiResponse = await ApiClient.get("/approval/payments/filters") as ApprovalFiltersResponse;
+            const apiResponse = await ApiClient.get("/filters/payments") as ApprovalFiltersResponse;
             if (apiResponse && apiResponse.success) {
                 setFilterItems(apiResponse.data.filters);
             } else {
@@ -330,26 +461,55 @@ const ApprovalsPage = () => {
 
     //Function to get tab cards
     const fetchApprovalStats = useCallback(async (filterParams: ApprovalFilterParams = currentFilters) => {
-
         setFetchingStats(true);
         try {
-            const queryString = buildApprovalQueryParams(filterParams);
-            const apiResponse = await ApiClient.get(`/approval/stats?${queryString}`) as ApprovalStats;
-            if (apiResponse.success && apiResponse.data) {
-                setApprovalCards(apiResponse.data.cards);
-                setLastUpdated(apiResponse.data.lastUpdated);
+            let apiUrl = '';
+            
+            // Build different endpoints based on active tab
+            switch (activeTab) {
+                case 'pending_registration':
+                    apiUrl = `/stats/approvals/${activeTab}`;
+                    break;
+                case 'pending_payment':
+                    const queryString = buildApprovalQueryParams(filterParams);
+                    apiUrl = `/stats/approvals/${activeTab}${queryString ? `?${queryString}` : ''}`;
+                    break;
+                case 'relieving_requests':
+                    apiUrl = `/stats/approvals/${activeTab}`;
+                    break;
+                default:
+                    apiUrl = `/stats/approvals/${activeTab}`;
+                    break;
             }
-            else {
-                notification.showError(apiResponse?.message || 'Failed to fetch approval stats', apiResponse.error, 2000);
-            } ``
 
+            const apiResponse = await ApiClient.get(apiUrl) as ApprovalStats;
+            if (apiResponse.success && apiResponse.data) {
+                setCardItems(apiResponse.data.cards);
+                // Since each tab now returns its own lastUpdated, extract the appropriate value
+                if (apiResponse.data.lastUpdated) {
+                    const lastUpdatedData = apiResponse.data.lastUpdated;
+                    switch (activeTab) {
+                        case 'pending_registration':
+                            setLastUpdated(lastUpdatedData.registration || lastUpdatedData);
+                            break;
+                        case 'pending_payment':
+                            setLastUpdated(lastUpdatedData.payment || lastUpdatedData);
+                            break;
+                        default:
+                            // For new tabs or direct lastUpdated values
+                            setLastUpdated(typeof lastUpdatedData === 'object' ? new Date() : lastUpdatedData);
+                            break;
+                    }
+                }
+            } else {
+                notification.showError(apiResponse?.message || 'Failed to fetch approval stats', apiResponse.error, 2000);
+            }
         } catch (error) {
             notification.showError('Error fetching approval stats', "Check your network connection", 2000);
         } finally {
             setFetchingStats(false);
         }
-
-    }, [notification, currentFilters]);
+    }, [notification, currentFilters, activeTab]);
 
     //handles payment filter apply function
     const handlePaymentFilterApply = useCallback(async (filterValues: Record<string, string | string[] | number | boolean | Date | { start: string; end: string } | null>) => {
@@ -392,21 +552,21 @@ const ApprovalsPage = () => {
         fetchApprovalStats(resetFilters);
     }, [fetchPaymentsData, fetchApprovalStats]);
 
-
-    const getTabCards = () => {
-        switch (activeTab) {
-            case "pending_registration":
-                return approvalCards?.registration || [];
-            case "pending_payment":
-                return approvalCards?.payment || [];
-            default:
-                return [];
-        }
-    };
-
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
-        fetchPendingRegistrationsData();
+        switch (activeTab) {
+            case "pending_registration":
+                fetchPendingRegistrationsData();
+                break;
+            case "pending_payment":
+                fetchPaymentsData(currentFilters);
+                break;
+            case "relieving_requests":
+                fetchRelievingRequestsData();
+                break;
+            default:
+                break;
+        }
     };
 
     const handleTabChange = (tabId: string) => {
@@ -503,6 +663,21 @@ const ApprovalsPage = () => {
         });
     };
 
+    // Relieving Request Modal handlers
+    const handleRelievingRequestView = (requestData: RelievingRequestData) => {
+        setRelievingRequestModal({
+            isOpen: true,
+            memberData: requestData
+        });
+    };
+
+    const handleCloseRelievingRequestModal = () => {
+        setRelievingRequestModal({
+            isOpen: false,
+            memberData: null
+        });
+    };
+
     const handleApproveUser = async (userId: string, pgId: string, formData: { roomId: string; rentAmount?: string; pricePerDay?: string; advanceAmount?: string; pgLocation: string; dateOfJoining?: string }) => {
         setApproveLoading(true);
         try {
@@ -512,7 +687,7 @@ const ApprovalsPage = () => {
                 ...formData
             }
 
-            const apiResponse = await ApiClient.put(`/approval/members/${userId}`, approveForm) as BaseApiResponse;
+            const apiResponse = await ApiClient.put(`/approvals/members/${userId}`, approveForm) as BaseApiResponse;
 
             if (apiResponse && apiResponse.success) {
                 notification.showSuccess('Member Approved', 'A new member has been added successfully in ' + formData.pgLocation);
@@ -600,6 +775,55 @@ const ApprovalsPage = () => {
         }
     };
 
+    // Relieving Request API handlers
+    const handleApproveRelievingRequest = async (requestId: string) => {
+        setApproveLoading(true);
+        try {
+            const approveForm = {
+                status: 'APPROVED'
+            };
+
+            const apiResponse = await ApiClient.put(`/approvals/leaving-requests/${requestId}`, approveForm) as BaseApiResponse;
+
+            if (apiResponse && apiResponse.success) {
+                notification.showSuccess('Relieving Request Approved', 'Member relieving request has been approved successfully');
+                fetchRelievingRequestsData();
+                fetchApprovalStats();
+                handleCloseRelievingRequestModal();
+            } else {
+                notification.showError(apiResponse?.message || 'Relieving Request Approval Failed', 'Failed to approve relieving request');
+            }
+        } catch (error) {
+            notification.showError('Relieving Request Approval Failed', 'Failed to approve relieving request');
+        } finally {
+            setApproveLoading(false);
+        }
+    };
+
+    const handleRejectRelievingRequest = async (requestId: string) => {
+        setRejectLoading(true);
+        try {
+            const rejectForm = {
+                status: 'REJECTED'
+            };
+
+            const apiResponse = await ApiClient.put(`/approvals/leaving-requests/${requestId}`, rejectForm) as BaseApiResponse;
+
+            if (apiResponse && apiResponse.success) {
+                notification.showSuccess('Relieving Request Rejected', 'Member relieving request has been rejected successfully');
+                fetchRelievingRequestsData();
+                fetchApprovalStats();
+                handleCloseRelievingRequestModal();
+            } else {
+                notification.showError(apiResponse?.message || 'Relieving Request Rejection Failed', 'Failed to reject relieving request');
+            }
+        } catch (error) {
+            notification.showError('Relieving Request Rejection Failed', 'Failed to reject relieving request');
+        } finally {
+            setRejectLoading(false);
+        }
+    };
+
     return (
         <div className="approvals-page">
             <div className="approvals-page__header">
@@ -623,12 +847,12 @@ const ApprovalsPage = () => {
                 )}
                 <div className="approvals-page__cards">
                     <layouts.CardGrid
-                        cards={approvalCards ? getTabCards() : [{ icon: "clock" }, { icon: "clock" }, { icon: "clock" }, { icon: "clock" }]}
+                        cards={cardItems ? cardItems : [{ icon: "clock" }, { icon: "clock" }, { icon: "clock" }, { icon: "clock" }]}
                         columns={4} gap="md"
                         loading={fetchingStats}
                         showRefresh={activeTab === 'pending_registration'}
                         onRefresh={fetchApprovalStats}
-                        lastUpdated={lastUpdated ? (activeTab === 'pending_registration' ? lastUpdated.registration : lastUpdated.payment) : undefined}
+                        lastUpdated={lastUpdated || undefined}
                         className="approvals-page__card-grid" />
                 </div>
                 <div className="approvals-page__table">
@@ -643,9 +867,33 @@ const ApprovalsPage = () => {
                             onPageChange: handlePageChange
                         }}
                         showRefresh
-                        onRefresh={() => activeTab === 'pending_registration' ? fetchPendingRegistrationsData() : fetchPaymentsData(currentFilters)}
-                        onRowClick={activeTab === 'pending_payment' ? (row) => handlePaymentQuickView(row as PaymentApprovalData) : undefined}
-                        className={activeTab === 'pending_payment' ? 'table--clickable' : ''}
+                        onRefresh={() => {
+                            switch (activeTab) {
+                                case 'pending_registration':
+                                    fetchPendingRegistrationsData();
+                                    break;
+                                case 'pending_payment':
+                                    fetchPaymentsData(currentFilters);
+                                    break;
+                                case 'relieving_requests':
+                                    fetchRelievingRequestsData();
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }}
+                        onRowClick={
+                            activeTab === 'pending_payment' 
+                                ? (row) => handlePaymentQuickView(row as PaymentApprovalData)
+                                : activeTab === 'relieving_requests'
+                                ? (row) => handleRelievingRequestView(row as unknown as RelievingRequestData)
+                                : undefined
+                        }
+                        className={
+                            activeTab === 'pending_payment' || activeTab === 'relieving_requests' 
+                                ? 'table--clickable' 
+                                : ''
+                        }
                     />
                 </div>
             </div>
@@ -673,6 +921,16 @@ const ApprovalsPage = () => {
                 memberData={paymentQuickViewModal.memberData}
                 onApprovePayment={handleApprovePayment}
                 onRejectPayment={handleRejectPayment}
+                approveLoading={approveLoading}
+                rejectLoading={rejectLoading}
+            />
+
+            <layouts.RelievingRequestModal
+                isOpen={relievingRequestModal.isOpen}
+                onClose={handleCloseRelievingRequestModal}
+                memberData={relievingRequestModal.memberData}
+                onApprove={handleApproveRelievingRequest}
+                onReject={handleRejectRelievingRequest}
                 approveLoading={approveLoading}
                 rejectLoading={rejectLoading}
             />

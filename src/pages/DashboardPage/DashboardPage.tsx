@@ -120,7 +120,7 @@ const DashboardPage: React.FC = () => {
                 10
             );
 
-            const endpoint = `/dashboard/members${queryString ? `?${queryString}` : ''}`;
+            const endpoint = `/members${queryString ? `?${queryString}` : ''}`;
 
             const apiResponse = await ApiClient.get(endpoint) as DashboardApiResponse;
             if (apiResponse.success && apiResponse.data) {
@@ -150,7 +150,7 @@ const DashboardPage: React.FC = () => {
 
         try {
 
-            const apiResponse = await ApiClient.get('/dashboard/stats') as DashboardStatsResponse;
+            const apiResponse = await ApiClient.get('/stats/dashboard') as DashboardStatsResponse;
             if (apiResponse.success && apiResponse.data) {
                 setCards(apiResponse.data.cards || []);
                 setLastUpdated(apiResponse.data.lastUpdated);
@@ -172,7 +172,7 @@ const DashboardPage: React.FC = () => {
         setFiltersLoading(true);
         try {
 
-            const apiResponse = await ApiClient.get('/dashboard/filters') as DashboardFiltersResponse
+            const apiResponse = await ApiClient.get('/filters/dashboard') as DashboardFiltersResponse
             if (apiResponse.success && apiResponse.data) {
                 setFilterItems(apiResponse.data.filters);
             }

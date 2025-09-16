@@ -201,6 +201,12 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 0.75rem;
+
+    &--loading {
+      opacity: 0.7;
+      pointer-events: none;
+      filter: blur(1px);
+    }
   }
 
   &__month-btn {
@@ -280,6 +286,25 @@
         transform: none;
         box-shadow: none;
         border-color: #f1f5f9;
+      }
+    }
+
+    &--loading {
+      opacity: 0.6;
+      pointer-events: none;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 20px;
+        height: 20px;
+        margin: -10px 0 0 -10px;
+        border: 2px solid transparent;
+        border-top: 2px solid #06b6d4;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
       }
     }
   }
@@ -573,4 +598,9 @@
       font-size: 0.75rem;
     }
   }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }

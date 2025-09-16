@@ -122,7 +122,7 @@ const MemberProfilePage: React.FC = () => {
         const fetchMemberData = async () => {
             try {
                 setLoading(true);
-                const apiResponse = await ApiClient.get(`/members/details/${memberId}`) as MemberProfileDataReponse;
+                const apiResponse = await ApiClient.get(`/members/${memberId}`) as MemberProfileDataReponse;
                 if (apiResponse.success && apiResponse.data) {
                     setMemberData(apiResponse.data);
                 }
@@ -271,7 +271,11 @@ const MemberProfilePage: React.FC = () => {
                                 <div className="stat-value">{formatCurrency(memberData.paymentSummary.totalAmountPending || 0)}</div>
                                 <div className="stat-label">Pending</div>
                             </div>
-                        </div>
+                            <div className="stat-item stat-neutral">
+                                <div className="stat-value">{memberData.paymentSummary.currentDueDate ? formatDate(memberData.paymentSummary.currentDueDate) : '-'}</div>
+                                <div className="stat-label">Due-date</div>
+                            </div>
+                            </div>
                     </div>
                 </div>
             </div>
@@ -294,7 +298,6 @@ const MemberProfilePage: React.FC = () => {
                                     </div>
                                     <div className="header-content">
                                         <h3>Personal Information</h3>
-                                        <p>Basic member details</p>
                                     </div>
                                 </div>
                                 <div className="card-body">
@@ -331,7 +334,6 @@ const MemberProfilePage: React.FC = () => {
                                     </div>
                                     <div className="header-content">
                                         <h3>Contact Information</h3>
-                                        <p>Communication details</p>
                                     </div>
                                 </div>
                                 <div className="card-body">
@@ -369,7 +371,6 @@ const MemberProfilePage: React.FC = () => {
                                     </div>
                                     <div className="header-content">
                                         <h3>Accommodation Details</h3>
-                                        <p>PG and room information</p>
                                     </div>
                                 </div>
                                 <div className="card-body">
@@ -406,7 +407,6 @@ const MemberProfilePage: React.FC = () => {
                     <section className="documents-section">
                         <div className="section-header">
                             <h2>Documents & Verification</h2>
-                            <p>View and manage member documents</p>
                         </div>
 
                         <div className="documents-grid">

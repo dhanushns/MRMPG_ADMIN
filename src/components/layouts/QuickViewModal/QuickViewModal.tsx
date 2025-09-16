@@ -147,7 +147,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
             setSelectedPgId('');
             setRoomsLoading(false);
             setPgLocationsLoading(false);
-            
+
             // Fetch PG locations when modal opens
             fetchPgLocations();
         }
@@ -171,14 +171,14 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
     // Function to fetch PG location options based on memberData
     const fetchPgLocations = async () => {
         if (!memberData) return;
-        
+
         // Determine pgType based on memberData (you might need to adjust this logic based on your data structure)
         const pgType = memberData.rentType === 'LONG_TERM' ? 'MENS' : 'MENS'; // Adjust this logic as needed
-        
+
         setPgLocationsLoading(true);
         try {
-            const response = await ApiClient.get(`/admin/pg-locations?pgType=${pgType}`) as PgLocationsApiResponse;
-            
+            const response = await ApiClient.get(`/filters/pg-locations?pgType=${pgType}`) as PgLocationsApiResponse;
+
             if (response && response.success && response.data) {
                 setPgLocations(response.data.options);
             } else {
@@ -202,8 +202,8 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
 
         setRoomsLoading(true);
         try {
-            const response = await ApiClient.get(`/admin/rooms?pgId=${pgId}`) as RoomApiResponse;
-            
+            const response = await ApiClient.get(`/filters/pg/rooms?pgId=${pgId}`) as RoomApiResponse;
+
             if (response && response.success && response.data) {
                 setRoomData(response.data.options);
             } else {
@@ -229,14 +229,14 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
         if (field === 'pgLocation') {
             // Find the selected PG location to get its ID
             const selectedPgLocation = pgLocations.find(pg => pg.value === value);
-            
+
             setFormData(prev => ({
                 ...prev,
                 [field]: value,
                 roomNo: '',
                 rentAmount: ''
             }));
-            
+
             // Set the selected PG ID and fetch room data
             if (selectedPgLocation) {
                 setSelectedPgId(selectedPgLocation.value);
@@ -384,7 +384,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                         </div>
                     </div>
                 )}
-                
+
                 {/* Combined Header and Banner Layout */}
                 <div className={`quick-view-header-banner header-banner--${memberData.rentType}`}>
                     {/* Header Section */}
@@ -394,8 +394,8 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                                 {memberData.rentType === 'LONG_TERM' ? 'Long-Term Member' : 'Short-Term Member'}
                             </span>
                         </div>
-                        <button 
-                            className="close-button" 
+                        <button
+                            className="close-button"
                             onClick={() => {
                                 // Prevent closing modal when loading
                                 if (!approveLoading && !rejectLoading) {
@@ -436,9 +436,8 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                                     size="small"
                                     onClick={() => navigate(`/members/${memberData.id}`)}
                                     className="view-profile-btn"
-                                    leftIcon={<ui.Icons name="user" size={16} />}
                                 >
-                                    View Profile
+                                    <ui.Icons name="user" size={16} />
                                 </ui.Button>
                             </div>
                         )}
@@ -647,7 +646,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                 {/* Footer Layout - Actions */}
                 <div className="quick-view-footer">
                     <div className="footer-actions">
-                        {modelLayouts.approvalForm ? (
+                        {modelLayouts.approvalForm && (
                             <div className="approve-user-actions">
                                 <ui.Button
                                     variant="danger"
@@ -671,16 +670,6 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                                 </ui.Button>
                             </div>
 
-                        ) : (
-                            <ui.Button
-                                variant="danger"
-                                size="medium"
-                                onClick={handleDeleteUser}
-                                className="delete-user-btn"
-                                leftIcon={<ui.Icons name="trash" size={16} />}
-                            >
-                                Delete User
-                            </ui.Button>
                         )}
                     </div>
                 </div>

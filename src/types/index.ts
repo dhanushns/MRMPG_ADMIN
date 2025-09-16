@@ -180,6 +180,8 @@ export type IconName =
   | "building"
   | "x"
   | "target"
+  | "indianRupeeIcon"
+  | "receiptIndianRupeeIcon";
 
 interface IconProps {
   name: IconName;

@@ -22,7 +22,11 @@ const ExpensePage = (): React.ReactElement => {
 
     // Form state
     const [isFormOpen, setIsFormOpen] = useState(false);
-    const [formType, setFormType] = useState<CashEntryType>('cash-in');
+    const [formType, setFormType] = useState<CashEntryType>('CASH_IN');
+
+    // Modal state
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [selectedExpense, setSelectedExpense] = useState<ExpenseEntry | null>(null);
 
     // Table state
     const [tableData, setTableData] = useState<ExpenseEntry[]>([]);
@@ -30,7 +34,7 @@ const ExpensePage = (): React.ReactElement => {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalEntries, setTotalEntries] = useState(0);
-    const [pageSize] = useState(20); // Fixed page size
+    const [pageSize] = useState(10); // Fixed page size
 
     // Check token validity periodically
     useEffect(() => {
@@ -59,22 +63,22 @@ const ExpensePage = (): React.ReactElement => {
     const fetchExpenseStats = useCallback(async () => {
         setCardLoading(true);
         try {
-            const apiResponse = await ApiClient.get('/expenses/stats') as ExpenseStatsResponse;
+            const apiResponse = await ApiClient.get('/stats/expenses') as ExpenseStatsResponse;
             if (apiResponse.success && apiResponse.data) {
                 setCards(apiResponse.data.cards || []);
                 setLastUpdated(apiResponse.data.lastUpdated);
             } else {
                 setCards([]);
                 notification.showError(
-                    apiResponse.message || 'Failed to fetch expense statistics', 
-                    apiResponse.error || "Contact support", 
+                    apiResponse.message || 'Failed to fetch expense statistics',
+                    apiResponse.error || "Contact support",
                     5000
                 );
             }
         } catch (error) {
             notification.showError(
-                'Error fetching expense statistics', 
-                "Check your network connection", 
+                'Error fetching expense statistics',
+                "Check your network connection",
                 5000
             );
             setCards([]);
@@ -92,24 +96,24 @@ const ExpensePage = (): React.ReactElement => {
                 limit: pageSize.toString()
             });
 
-            const apiResponse = await ApiClient.get(`/expense/table?${queryParams}`) as ExpenseTableResponse;
+            const apiResponse = await ApiClient.get(`/expenses?${queryParams}`) as ExpenseTableResponse;
             if (apiResponse.success && apiResponse.data) {
-                setTableData(apiResponse.data.entries || []);
-                setCurrentPage(apiResponse.data.pagination.currentPage);
-                setTotalPages(apiResponse.data.pagination.totalPages);
-                setTotalEntries(apiResponse.data.pagination.totalEntries);
+                setTableData(apiResponse.data || []);
+                setCurrentPage(apiResponse.pagination.page);
+                setTotalPages(apiResponse.pagination.totalPages);
+                setTotalEntries(apiResponse.pagination.totalPages);
             } else {
                 setTableData([]);
                 notification.showError(
-                    apiResponse.message || 'Failed to fetch expense table data', 
-                    apiResponse.error || "Contact support", 
+                    apiResponse.message || 'Failed to fetch expense table data',
+                    apiResponse.error || "Contact support",
                     5000
                 );
             }
         } catch (error) {
             notification.showError(
-                'Error fetching expense table data', 
-                "Check your network connection", 
+                'Error fetching expense table data',
+                "Check your network connection",
                 5000
             );
             setTableData([]);
@@ -128,22 +132,55 @@ const ExpensePage = (): React.ReactElement => {
         setIsFormOpen(false);
     };
 
+    // Helper function to submit cash entry data
+    const submitCashEntry = async (data: CashEntryFormData): Promise<any> => {
+        // Create FormData for file upload
+        const formData = new FormData();
+
+        // Append form fields
+        formData.append('date', data.date);
+        formData.append('amount', data.amount);
+        formData.append('entryType', data.type);
+        formData.append('partyName', data.partyName);
+        formData.append('pgId', data.pgId);
+        formData.append('remarks', data.remarks);
+        formData.append('paymentType', data.paymentType);
+
+        // Append files if any
+        if (data.attachments && data.attachments.length > 0) {
+            data.attachments.forEach((file) => {
+                formData.append('bills', file);
+            });
+        }
+
+        // Use ApiClient postFormData method for authenticated multipart request
+        const result = await ApiClient.postFormData('/expenses', formData) as any;
+
+        if (!result.success) {
+            throw new Error(result.message || 'Failed to save cash entry');
+        }
+
+        return result;
+    };
+
     const handleFormSave = async (data: CashEntryFormData) => {
         try {
-            // Here you would typically call your API to save the cash entry
-            console.log('Saving cash entry:', data);
+            await submitCashEntry(data);
+
             notification.showSuccess(
-                `${data.type === 'cash-in' ? 'Cash In' : 'Cash Out'} entry saved successfully`,
+                `${data.type === 'CASH_IN' ? 'Cash In' : 'Cash Out'} entry saved successfully`,
                 'Entry has been recorded',
                 3000
             );
             closeForm();
-            // Refresh the stats after saving
+            // Refresh both stats and table data
             fetchExpenseStats();
+            fetchExpenseTableData(currentPage);
         } catch (error) {
+            console.error('Error saving cash entry:', error);
             notification.showError(
                 'Failed to save cash entry',
-                'Please try again',
+                error instanceof Error ? error.message : 'Please try again',
                 5000
             );
         }
@@ -151,19 +188,21 @@ const ExpensePage = (): React.ReactElement => {
 
     const handleFormSaveAndAddNew = async (data: CashEntryFormData) => {
         try {
-            // Here you would typically call your API to save the cash entry
-            console.log('Saving cash entry and adding new:', data);
+            await submitCashEntry(data);
+
             notification.showSuccess(
-                `${data.type === 'cash-in' ? 'Cash In' : 'Cash Out'} entry saved successfully`,
+                `${data.type === 'CASH_IN' ? 'Cash In' : 'Cash Out'} entry saved successfully`,
                 'Ready for next entry',
                 3000
             );
-            // Don't close the form, just refresh stats
+            // Don't close the form, just refresh data
             fetchExpenseStats();
+            fetchExpenseTableData(currentPage);
         } catch (error) {
+            console.error('Error saving cash entry:', error);
             notification.showError(
                 'Failed to save cash entry',
-                'Please try again',
+                error instanceof Error ? error.message : 'Please try again',
                 5000
             );
         }
@@ -188,6 +227,9 @@ const ExpensePage = (): React.ReactElement => {
         {
             key: 'entryType',
             label: 'Type',
+            width: '100px',
+            align: 'center' as const,
+            className: 'type-column',
             render: (_: unknown, row: Record<string, unknown>) => {
                 const entry = row as unknown as ExpenseEntry;
                 return (
@@ -200,6 +242,9 @@ const ExpensePage = (): React.ReactElement => {
         {
             key: 'amount',
             label: 'Amount',
+            width: '120px',
+            align: 'center' as const,
+            className: 'amount-column',
             render: (_: unknown, row: Record<string, unknown>) => {
                 const entry = row as unknown as ExpenseEntry;
                 return (
@@ -207,11 +252,14 @@ const ExpensePage = (): React.ReactElement => {
                         ₹{entry.amount.toLocaleString()}
                     </span>
                 );
-            }
+            },
         },
         {
             key: 'date',
             label: 'Date',
+            width: '110px',
+            align: 'center' as const,
+            className: 'date-column',
             render: (_: unknown, row: Record<string, unknown>) => {
                 const entry = row as unknown as ExpenseEntry;
                 return new Date(entry.date).toLocaleDateString();
@@ -220,55 +268,66 @@ const ExpensePage = (): React.ReactElement => {
         {
             key: 'partyName',
             label: 'Party Name',
+            width: '150px',
+            align: 'left' as const,
+            className: 'party-column',
             render: (_: unknown, row: Record<string, unknown>) => {
                 const entry = row as unknown as ExpenseEntry;
-                return entry.partyName || '-';
+                return (
+                    <span className="party-name" title={entry.partyName || '-'}>
+                        {entry.partyName || '-'}
+                    </span>
+                );
             }
         },
         {
-            key: 'admin',
+            key: 'adminName',
             label: 'Admin',
+            width: '120px',
+            align: 'left' as const,
+            className: 'admin-column',
             render: (_: unknown, row: Record<string, unknown>) => {
                 const entry = row as unknown as ExpenseEntry;
-                return entry.admin?.name || '-';
+                return (
+                    <span className="admin-name" title={entry.adminName || '-'}>
+                        {entry.adminName || '-'}
+                    </span>
+                );
             }
         },
         {
-            key: 'pg',
+            key: 'pgName',
             label: 'PG',
+            width: '130px',
+            align: 'left' as const,
+            className: 'pg-column',
             render: (_: unknown, row: Record<string, unknown>) => {
                 const entry = row as unknown as ExpenseEntry;
-                return entry.pg?.name || '-';
+                return (
+                    <span className="pg-name" title={entry.pgName || '-'}>
+                        {entry.pgName || '-'}
+                    </span>
+                );
             }
         },
         {
             key: 'actions',
             label: 'Actions',
+            width: '80px',
+            align: 'center' as const,
+            className: 'actions-column',
             render: (_: unknown, row: Record<string, unknown>) => {
                 const entry = row as unknown as ExpenseEntry;
                 return (
                     <div className="table-actions">
-                        <button 
+                        <ui.Button variant='transparent'
+                            size='small'
                             className="action-btn action-btn--view"
-                            onClick={() => handleViewExpense(entry.id)}
+                            onClick={() => handleViewExpense(entry)}
                             title="View Details"
                         >
-                            <i className="icon-eye"></i>
-                        </button>
-                        <button 
-                            className="action-btn action-btn--edit"
-                            onClick={() => handleEditExpense(entry.id)}
-                            title="Edit"
-                        >
-                            <i className="icon-edit"></i>
-                        </button>
-                        <button 
-                            className="action-btn action-btn--delete"
-                            onClick={() => handleDeleteExpense(entry.id)}
-                            title="Delete"
-                        >
-                            <i className="icon-delete"></i>
-                        </button>
+                            <ui.Icons name="eye" size={16} />
+                        </ui.Button>
                     </div>
                 );
             }
@@ -276,19 +335,14 @@ const ExpensePage = (): React.ReactElement => {
     ];
 
     // Table action handlers
-    const handleViewExpense = (id: string) => {
-        console.log('View expense:', id);
-        // TODO: Implement view functionality
+    const handleViewExpense = (expense: ExpenseEntry) => {
+        setSelectedExpense(expense);
+        setIsViewModalOpen(true);
     };
 
-    const handleEditExpense = (id: string) => {
-        console.log('Edit expense:', id);
-        // TODO: Implement edit functionality
-    };
-
-    const handleDeleteExpense = (id: string) => {
-        console.log('Delete expense:', id);
-        // TODO: Implement delete functionality
+    const handleCloseViewModal = () => {
+        setIsViewModalOpen(false);
+        setSelectedExpense(null);
     };
 
     return (
@@ -304,14 +358,14 @@ const ExpensePage = (): React.ReactElement => {
                                 variant: "primary",
                                 icon: "plus",
                                 size: "small",
-                                onClick: () => openForm('cash-in')
+                                onClick: () => openForm('CASH_IN')
                             },
                             {
                                 label: "Cash Out",
                                 variant: "secondary",
                                 icon: "minus",
                                 size: "small",
-                                onClick: () => openForm('cash-out')
+                                onClick: () => openForm('CASH_OUT')
                             },
                         ]}
                     />
@@ -322,9 +376,9 @@ const ExpensePage = (): React.ReactElement => {
                     <div className="expense-page__stats-section">
                         <layouts.CardGrid
                             cards={cards.length > 0 ? cards : [
-                                { icon: "clock" }, 
-                                { icon: "clock" }, 
-                                { icon: "clock" }, 
+                                { icon: "clock" },
+                                { icon: "clock" },
+                                { icon: "clock" },
                                 { icon: "clock" }
                             ]}
                             loading={cardLoading}
@@ -343,6 +397,7 @@ const ExpensePage = (): React.ReactElement => {
                             columns={tableColumns}
                             data={tableData as unknown as Record<string, unknown>[]}
                             loading={isTableLoading}
+                            sortable={false}
                             pagination={{
                                 currentPage: currentPage,
                                 totalPages: totalPages,
@@ -362,6 +417,13 @@ const ExpensePage = (): React.ReactElement => {
                 onSave={handleFormSave}
                 onSaveAndAddNew={handleFormSaveAndAddNew}
                 initialType={formType}
+            />
+
+            {/* Expense View Modal */}
+            <layouts.ExpenseViewModal
+                isOpen={isViewModalOpen}
+                onClose={handleCloseViewModal}
+                expense={selectedExpense}
             />
         </>
     );
