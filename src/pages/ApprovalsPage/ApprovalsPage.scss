@@ -108,37 +108,4 @@
     font-weight: 600;
     color: #059669;
   }
-
-  .status-badge {
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-
-    &--pending {
-      background: #fef3c7;
-      color: #92400e;
-    }
-
-    &--approved {
-      background: #d1fae5;
-      color: #065f46;
-    }
-
-    &--rejected {
-      background: #fee2e2;
-      color: #991b1b;
-    }
-
-    &--paid {
-      background: #d1fae5;
-      color: #065f46;
-    }
-
-    &--overdue {
-      background: #fee2e2;
-      color: #991b1b;
-    }
-  }
 }

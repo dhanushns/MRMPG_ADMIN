@@ -260,15 +260,15 @@ const MemberProfilePage: React.FC = () => {
                         {/* Quick Stats */}
                         <div className="quick-stats">
                             <div className="stat-item stat-positive">
-                                <div className="stat-value">{formatCurrency(memberData.paymentSummary.totalAmountPaid)}</div>
+                                <div className="stat-value">{formatCurrency(memberData.paymentSummary.totalAmountPaid || 0)}</div>
                                 <div className="stat-label">Total Paid</div>
                             </div>
                             <div className="stat-item stat-neutral">
-                                <div className="stat-value">{memberData.paymentSummary.totalPayments}</div>
+                                <div className="stat-value">{memberData.paymentSummary.totalPayments || 0}</div>
                                 <div className="stat-label">Payments Made</div>
                             </div>
                             <div className="stat-item stat-warning">
-                                <div className="stat-value">{formatCurrency(memberData.paymentSummary.totalAmountPending)}</div>
+                                <div className="stat-value">{formatCurrency(memberData.paymentSummary.totalAmountPending || 0)}</div>
                                 <div className="stat-label">Pending</div>
                             </div>
                         </div>
@@ -402,96 +402,73 @@ const MemberProfilePage: React.FC = () => {
                         </div>
                     </section>
 
-                    {/* Payment Analytics Section */}
-                    <section className="analytics-section">
+                    {/* Documents Section */}
+                    <section className="documents-section">
                         <div className="section-header">
-                            <h2>Payment Analytics</h2>
+                            <h2>Documents & Verification</h2>
+                            <p>View and manage member documents</p>
                         </div>
 
-                        <div className="analytics-grid">
-                            <div className="analytics-card payment-summary">
-                                <div className="card-header">
-                                    <h3>Payment Summary</h3>
-                                    <div className="header-badge">
-                                        <ui.Icons name="calendar" size={16} />
-                                        Up to date
+                        <div className="documents-grid">
+                            {/* ID Proof Document Card */}
+                            <div className={`document-card document-card--${rentTypeClass.toLowerCase()}`}>
+                                <div className="document-card-header">
+                                    <div className="document-icon-wrapper">
+                                        <ui.Icons name="fileText" size={24} />
+                                    </div>
+                                    <div className="document-meta">
+                                        <h3 className="document-title">ID Proof</h3>
+                                        <span className="document-type">Identity Document</span>
+                                    </div>
+                                    <div className="verification-badge verified">
+                                        <ui.Icons name="checkCircle" size={16} />
+                                        <span>Verified</span>
                                     </div>
                                 </div>
-                                <div className="summary-metrics">
-                                    <div className={`metric-card metric-paid metric-card--${rentTypeClass}`}>
-                                        <div className="metric-icon">
-                                            <ui.Icons name="checkCircle" size={24} />
-                                        </div>
-                                        <div className="metric-info">
-                                            <div className="metric-value">{formatCurrency(memberData.paymentSummary.totalAmountPaid)}</div>
-                                            <div className="metric-label">Total Paid</div>
-                                        </div>
-                                    </div>
-                                    <div className={`metric-card metric-pending metric-card--${rentTypeClass}`}>
-                                        <div className="metric-icon">
-                                            <ui.Icons name="lock" size={24} />
-                                        </div>
-                                        <div className="metric-info">
-                                            <div className="metric-value">{formatCurrency(memberData.paymentSummary.totalAmountPending)}</div>
-                                            <div className="metric-label">Pending Amount</div>
-                                        </div>
-                                    </div>
-                                    <div className={`metric-card metric-due metric-card--${rentTypeClass}`}>
-                                        <div className="metric-icon">
-                                            <ui.Icons name="calendar" size={24} />
-                                        </div>
-                                        <div className="metric-info">
-                                            <div className="metric-value">
-                                                {memberData.paymentSummary.nextDueDate ? formatDate(memberData.paymentSummary.nextDueDate) : 'No due date'}
-                                            </div>
-                                            <div className="metric-label">Next Due Date</div>
-                                        </div>
+                                <div className="document-card-body">
+                                    <p className="document-description">
+                                        Government issued identity document for verification purposes.
+                                    </p>
+                                    <div className="document-actions">
+                                        <ui.Button
+                                            variant="primary"
+                                            size="small"
+                                            onClick={() => handleDocumentView(memberData.member.documentUrl, 'ID Proof')}
+                                            leftIcon={<ui.Icons name="eye" size={16} />}
+                                        >
+                                            View Document
+                                        </ui.Button>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Documents Card */}
-                            <div className="analytics-card documents-card">
-                                <div className="card-header">
-                                    <h3>Documents</h3>
-                                    <div className="header-badge">
-                                        <ui.Icons name="shield" size={16} />
-                                        Verified
+                            {/* Profile Photo Document Card */}
+                            <div className={`document-card document-card--${rentTypeClass.toLowerCase()}`}>
+                                <div className="document-card-header">
+                                    <div className="document-icon-wrapper">
+                                        <ui.Icons name="user" size={24} />
+                                    </div>
+                                    <div className="document-meta">
+                                        <h3 className="document-title">Profile Photo</h3>
+                                        <span className="document-type">Profile Image</span>
+                                    </div>
+                                    <div className="verification-badge verified">
+                                        <ui.Icons name="checkCircle" size={16} />
+                                        <span>Verified</span>
                                     </div>
                                 </div>
-                                <div className="documents-list">
-                                    <div className={`document-item document-item--${rentTypeClass}`}>
-                                        <div className="document-icon">
-                                            <ui.Icons name="fileText" size={20} />
-                                        </div>
-                                        <div className="document-info">
-                                            <span className="document-name">Aadhar Card</span>
-                                            <span className="document-status verified">Verified</span>
-                                        </div>
+                                <div className="document-card-body">
+                                    <p className="document-description">
+                                        Member's profile photograph for identification and records.
+                                    </p>
+                                    <div className="document-actions">
                                         <ui.Button
-                                            variant="ghost"
-                                            size="small"
-                                            onClick={() => handleDocumentView(memberData.member.aadharUrl, 'Aadhar Card')}
-                                            leftIcon={<ui.Icons name="eye" size={16} />}
-                                        >
-                                            View
-                                        </ui.Button>
-                                    </div>
-                                    <div className={`document-item document-item--${rentTypeClass}`}>
-                                        <div className="document-icon">
-                                            <ui.Icons name="user" size={20} />
-                                        </div>
-                                        <div className="document-info">
-                                            <span className="document-name">Profile Photo</span>
-                                            <span className="document-status verified">Verified</span>
-                                        </div>
-                                        <ui.Button
-                                            variant="ghost"
+                                            variant="primary"
                                             size="small"
                                             onClick={() => handleDocumentView(memberData.member.photoUrl, 'Profile Photo')}
                                             leftIcon={<ui.Icons name="eye" size={16} />}
                                         >
-                                            View
+                                            View Photo
                                         </ui.Button>
                                     </div>
                                 </div>

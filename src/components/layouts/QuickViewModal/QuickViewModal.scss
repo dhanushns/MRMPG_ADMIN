@@ -312,12 +312,12 @@
       transition: all 0.2s ease;
       border: 1px solid rgba(255, 255, 255, 0.3);
       align-self: flex-end;
-      
-      button{
+
+      button {
         color: white;
       }
 
-      button:hover{
+      button:hover {
         color: white;
       }
 
@@ -663,6 +663,28 @@
         color: #10b981;
         font-weight: bold;
       }
+    }
+
+    // Rent info note styling for short-term members
+    .rent-info-note {
+      color: #3b82f6;
+      font-size: 12px;
+      font-style: italic;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    // Date info note styling for short-term members
+    .date-info-note {
+      color: #3b82f6;
+      font-size: 12px;
+      font-style: italic;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
     // Error message styling

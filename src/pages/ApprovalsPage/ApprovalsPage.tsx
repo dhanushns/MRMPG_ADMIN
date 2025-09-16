@@ -96,45 +96,27 @@ const ApprovalsPage = () => {
                     {
                         key: "name",
                         label: "Name",
-                        sortable: true,
                         width: "10%",
                         align: "left" as const,
                     },
                     {
-                        key: "location",
-                        label: "Location",
-                        sortable: true,
-                        width: "10%"
-                    },
-                    {
-                        key: "work",
-                        label: "Work",
-                        sortable: true,
-                        width: "10%",
-                        align: "center" as const
-                    },
-                    {
                         key: "rentType",
                         label: "Rent Type",
-                        sortable: true,
                         width: "10%"
                     },
                     {
                         key: "pgLocation",
                         label: "PG Location",
-                        sortable: true,
                         width: "10%"
                     },
                     {
                         key: "phone",
                         label: "Phone",
-                        sortable: true,
                         width: "10%"
                     },
                     {
                         key: "actions",
                         label: "Actions",
-                        sortable: false,
                         width: "10%",
                         align: "center" as const,
                         render: (_value: unknown, row: Record<string, unknown>) => (
@@ -154,40 +136,28 @@ const ApprovalsPage = () => {
                     {
                         key: "name",
                         label: "Name",
-                        sortable: true,
                         width: "15%",
                         align: "left" as const,
                     },
                     {
-                        key: "work",
-                        label: "Work",
-                        sortable: true,
-                        width: "12%",
-                        align: "center" as const
-                    },
-                    {
                         key: "rentType",
                         label: "Rent Type",
-                        sortable: true,
                         width: "12%"
                     },
                     {
                         key: "pgLocation",
                         label: "PG Location",
-                        sortable: true,
                         width: "15%",
                         align: "center" as const
                     },
                     {
                         key: "phone",
                         label: "Phone",
-                        sortable: true,
                         width: "15%"
                     },
                     {
                         key: "rentAmount",
                         label: "Rent",
-                        sortable: true,
                         width: "12%",
                         align: "center" as const,
                         render: (value: unknown) => (
@@ -202,7 +172,6 @@ const ApprovalsPage = () => {
                     {
                         key: "requestedMonthPaymentStatus",
                         label: "Payment",
-                        sortable: false,
                         width: "10%",
                         align: "center" as const,
                         render: (value: unknown) => (
@@ -214,7 +183,6 @@ const ApprovalsPage = () => {
                     {
                         key: "requestedMonthApprovalStatus",
                         label: "Approval",
-                        sortable: false,
                         width: "9%",
                         align: "center" as const,
                         render: (value: unknown) => (
@@ -237,7 +205,7 @@ const ApprovalsPage = () => {
         switch (activeTab) {
             case "pending_registration":
                 fetchPendingRegistrationsData();
-                handleRefreshStats();
+                fetchApprovalStats();
                 break;
             case "pending_payment":
                 fetchPaymentsData();
@@ -383,28 +351,6 @@ const ApprovalsPage = () => {
 
     }, [notification, currentFilters]);
 
-    // Refresh Stats card
-    const handleRefreshStats = useCallback(async () => {
-        setFetchingStats(true);
-        try {
-
-            const apiResponse = await ApiClient.post("/approval/stats/refresh", {}) as ApprovalStats;
-            if (apiResponse.success && apiResponse.data) {
-                setApprovalCards(apiResponse.data.cards);
-                setLastUpdated(apiResponse.data.lastUpdated);
-            }
-            else {
-                notification.showError(apiResponse?.message || 'Failed to refresh approval stats', apiResponse.error, 2000);
-            }
-
-        } catch (error) {
-            notification.showError('Error fetching approval stats', "Check your network connection", 2000);
-        }
-        finally {
-            setFetchingStats(false);
-        }
-    }, [notification]);
-
     //handles payment filter apply function
     const handlePaymentFilterApply = useCallback(async (filterValues: Record<string, string | string[] | number | boolean | Date | { start: string; end: string } | null>) => {
         const filterParams: ApprovalFilterParams = {
@@ -540,7 +486,7 @@ const ApprovalsPage = () => {
             },
             documents: [
                 { name: 'Profile Photo', url: memberData.photoUrl },
-                { name: 'Aadhar Card', url: memberData.aadharUrl }
+                { name: 'ID Proof', url: memberData.documentUrl }
             ].filter(doc => doc.url)
         };
 
@@ -557,7 +503,7 @@ const ApprovalsPage = () => {
         });
     };
 
-    const handleApproveUser = async (userId: string, pgId: string, formData: { roomId: string; rentAmount: string; advanceAmount?: string; pgLocation: string; dateOfJoining?: string }) => {
+    const handleApproveUser = async (userId: string, pgId: string, formData: { roomId: string; rentAmount?: string; pricePerDay?: string; advanceAmount?: string; pgLocation: string; dateOfJoining?: string }) => {
         setApproveLoading(true);
         try {
             const approveForm = {
@@ -681,7 +627,7 @@ const ApprovalsPage = () => {
                         columns={4} gap="md"
                         loading={fetchingStats}
                         showRefresh={activeTab === 'pending_registration'}
-                        onRefresh={handleRefreshStats}
+                        onRefresh={fetchApprovalStats}
                         lastUpdated={lastUpdated ? (activeTab === 'pending_registration' ? lastUpdated.registration : lastUpdated.payment) : undefined}
                         className="approvals-page__card-grid" />
                 </div>

@@ -994,29 +994,168 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 12px;
-  border-radius: 16px;
-  font-size: 10px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  min-width: 65px;
+  min-width: 70px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 
+  // PAID - Green (Success)
   &--paid {
     background-color: #dcfce7;
     color: #166534;
     border: 1px solid #bbf7d0;
   }
 
+  // APPROVED - Green (Success)
+  &--approved {
+    background-color: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+  }
+
+  // PENDING - Yellow/Orange (Warning)
   &--pending {
     background-color: #fef3c7;
     color: #92400e;
     border: 1px solid #fde68a;
   }
+
+  // OVERDUE - Red (Danger)
+  &--overdue {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
+
+  // REJECTED - Red (Danger)
+  &--rejected {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
+
+  // Room Status - VACANT (Orange/Yellow)
+  &--vacant {
+    background-color: #fff3e0;
+    color: #e65100;
+    border: 1px solid #ffcc02;
+  }
+
+  // Room Status - PARTIALLY OCCUPIED (Amber)
+  &--partially-occupied {
+    background-color: #fff8e1;
+    color: #f57c00;
+    border: 1px solid #ffb74d;
+  }
+
+  // Room Status - FULLY OCCUPIED (Green)
+  &--fully-occupied {
+    background-color: #e8f5e8;
+    color: #2e7d32;
+    border: 1px solid #81c784;
+  }
+
+  // General Status Colors
+  &--available {
+    background-color: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+  }
+
+  &--occupied {
+    background-color: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+  }
+
+  &--partial-occupancy {
+    background-color: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #93c5fd;
+  }
+
+  &--maintenance {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
+
+  &--unavailable {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    border: 1px solid #d1d5db;
+  }
+
+  // Enquiry Status
+  &--not-resolved {
+    background-color: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+  }
+
+  &--resolved {
+    background-color: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+  }
+
+  // For class-based status selectors (used in some components)
+  &.status-available {
+    background-color: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+  }
+
+  &.status-occupied {
+    background-color: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+  }
+
+  &.status-partial-occupancy {
+    background-color: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #93c5fd;
+  }
+
+  &.status-maintenance {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
+
+  &.status-unavailable {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    border: 1px solid #d1d5db;
+  }
+
+  // Hover effects for interactive badges
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+@media (max-width: 768px) {
+  .status-badge {
+    padding: 4px 10px;
+    font-size: 10px;
+    min-width: 60px;
+    border-radius: 16px;
+  }
 }
 
 @media (max-width: 480px) {
   .status-badge {
+    padding: 3px 8px;
+    font-size: 9px;
+    min-width: 55px;
     overflow: visible !important;
     text-overflow: unset !important;
     white-space: nowrap !important;

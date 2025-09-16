@@ -145,21 +145,21 @@ const DashboardPage: React.FC = () => {
         }
     }, [notification]);
 
-    const refreshDashboardCards = useCallback(async () => {
+    const fetchDashboardStats = useCallback(async () => {
         setCardLoading(true);
 
         try {
 
-            const apiResponse = await ApiClient.post('/dashboard/stats/refresh', {}) as DashboardStatsResponse;
+            const apiResponse = await ApiClient.get('/dashboard/stats') as DashboardStatsResponse;
             if (apiResponse.success && apiResponse.data) {
                 setCards(apiResponse.data.cards || []);
                 setLastUpdated(apiResponse.data.lastUpdated);
             } else {
                 setCards([]);
-                notification.showError('Failed to fetch dashboard cards', "Contact support", 5000);
+                notification.showError(apiResponse.message || 'Failed to fetch dashboard cards', apiResponse.error || "Contact support", 5000);
             }
         } catch (error) {
-            notification.showError('Error refreshing dashboard cards', "Check your network connection", 5000);
+            notification.showError('Error fetching dashboard cards', "Check your network connection", 5000);
             setCards([]);
         }
         finally {
@@ -226,12 +226,12 @@ const DashboardPage: React.FC = () => {
     // Initial data loading - only runs once when component mounts
     useEffect(() => {
         if (AuthManager.isAuthenticated() && isInitialLoad.current) {
-            refreshDashboardCards();
+            fetchDashboardStats();
             fetchFilterOptions();
             fetchMembersData(1, filters, null, "asc");
             isInitialLoad.current = false;
         }
-    }, [refreshDashboardCards, fetchFilterOptions, fetchMembersData, filters]);
+    }, [fetchDashboardStats, fetchFilterOptions, fetchMembersData, filters]);
 
     // QuickView Modal Handlers
     const handleRowClick = (row: TableMemberData) => {
@@ -253,27 +253,18 @@ const DashboardPage: React.FC = () => {
         {
             key: "memberId",
             label: "Member ID",
-            sortable: true,
             width: "10%",
             align: "center" as const,
         },
         {
             key: "name",
             label: "Name",
-            sortable: true,
             width: "10%",
             align: "left" as const,
         },
         {
-            key: "location",
-            label: "Location",
-            sortable: true,
-            width: "10%"
-        },
-        {
             key: "rentType",
             label: "Rent Type",
-            sortable: true,
             width: "10%"
         },
         {
@@ -285,7 +276,6 @@ const DashboardPage: React.FC = () => {
         {
             key: "advanceAmount",
             label: "Advance",
-            sortable: true,
             width: "10%",
             align: "center" as const,
             render: (value: unknown) => (
@@ -300,7 +290,6 @@ const DashboardPage: React.FC = () => {
         {
             key: "rentAmount",
             label: "Rent",
-            sortable: true,
             width: "10%",
             align: "center" as const,
             render: (value: unknown) => (
@@ -315,7 +304,6 @@ const DashboardPage: React.FC = () => {
         {
             key: "paymentStatus",
             label: "Status",
-            sortable: false,
             width: "10%",
             align: "center" as const,
             render: (value: unknown) => (
@@ -344,7 +332,7 @@ const DashboardPage: React.FC = () => {
                             columns={4}
                             gap='md'
                             showRefresh
-                            onRefresh={refreshDashboardCards}
+                            onRefresh={fetchDashboardStats}
                             lastUpdated={lastUpdated}
                             className='dashboard-cards'
                         />
@@ -418,8 +406,8 @@ const DashboardPage: React.FC = () => {
                         rent: selectedMember.rentAmount,
                         joinedOn: new Date(selectedMember.dateOfJoining).toLocaleDateString('en-IN'),
                         documents: [{
-                            name: 'Aadhar Card',
-                            url: selectedMember.aadharUrl
+                            name: 'ID Proof',
+                            url: selectedMember.documentUrl
                         }]
                     } : null}
                     onDeleteUser={handleDeleteUser}

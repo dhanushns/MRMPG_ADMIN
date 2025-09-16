@@ -21,6 +21,7 @@ interface RoomModalProps {
         capacity: number;
         rent: number;
         pgLocation: string;
+        electricityCharge?: number;
     }) => Promise<void>;
     onDelete: (roomId: string) => Promise<void>;
     loading?: boolean;
@@ -41,14 +42,16 @@ const RoomModal: React.FC<RoomModalProps> = ({
         roomNo: '',
         capacity: '',
         rent: '',
-        pgLocation: ''
+        pgLocation: '',
+        electricityCharge: ''
     });
 
     const [formErrors, setFormErrors] = useState({
         roomNo: '',
         capacity: '',
         rent: '',
-        pgLocation: ''
+        pgLocation: '',
+        electricityCharge: ''
     });
 
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
@@ -63,17 +66,19 @@ const RoomModal: React.FC<RoomModalProps> = ({
                     roomNo: roomData.roomNo,
                     capacity: roomData.capacity.toString(),
                     rent: roomData.rentAmount.toString(),
-                    pgLocation: (roomData as any).pgLocation || ''
+                    pgLocation: (roomData as any).pgLocation || '',
+                    electricityCharge: (roomData as any).electricityCharge?.toString() || ''
                 });
             } else {
                 setFormData({
                     roomNo: '',
                     capacity: '',
                     rent: '',
-                    pgLocation: ''
+                    pgLocation: '',
+                    electricityCharge: ''
                 });
             }
-            setFormErrors({ roomNo: '', capacity: '', rent: '', pgLocation: '' });
+            setFormErrors({ roomNo: '', capacity: '', rent: '', pgLocation: '', electricityCharge: '' });
             setShowDeleteConfirmation(false);
             setDeleteConfirmationText('');
         }
@@ -89,7 +94,7 @@ const RoomModal: React.FC<RoomModalProps> = ({
     };
 
     const validateForm = () => {
-        const errors = { roomNo: '', capacity: '', rent: '', pgLocation: '' };
+        const errors = { roomNo: '', capacity: '', rent: '', pgLocation: '', electricityCharge: '' };
         let isValid = true;
 
         // Room number validation
@@ -143,6 +148,23 @@ const RoomModal: React.FC<RoomModalProps> = ({
             isValid = false;
         }
 
+        // Electricity Charge validation (optional field)
+        if (formData.electricityCharge.trim()) {
+            if (isNaN(Number(formData.electricityCharge))) {
+                errors.electricityCharge = 'Electricity charge must be a valid number';
+                isValid = false;
+            } else {
+                const charge = Number(formData.electricityCharge);
+                if (charge < 0) {
+                    errors.electricityCharge = 'Electricity charge cannot be negative';
+                    isValid = false;
+                } else if (charge > 50000) {
+                    errors.electricityCharge = 'Electricity charge seems too high (max ₹50,000)';
+                    isValid = false;
+                }
+            }
+        }
+
         setFormErrors(errors);
         return isValid;
     };
@@ -152,7 +174,8 @@ const RoomModal: React.FC<RoomModalProps> = ({
             const roomDataToSave = {
                 ...formData,
                 capacity: Number(formData.capacity),
-                rent: Number(formData.rent)
+                rent: Number(formData.rent),
+                electricityCharge: formData.electricityCharge ? Number(formData.electricityCharge) : undefined
             };
             await onSave(roomDataToSave);
         }
@@ -197,7 +220,7 @@ const RoomModal: React.FC<RoomModalProps> = ({
                             <span className="loading-text">
                                 {deleteLoading ? 'Deleting room...' : (isEdit ? 'Updating room...' : 'Creating room...')}
                             </span>
-                        </div>
+                        </div>  
                     </div>
                 )}
 
@@ -299,6 +322,19 @@ const RoomModal: React.FC<RoomModalProps> = ({
                                                 </span>
                                             </div>
                                         </div>
+                                        {roomData.electricityCharge && (
+                                            <div className="status-card">
+                                                <div className="status-icon">
+                                                    <ui.Icons name="battery" size={16} />
+                                                </div>
+                                                <div className="status-info">
+                                                    <span className="status-label">Electricity Charge</span>
+                                                    <span className="status-value">
+                                                        ₹{roomData.electricityCharge}/month
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {roomData.members && roomData.members.length > 0 && (
@@ -328,10 +364,6 @@ const RoomModal: React.FC<RoomModalProps> = ({
                     )}
 
                     <div className="form-section">
-                        <div className="section-header">
-                            <ui.Icons name="edit3" size={18} />
-                            <h4>{isEdit ? 'Update Room Details' : 'Room Details'}</h4>
-                        </div>
                         <div className="form-grid">
                             <div className="form-group full-width">
                                 <ui.Label htmlFor="pgLocation" required>PG Location</ui.Label>
@@ -428,6 +460,25 @@ const RoomModal: React.FC<RoomModalProps> = ({
                                     />
                                 </div>
                                 <span className="field-note">Enter amount in rupees</span>
+                            </div>
+
+                            <div className="form-group">
+                                <ui.Label htmlFor="electricityCharge">Electricity Bill Charge</ui.Label>
+                                <div className="input-with-icon">
+                                    <ui.Icons name="battery" size={16} className="input-icon" />
+                                    <ui.Input
+                                        id="electricityCharge"
+                                        type="number"
+                                        value={formData.electricityCharge}
+                                        onChange={(e) => handleInputChange('electricityCharge', e.target.value)}
+                                        placeholder="Enter electricity charge (optional)"
+                                        error={formErrors.electricityCharge}
+                                        min="0"
+                                        disabled={loading}
+                                        className="input-with-padding"
+                                    />
+                                </div>
+                                <span className="field-note">Monthly electricity charge per person (optional)</span>
                             </div>
                         </div>
                     </div>

@@ -71,7 +71,11 @@ const PaymentQuickViewModal: React.FC<PaymentQuickViewModalProps> = ({
     };
 
     const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-IN', {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+            return 'Not Paid';
+        }
+        return date.toLocaleDateString('en-IN', {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
@@ -278,12 +282,12 @@ const PaymentQuickViewModal: React.FC<PaymentQuickViewModalProps> = ({
                                                 <label>Attempt Number</label>
                                                 <span className="attempt-badge">#{memberData.paymentDetails.attemptNumber}</span>
                                             </div>
-                                            {memberData.paymentDetails.paidDate && (
-                                                <div className="timeline-item">
-                                                    <label>Paid Date</label>
-                                                    <span className="text-success">{formatDate(memberData.paymentDetails.paidDate)}</span>
-                                                </div>
-                                            )}
+                                            <div className="timeline-item">
+                                                <label>Paid Date</label>
+                                                <span className={memberData.paymentDetails.paidDate && !isNaN(new Date(memberData.paymentDetails.paidDate).getTime()) ? "text-success" : "text-muted"}>
+                                                    {memberData.paymentDetails.paidDate ? formatDate(memberData.paymentDetails.paidDate) : 'Not Paid'}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

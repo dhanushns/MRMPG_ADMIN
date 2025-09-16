@@ -278,6 +278,24 @@ interface CardLayoutProps {
   style?: React.CSSProperties;
 }
 
+interface HeaderButton {
+  label: string;
+  onClick: () => void;
+  variant?: "primary" | "secondary" | "outline" | "ghost";
+  size?: "small" | "medium" | "large";
+  icon?: React.ReactNode;
+  disabled?: boolean;
+  loading?: boolean;
+  className?: string;
+}
+
+interface HeaderLayoutProps {
+  title: string;
+  subText?: string;
+  pageInfo?: string;
+  buttons?: HeaderButton[];
+}
+
 interface types {
   Menu: Menu;
   FilterOptionProps: FilterOptionProps;
@@ -290,5 +308,7 @@ interface types {
   TableLayoutProps: TableLayoutProps;
   CardLayoutProps: CardLayoutProps;
   ActionButtonProps: ActionButton;
+  HeaderButton: HeaderButton;
+  HeaderLayoutProps: HeaderLayoutProps;
 }
 export type { types };

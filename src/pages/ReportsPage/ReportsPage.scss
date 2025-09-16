@@ -223,70 +223,6 @@
   }
 }
 
-// Status badge styles
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.375rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
-  white-space: nowrap;
-
-  &.status-available {
-    background-color: var(--color-success-100);
-    color: var(--color-success-700);
-    border: 1px solid var(--color-success-200);
-  }
-
-  &.status-occupied {
-    background-color: var(--color-warning-100);
-    color: var(--color-warning-700);
-    border: 1px solid var(--color-warning-200);
-  }
-
-  &.status-partial-occupancy {
-    background-color: var(--color-info-100);
-    color: var(--color-info-700);
-    border: 1px solid var(--color-info-200);
-  }
-
-  &.status-maintenance {
-    background-color: var(--color-error-100);
-    color: var(--color-error-700);
-    border: 1px solid var(--color-error-200);
-  }
-
-  &.status-unavailable {
-    background-color: var(--color-gray-100);
-    color: var(--color-gray-700);
-    border: 1px solid var(--color-gray-200);
-  }
-
-  &--paid {
-    background: #d1fae5;
-    color: #065f46;
-  }
-
-  &--partial {
-    background: #fef3c7;
-    color: #92400e;
-  }
-
-  &--pending {
-    background: #fee2e2;
-    color: #991b1b;
-  }
-
-  &--overdue {
-    background: #fee2e2;
-    color: #991b1b;
-  }
-}
-
 // Trend indicator styles
 .trend-indicator {
   display: inline-flex;
@@ -347,11 +283,6 @@
 
 // Responsive adjustments
 @media (max-width: 768px) {
-  .status-badge {
-    font-size: 0.625rem;
-    padding: 0.125rem 0.375rem;
-  }
-
   .trend-indicator {
     font-size: 0.625rem;
     padding: 0.125rem 0.375rem;

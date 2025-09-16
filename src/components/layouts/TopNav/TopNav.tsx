@@ -82,6 +82,20 @@ const TopNav = ({ selectedTab }: TopNavProps): React.ReactElement => {
 
         },
         {
+            id: "expenses",
+            layout: "entity",
+            label: "Expenses",
+            path: "/expenses",
+            class: "expenses-nav"
+        },
+        {
+            id: "staff",
+            layout: "entity",
+            label: "Staff",
+            path: "/staff",
+            class: "staff-nav"
+        },
+        {
             id: "report",
             layout: "root",
             label: "Report",
@@ -255,11 +269,11 @@ const TopNav = ({ selectedTab }: TopNavProps): React.ReactElement => {
                                                         <h4>Welcome {staffData?.name || 'User'}</h4>
                                                     </div>
                                                 </div>
-                                                
+
                                                 <div className="profile-card-info">
-                                                     {/* Insert PG Type */}
+                                                    {/* Insert PG Type */}
                                                 </div>
-                                                
+
                                                 <div className="profile-card-actions">
                                                     <ui.Button
                                                         variant="outline"
@@ -319,7 +333,7 @@ const TopNav = ({ selectedTab }: TopNavProps): React.ReactElement => {
                                             <img src={String(menu.image) || ""} alt={menu.label || "Profile"} />
                                             <div className="profile-details">
                                                 <div className="profile-name">{staffData?.name || 'User'}</div>
-                                               {/* Insert PG Type */}
+                                                {/* Insert PG Type */}
                                                 <ui.Button
                                                     variant="outline"
                                                     size="small"

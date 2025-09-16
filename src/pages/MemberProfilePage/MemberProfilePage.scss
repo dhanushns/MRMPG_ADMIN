@@ -687,114 +687,6 @@
             }
         }
 
-        // Payment Summary Specific Styles
-        &.payment-summary {
-            .summary-metrics {
-                padding: var(--spacing-xl);
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                gap: var(--spacing-lg);
-
-                @media (max-width: 640px) {
-                    grid-template-columns: 1fr;
-                    padding: var(--spacing-lg);
-                }
-
-                .metric-card {
-                    display: flex;
-                    align-items: center;
-                    gap: var(--spacing-md);
-                    border-radius: var(--border-radius-lg);
-                    transition: var(--transition-fast);
-
-                    .metric-icon {
-                        width: 48px;
-                        height: 48px;
-                        border-radius: var(--border-radius-lg);
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        flex-shrink: 0;
-
-                        svg {
-                            width: 24px;
-                            height: 24px;
-                        }
-                    }
-
-                    .metric-info {
-                        flex: 1;
-                        min-width: 0;
-
-                        .metric-value {
-                            font-size: var(--font-size-xl);
-                            font-weight: var(--font-weight-bold);
-                            line-height: var(--line-height-tight);
-                            margin-bottom: var(--spacing-xs);
-                            word-break: break-word;
-                        }
-
-                        .metric-label {
-                            font-size: var(--font-size-sm);
-                            color: var(--gray-500);
-                            font-weight: var(--font-weight-medium);
-                        }
-                    }
-
-                    &.metric-paid {
-                        .metric-icon {
-                            background: var(--success-light);
-                            color: var(--success);
-                        }
-
-                        .metric-value {
-                            color: var(--success);
-                        }
-                    }
-
-                    &.metric-pending {
-                        .metric-icon {
-                            background: var(--warning-light);
-                            color: var(--warning);
-                        }
-
-                        .metric-value {
-                            color: var(--warning);
-                        }
-                    }
-
-                    // Dynamic hover and due metric colors based on rent type
-                    &.metric-card--LONG_TERM {
-
-                        &.metric-due {
-                            .metric-icon {
-                                background: var(--primary-lighter);
-                                color: var(--primary-color);
-                            }
-
-                            .metric-value {
-                                color: var(--gray-800);
-                            }
-                        }
-                    }
-
-                    &.metric-card--SHORT_TERM {
-
-                        &.metric-due {
-                            .metric-icon {
-                                background: #F8F9FF;
-                                color: #4f46e5;
-                            }
-
-                            .metric-value {
-                                color: var(--gray-800);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
         // Documents Card Specific Styles
         &.documents-card {
             .documents-list {
@@ -871,6 +763,206 @@
                                 color: #4f46e5;
                             }
                         }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Documents Section
+.documents-section {
+    .documents-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: var(--spacing-xl);
+
+        @media (max-width: 768px) {
+            grid-template-columns: 1fr;
+            gap: var(--spacing-lg);
+        }
+
+        @media (max-width: 480px) {
+            grid-template-columns: 1fr;
+            gap: var(--spacing-md);
+        }
+    }
+
+    .document-card {
+        background: var(--white);
+        border-radius: var(--border-radius-xl);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+        transition: var(--transition-normal);
+        border: 1px solid var(--gray-100);
+
+        &:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+
+            .document-icon-wrapper {
+                transform: scale(1.05);
+            }
+
+            .document-card-header {
+                .document-title {
+                    text-decoration: none;
+                }
+            }
+        }
+
+        // Loading and disabled states
+        &.loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        &.disabled {
+            opacity: 0.5;
+            filter: grayscale(1);
+        }
+
+        // Dynamic styling based on rent type
+        &.document-card--long_term {
+            border-top: 4px solid var(--primary-color);
+
+            .document-icon-wrapper {
+                background: var(--primary-lighter);
+                
+                svg {
+                    color: var(--primary-color);
+                }
+            }
+
+            .document-title {
+                color: var(--primary-color);
+            }
+
+            .verification-badge.verified {
+                background: var(--primary-lighter);
+                color: var(--primary-color);
+                border: 1px solid var(--primary-light);
+            }
+        }
+
+        &.document-card--short_term {
+            border-top: 4px solid #4f46e5;
+
+            .document-icon-wrapper {
+                background: #F8F9FF;
+                
+                svg {
+                    color: #4f46e5;
+                }
+            }
+
+            .document-title {
+                color: #4f46e5;
+            }
+
+            .verification-badge.verified {
+                background: #F8F9FF;
+                color: #4f46e5;
+                border: 1px solid #c084fc;
+            }
+        }
+
+        .document-card-header {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--spacing-md);
+            padding: var(--spacing-xl);
+            border-bottom: 1px solid var(--gray-100);
+
+            .document-icon-wrapper {
+                width: 56px;
+                height: 56px;
+                border-radius: var(--border-radius-xl);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+                transition: var(--transition-fast);
+
+                svg {
+                    width: 24px;
+                    height: 24px;
+                }
+            }
+
+            .document-meta {
+                flex: 1;
+                min-width: 0;
+
+                .document-title {
+                    font-size: var(--font-size-xl);
+                    font-weight: var(--font-weight-semibold);
+                    margin: 0 0 var(--spacing-xs) 0;
+                    line-height: var(--line-height-tight);
+                }
+
+                .document-type {
+                    font-size: var(--font-size-sm);
+                    color: var(--gray-500);
+                    font-weight: var(--font-weight-medium);
+                    text-transform: uppercase;
+                    letter-spacing: 0.025em;
+                }
+            }
+
+            .verification-badge {
+                display: flex;
+                align-items: center;
+                gap: var(--spacing-xs);
+                padding: var(--spacing-xs) var(--spacing-md);
+                border-radius: var(--border-radius-lg);
+                font-size: var(--font-size-sm);
+                font-weight: var(--font-weight-semibold);
+                flex-shrink: 0;
+
+                svg {
+                    width: 16px;
+                    height: 16px;
+                }
+
+                &.verified {
+                    background: var(--success-light);
+                    color: var(--success);
+                    border: 1px solid var(--success-lighter);
+                }
+
+                &.pending {
+                    background: var(--warning-light);
+                    color: var(--warning);
+                    border: 1px solid var(--warning-lighter);
+                }
+
+                &.rejected {
+                    background: var(--error-light);
+                    color: var(--error);
+                    border: 1px solid var(--error-lighter);
+                }
+            }
+        }
+
+        .document-card-body {
+            padding: var(--spacing-lg) var(--spacing-xl) var(--spacing-xl);
+
+            .document-description {
+                color: var(--gray-600);
+                font-size: var(--font-size-base);
+                line-height: var(--line-height-relaxed);
+                margin: 0 0 var(--spacing-lg) 0;
+            }
+
+            .document-actions {
+                display: flex;
+                justify-content: center;
+
+                @media (max-width: 480px) {
+                    .button {
+                        width: 100%;
+                        justify-content: center;
                     }
                 }
             }

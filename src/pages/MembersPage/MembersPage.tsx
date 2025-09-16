@@ -139,7 +139,7 @@ const MembersPage = (): React.ReactElement => {
             setMembersData([]);
             setTotalPages(1);
             setTotalMembers(0);
-            
+
             // Reset filters when enrollment type changes
             const resetFilters = {
                 search: '',
@@ -150,7 +150,7 @@ const MembersPage = (): React.ReactElement => {
             };
             setFilters(resetFilters);
             setCurrentPage(1);
-            
+
             // Fetch new data for the new enrollment type
             fetchMembersData(1, resetFilters, null, "asc");
         }
@@ -184,41 +184,30 @@ const MembersPage = (): React.ReactElement => {
     const getColumns = useCallback((): types["TableColumn"][] => {
         const baseColumns: types["TableColumn"][] = [
             {
+                key: "memberId",
+                label: "Member ID",
+                align: "center",
+                width: "12%",
+            },
+            {
                 key: "name",
                 label: "Name",
-                sortable: true,
                 align: "left",
                 render: (value) => (
                     <span className="student-name">{value as string}</span>
                 ),
-                width: "15%",
+                width: "13%",
                 style: { color: "var(--primary-color)" }
-            },
-            {
-                key: "memberId",
-                label: "Member ID",
-                sortable: true,
-                align: "center",
-                width: "12%",
             },
             {
                 key: "roomNo",
                 label: "Room No",
-                sortable: true,
                 align: "center",
                 width: "10%",
             },
             {
-                key: "work",
-                label: "Work",
-                sortable: true,
-                align: "center",
-                width: "12%",
-            },
-            {
                 key: "pgLocation",
                 label: "Pg Location",
-                sortable: true,
                 align: "center",
                 width: "12%",
             },
@@ -230,7 +219,6 @@ const MembersPage = (): React.ReactElement => {
                 {
                     key: "rentAmount",
                     label: "Rent",
-                    sortable: true,
                     align: "center",
                     width: "12%",
                     render: (value) => (
@@ -243,7 +231,6 @@ const MembersPage = (): React.ReactElement => {
                 {
                     key: "advanceAmount",
                     label: "Advance",
-                    sortable: false,
                     align: "center",
                     width: "12%",
                     render: (value) => (
@@ -254,9 +241,8 @@ const MembersPage = (): React.ReactElement => {
                     ),
                 },
                 {
-                    key: "status",
+                    key: "paymentStatus",
                     label: "Status",
-                    sortable: false,
                     align: "center",
                     width: "15%",
                     render: (value: unknown) => (
@@ -272,7 +258,6 @@ const MembersPage = (): React.ReactElement => {
                 {
                     key: "dateOfJoining",
                     label: "JoinedOn",
-                    sortable: true,
                     align: "center",
                     width: "12%",
                     render: (value) => {
@@ -283,9 +268,8 @@ const MembersPage = (): React.ReactElement => {
                     }
                 },
                 {
-                    key: "status",
+                    key: "paymentStatus",
                     label: "Status",
-                    sortable: false,
                     align: "center",
                     width: "15%",
                     render: (value: unknown) => (
@@ -409,7 +393,8 @@ const MembersPage = (): React.ReactElement => {
                         {
                             paymentInfo: true,
                             documents: true,
-                            approvalForm: false
+                            approvalForm: false,
+                            showViewProfile: true,
                         }
                     }
                     onClose={handleCloseModal}
@@ -431,11 +416,12 @@ const MembersPage = (): React.ReactElement => {
                         rent: selectedMember.rentAmount,
                         joinedOn: new Date(selectedMember.dateOfJoining).toLocaleDateString('en-IN'),
                         documents: [{
-                            name: 'Aadhar Card',
-                            url: selectedMember.aadharUrl
+                            name: 'ID Proof',
+                            url: selectedMember.documentUrl
                         }]
                     } : null}
                     onDeleteUser={handleDeleteUser}
+
                 />
             </div>
         </>

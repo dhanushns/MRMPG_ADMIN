@@ -15,6 +15,8 @@ import DocumentViewer from "./DocumentViewer";
 import Notification from "./Notification";
 import WeekPicker from "./WeekPicker";
 import MonthPicker from "./MonthPicker";
+import CashEntryForm from "./CashEntryForm";
+import ImageUpload from "./ImageUpload";
 
 const ui = {
     Label,
@@ -33,7 +35,9 @@ const ui = {
     DocumentViewer,
     Notification,
     WeekPicker,
-    MonthPicker
+    MonthPicker,
+    CashEntryForm,
+    ImageUpload
 }
 
 export default ui;

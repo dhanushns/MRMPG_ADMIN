@@ -87,6 +87,20 @@ export interface Pg {
   payment?: Payment[];
 }
 
+// PG List Response for dropdowns
+export interface PgListOption {
+  value: string; // pgId
+  label: string; // display label
+  pgName: string; // PG name
+  pgType: string; // PG type
+}
+
+export interface PgListResponse extends BaseApiResponse {
+  data?: {
+    options: PgListOption[];
+  };
+}
+
 export interface MemberData {
   id: string;
   memberId: string;
@@ -98,7 +112,7 @@ export interface MemberData {
   phone: string;
   work: string;
   photoUrl: string;
-  aadharUrl: string;
+  documentUrl: string;
   rentType: RentType;
   advanceAmount: number;
   pgId: string;
@@ -376,6 +390,7 @@ export interface RoomData {
   currentOccupancy: number;
   availableSlots: number;
   isFullyOccupied: boolean;
+  electricityCharge?: number;
   members: [
     {
       id: string;
@@ -536,5 +551,63 @@ export interface FinancialReportResponse extends BaseApiResponse {
   data: {
     tableData: FinancialReportData[];
     pagination: Pagination;
+  };
+}
+
+// Expense Management types
+export interface ExpenseStatsResponse extends BaseApiResponse {
+  data: {
+    cards?: CardItem[];
+    lastUpdated: Date | string;
+  };
+}
+
+export interface ExpenseFiltersResponse extends BaseApiResponse {
+  data: {
+    filters: types["FilterItemProps"][];
+  };
+}
+
+// Expense Table Data Types
+export interface ExpenseEntry {
+  id: string;
+  entryType: 'CASH_IN' | 'CASH_OUT';
+  amount: number;
+  date: string;
+  partyName: string;
+  remarks?: string;
+  paymentType: 'Cash' | 'Online';
+  attachments?: string[];
+  admin: {
+    id: string;
+    name: string;
+  };
+  pg: {
+    id: string;
+    name: string;
+    location: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ExpenseTableResponse extends BaseApiResponse {
+  data: {
+    entries: ExpenseEntry[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalEntries: number;
+      entriesPerPage: number;
+      hasNextPage: boolean;
+      hasPrevPage: boolean;
+    };
+    filters?: {
+      entryType?: string;
+      dateFrom?: string;
+      dateTo?: string;
+      pgId?: string;
+      adminId?: string;
+    };
   };
 }

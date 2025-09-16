@@ -59,7 +59,7 @@ interface QuickViewModalProps {
     };
     memberData: QuickViewMemberData | null;
     onDeleteUser?: (userId: string) => void;
-    onApproveUser?: (userId: string, pgId: string, formData: { roomId: string; rentAmount: string; advanceAmount?: string; pgLocation: string; dateOfJoining?: string }) => void;
+    onApproveUser?: (userId: string, pgId: string, formData: { roomId: string; rentAmount?: string; pricePerDay?: string; advanceAmount?: string; pgLocation: string; dateOfJoining?: string; dateOfRelieving?: string }) => void;
     onRejectUser?: (userId: string) => void;
     approveLoading?: boolean;
     rejectLoading?: boolean;
@@ -91,15 +91,18 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
     const [formData, setFormData] = useState({
         roomNo: '',
         rentAmount: '',
+        pricePerDay: '',
         advanceAmount: '',
         pgLocation: memberData?.pgLocation || '',
-        dateOfJoining: ''
+        dateOfJoining: '',
+        dateOfRelieving: ''
     });
 
     // Form validation errors
     const [formErrors, setFormErrors] = useState({
         roomNo: '',
         rentAmount: '',
+        pricePerDay: '',
         pgLocation: ''
     });
 
@@ -126,13 +129,16 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
             setFormData({
                 roomNo: memberData?.roomNo || '',
                 rentAmount: '',
+                pricePerDay: '',
                 advanceAmount: '',
                 pgLocation: '',
-                dateOfJoining: ''
+                dateOfJoining: '',
+                dateOfRelieving: ''
             });
             setFormErrors({
                 roomNo: '',
                 rentAmount: '',
+                pricePerDay: '',
                 pgLocation: ''
             });
             // Clear data when modal opens
@@ -245,18 +251,26 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
         if (field === 'roomNo' && value) {
             const selectedRoom = roomData.find(room => room.value === value);
             if (selectedRoom) {
-                // Auto-fill rent amount based on selected room
-                setFormData(prev => ({
-                    ...prev,
-                    roomNo: value,
-                    rentAmount: selectedRoom.rent.toString()
-                }));
+                // For LONG_TERM members, auto-fill rent amount from room data
+                if (memberData?.rentType === 'LONG_TERM') {
+                    setFormData(prev => ({
+                        ...prev,
+                        roomNo: value,
+                        rentAmount: selectedRoom.rent.toString()
+                    }));
+                } else {
+                    // For SHORT_TERM members, just set the room without auto-filling any price
+                    setFormData(prev => ({
+                        ...prev,
+                        roomNo: value
+                    }));
+                }
             }
         }
     };
 
     const validateForm = () => {
-        const errors = { roomNo: '', rentAmount: '', pgLocation: '' };
+        const errors = { roomNo: '', rentAmount: '', pricePerDay: '', pgLocation: '' };
         let isValid = true;
 
         if (!formData.roomNo.trim()) {
@@ -264,12 +278,16 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
             isValid = false;
         }
 
-        if (!formData.rentAmount.trim()) {
-            errors.rentAmount = 'Rent amount is required';
-            isValid = false;
-        } else if (isNaN(Number(formData.rentAmount)) || Number(formData.rentAmount) <= 0) {
-            errors.rentAmount = 'Please enter a valid rent amount';
-            isValid = false;
+        // For long-term members, rentAmount is not required (auto-filled from room selection)
+        // For short-term members, pricePerDay is required
+        if (memberData?.rentType === 'SHORT_TERM') {
+            if (!formData.pricePerDay.trim()) {
+                errors.pricePerDay = 'Price per day is required';
+                isValid = false;
+            } else if (isNaN(Number(formData.pricePerDay)) || Number(formData.pricePerDay) <= 0) {
+                errors.pricePerDay = 'Please enter a valid price per day';
+                isValid = false;
+            }
         }
 
         if (!formData.pgLocation.trim()) {
@@ -287,13 +305,30 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
 
     const handleApproveUser = () => {
         if (validateForm() && onApproveUser && memberData?.id) {
-            onApproveUser(memberData.id.toString(), selectedPgId, {
+            const approvalData: {
+                roomId: string;
+                rentAmount?: string;
+                pricePerDay?: string;
+                advanceAmount?: string;
+                pgLocation: string;
+                dateOfJoining?: string;
+                dateOfRelieving?: string;
+            } = {
                 roomId: formData.roomNo,
-                rentAmount: formData.rentAmount,
                 advanceAmount: formData.advanceAmount || undefined,
                 pgLocation: formData.pgLocation,
-                dateOfJoining: formData.dateOfJoining || undefined
-            });
+                dateOfJoining: formData.dateOfJoining || undefined,
+                dateOfRelieving: memberData?.rentType === 'SHORT_TERM' ? formData.dateOfRelieving || undefined : undefined
+            };
+
+            // Add the appropriate price field based on member type
+            if (memberData.rentType === 'LONG_TERM') {
+                approvalData.rentAmount = formData.rentAmount;
+            } else {
+                approvalData.pricePerDay = formData.pricePerDay;
+            }
+
+            onApproveUser(memberData.id.toString(), selectedPgId, approvalData);
             // Don't close modal here - parent will close it after successful API call
         }
     };
@@ -541,20 +576,27 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                                     </div>
 
                                     <div className="form-group">
-                                        <ui.Label htmlFor="rentAmount" required>Rent Amount</ui.Label>
+                                        <ui.Label htmlFor="rentAmount" required>
+                                            {memberData.rentType === 'SHORT_TERM' ? 'Rent Amount per Day' : 'Rent Amount'}
+                                        </ui.Label>
                                         <ui.Input
                                             id="rentAmount"
                                             type="number"
                                             value={formData.rentAmount}
                                             onChange={(e) => handleFormChange('rentAmount', e.target.value)}
-                                            placeholder="Enter rent amount"
+                                            placeholder={memberData.rentType === 'SHORT_TERM' ? 'Enter daily rent amount' : 'Enter rent amount'}
                                             error={formErrors.rentAmount}
                                             className={`form-input form-input--${memberData.rentType}`}
-                                            readOnly={!!formData.roomNo && roomData.some(room => room.value === formData.roomNo)}
+                                            readOnly={memberData.rentType === 'LONG_TERM' && !!formData.roomNo && roomData.some(room => room.value === formData.roomNo)}
                                         />
-                                        {formData.roomNo && roomData.some(room => room.value === formData.roomNo) && (
+                                        {memberData.rentType === 'LONG_TERM' && formData.roomNo && roomData.some(room => room.value === formData.roomNo) && (
                                             <small className="auto-filled-note">
                                                 Auto-filled based on selected room
+                                            </small>
+                                        )}
+                                        {memberData.rentType === 'SHORT_TERM' && (
+                                            <small className="rent-info-note">
+                                                Enter the daily rent amount for this short-term stay
                                             </small>
                                         )}
                                     </div>
@@ -580,6 +622,22 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                                             className={`form-input form-input--${memberData.rentType}`}
                                         />
                                     </div>
+
+                                    {memberData.rentType === 'SHORT_TERM' && (
+                                        <div className="form-group">
+                                            <ui.Label htmlFor="dateOfRelieving">Date Of Relieving</ui.Label>
+                                            <ui.DateInput
+                                                id="dateOfRelieving"
+                                                value={formData.dateOfRelieving}
+                                                onChange={(value) => handleFormChange('dateOfRelieving', value)}
+                                                className={`form-input form-input--${memberData.rentType}`}
+                                                min={formData.dateOfJoining || undefined}
+                                            />
+                                            <small className="date-info-note">
+                                                Select the expected checkout date for this short-term stay
+                                            </small>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
