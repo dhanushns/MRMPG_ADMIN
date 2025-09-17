@@ -117,4 +117,30 @@ export class ApiClient {
     
     return response.json();
   }
+
+   // PATCH request with FormData (for file uploads)
+  static async patchFormData(endpoint: string, formData: FormData): Promise<unknown> {
+    const authHeaders = AuthManager.getAuthHeader();
+    
+    const config: RequestInit = {
+      method: 'PATCH',
+      headers: {
+        // Don't set Content-Type for FormData, browser will set it with boundary
+        ...(authHeaders as Record<string, string>),
+      },
+      body: formData,
+    };
+
+    const response = await fetch(`${this.baseURL}${endpoint}`, config);
+    
+    // Handle token expiry
+    if (response.status === 401) {
+      AuthManager.clearAuthData();
+      window.location.href = '/login';
+      throw new Error('Authentication expired');
+    }
+    
+    return response.json();
+  }
+
 }

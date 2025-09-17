@@ -394,16 +394,20 @@ const FilterLayout = ({
                             <ui.Button 
                                 type="button" 
                                 variant="secondary" 
+                                size="small"
                                 className="filter-layout__toggle" 
                                 onClick={() => setIsCollapsed(!isCollapsed)}
                                 aria-expanded={!isCollapsed}
                                 disabled={loading}
+                                rightIcon={
+                                    <div className={`toggle-icon ${isCollapsed ? "collapsed" : ""}`}>
+                                        <ui.Icons name="chevronDown" strokeWidth={3} />
+                                    </div>
+                                }
+                                iconOnlyOnMobile={true}
                             >
                                 <div className="toggle-text">
                                     {isCollapsed ? "Show Filters" : "Hide Filters"}
-                                </div>
-                                <div className={`toggle-icon ${isCollapsed ? "collapsed" : ""}`}>
-                                    <ui.Icons name="chevronDown" strokeWidth={3} />
                                 </div>
                             </ui.Button>
                         </>
@@ -423,22 +427,13 @@ const FilterLayout = ({
                                 <ui.Button 
                                     type="button" 
                                     variant="outline" 
+                                    size="small"
                                     className="filter-button" 
                                     onClick={handleReset}
                                     disabled={loading}
+                                    leftIcon={<ui.Icons name="refresh" size={16} />}
                                 >
                                     Reset
-                                </ui.Button>
-                            )}
-                            {showApplyButton && (
-                                <ui.Button 
-                                    type="button" 
-                                    variant="secondary" 
-                                    className="filter-button" 
-                                    onClick={handleApply}
-                                    disabled={loading}
-                                >
-                                    Apply Filters
                                 </ui.Button>
                             )}
                         </div>
@@ -450,10 +445,12 @@ const FilterLayout = ({
                     <ui.Button 
                         type="button" 
                         variant="primary" 
+                        size="small"
                         className="filter-button filter-button__download-report" 
                         rightIcon={<ui.Icons name="download" />}
                         disabled={loading}
                         onClick={onDownloadReport}
+                        iconOnlyOnMobile={true}
                     >
                         Download Report
                     </ui.Button>

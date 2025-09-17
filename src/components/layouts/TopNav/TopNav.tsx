@@ -264,7 +264,11 @@ const TopNav = ({ selectedTab }: TopNavProps): React.ReactElement => {
                                                 </div>
 
                                                 <div className="profile-card-info">
-                                                    {/* Insert PG Type */}
+                                                    <div className="pg-type-badge">
+                                                        <span className={`pg-type-label pg-type-label--${staffData?.pgType?.toLowerCase() || 'default'}`}>
+                                                            {staffData?.pgType === 'MENS' ? 'Men\'s PG' : staffData?.pgType === 'WOMENS' ? 'Women\'s PG' : 'PG Admin'}
+                                                        </span>
+                                                    </div>
                                                 </div>
 
                                                 <div className="profile-card-actions">
@@ -326,7 +330,11 @@ const TopNav = ({ selectedTab }: TopNavProps): React.ReactElement => {
                                             <img src={String(menu.image) || ""} alt={menu.label || "Profile"} />
                                             <div className="profile-details">
                                                 <div className="profile-name">{staffData?.name || 'User'}</div>
-                                                {/* Insert PG Type */}
+                                                <div className="mobile-pg-type">
+                                                    <span className={`pg-type-label pg-type-label--${staffData?.pgType?.toLowerCase() || 'default'}`}>
+                                                        {staffData?.pgType === 'MENS' ? 'Men\'s PG' : staffData?.pgType === 'WOMENS' ? 'Women\'s PG' : 'PG Admin'}
+                                                    </span>
+                                                </div>
                                                 <ui.Button
                                                     variant="outline"
                                                     size="small"

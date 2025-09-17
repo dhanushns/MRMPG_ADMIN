@@ -332,6 +332,7 @@ const DashboardPage: React.FC = () => {
                             columns={4}
                             gap='md'
                             showRefresh
+                            refreshLoading={cardLoading}
                             onRefresh={fetchDashboardStats}
                             lastUpdated={lastUpdated}
                             className='dashboard-cards'

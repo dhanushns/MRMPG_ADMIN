@@ -27,6 +27,7 @@ const MemberProfilePage: React.FC = () => {
         title: string;
     }>({ isOpen: false, imageUrl: '', title: '' });
     const [deleteLoading, setDeleteLoading] = useState(false);
+    const [reportLoading, setReportLoading] = useState(false);
 
     // Payment table columns with proper typing
     const paymentColumns = [
@@ -82,18 +83,17 @@ const MemberProfilePage: React.FC = () => {
                 const payment = row as unknown as Payment;
                 return (
                     <div className="payment-documents">
-                        {payment.rentBillScreenshot && (
+                        {payment.rentBillScreenshot ? (
                             <ui.Button
                                 variant="ghost"
                                 size="small"
                                 onClick={() => payment.rentBillScreenshot && handleDocumentView(payment.rentBillScreenshot, 'Rent Bill')}
                                 leftIcon={<ui.Icons name="eye" size={16} />}
                             >
-
                                 Rent Bill
                             </ui.Button>
-                        )}
-                        {payment.electricityBillScreenshot && (
+                        ) : null}
+                        {payment.electricityBillScreenshot ? (
                             <ui.Button
                                 variant="ghost"
                                 size="small"
@@ -102,6 +102,9 @@ const MemberProfilePage: React.FC = () => {
                             >
                                 Electricity Bill
                             </ui.Button>
+                        ) : null}
+                        {!payment.rentBillScreenshot && !payment.electricityBillScreenshot && (
+                            <span className="no-documents">No documents</span>
                         )}
                     </div>
                 );
@@ -165,6 +168,40 @@ const MemberProfilePage: React.FC = () => {
         } catch (err) {
         } finally {
             setDeleteLoading(false);
+        }
+    };
+
+    const handleGenerateReport = async () => {
+        if (!memberData) return;
+
+        try {
+            setReportLoading(true);
+            
+            // Make API call to generate member report
+            const response = await ApiClient.makeAuthenticatedRequest(`/members/report/${memberId}`);
+
+            // Create blob URL and trigger download
+            const blob = new Blob([await response.arrayBuffer()], { type: 'application/zip' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${memberData.member.name}_Report_${new Date().toISOString().split('T')[0]}.zip`;
+            document.body.appendChild(link);
+            link.click();
+            
+            // Cleanup
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(link);
+            
+            notification.showSuccess('Member report generated successfully', 'The report has been downloaded to your device', 3000);
+        } catch (error) {
+            notification.showError(
+                'Failed to generate member report', 
+                error instanceof Error ? error.message : 'Please try again later', 
+                5000
+            );
+        } finally {
+            setReportLoading(false);
         }
     };
 
@@ -471,6 +508,54 @@ const MemberProfilePage: React.FC = () => {
                                             View Photo
                                         </ui.Button>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Generate Member Report Section */}
+                    <section className="report-section">
+                        <div className="section-header">
+                            <h2>Generate Member Report</h2>
+                            <p>Download a comprehensive report containing all member information, payment history, and documents.</p>
+                        </div>
+
+                        <div className="report-card">
+                            <div className="report-card-content">
+                                <div className="report-info">
+                                    <div className="report-icon">
+                                        <ui.Icons name="fileText" size={48} />
+                                    </div>
+                                    <div className="report-details">
+                                        <h3>Comprehensive Member Report</h3>
+                                        <p>This report includes:</p>
+                                        <ul className="report-features">
+                                            <li>Complete member profile information</li>
+                                            <li>Payment history and financial summary</li>
+                                            <li>Document copies and verification status</li>
+                                            <li>Room and accommodation details</li>
+                                            <li>Contact and emergency information</li>
+                                        </ul>
+                                        <div className="report-meta">
+                                            <span className="report-format">Format: ZIP file containing PDF and images</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="report-actions">
+                                    <ui.Button
+                                        variant="primary"
+                                        size="medium"
+                                        onClick={handleGenerateReport}
+                                        disabled={reportLoading}
+                                        loading={reportLoading}
+                                        leftIcon={<ui.Icons name="download" size={16} />}
+                                        className="generate-report-btn"
+                                    >
+                                        {reportLoading ? 'Generating...' : 'Generate & Download'}
+                                    </ui.Button>
+                                    <p className="report-note">
+                                        Report downloaded as ZIP file to your device.
+                                    </p>
                                 </div>
                             </div>
                         </div>

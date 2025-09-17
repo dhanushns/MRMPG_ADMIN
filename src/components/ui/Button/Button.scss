@@ -391,6 +391,46 @@
       height: 3.75rem;
       font-size: var(--font-size-lg);
     }
+
+    // Icon-only behavior on mobile
+    &--icon-only-mobile {
+      .btn__text {
+        display: none;
+      }
+
+      // Adjust padding when text is hidden
+      &.btn--small {
+        padding: 0 var(--spacing-sm);
+        width: 2.25rem;
+        min-width: 2.25rem;
+      }
+
+      &.btn--medium {
+        padding: 0 var(--spacing-md);
+        width: 2.75rem;
+        min-width: 2.75rem;
+      }
+
+      &.btn--large {
+        padding: 0 var(--spacing-lg);
+        width: 3.25rem;
+        min-width: 3.25rem;
+      }
+
+      &.btn--xl {
+        padding: 0 var(--spacing-xl);
+        width: 3.75rem;
+        min-width: 3.75rem;
+      }
+
+      // Center the icon
+      .btn__icon {
+        margin: 0;
+      }
+
+      // Remove gaps when text is hidden
+      gap: 0;
+    }
   }
 
   .btn-group {

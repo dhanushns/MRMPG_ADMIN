@@ -13,6 +13,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     leftIcon?: React.ReactNode;
     rightIcon?: React.ReactNode;
   };
+  iconOnlyOnMobile?: boolean;
   className?: string;
 }
 
@@ -25,6 +26,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
   leftIcon,
   rightIcon,
   onHover,
+  iconOnlyOnMobile = false,
   className = '',
   disabled = false,
   type = 'button',
@@ -42,6 +44,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
     (leftIcon || (onHover?.leftIcon && isHovered)) && 'btn--with-left-icon',
     (rightIcon || (onHover?.rightIcon && isHovered)) && 'btn--with-right-icon',
     onHover && 'btn--has-hover-icons',
+    iconOnlyOnMobile && 'btn--icon-only-mobile',
     className
   ].filter(Boolean).join(' ');
 
@@ -69,6 +72,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
       disabled={disabled || loading}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      aria-label={iconOnlyOnMobile ? String(children) : undefined}
       {...props}
     >
       {loading && (

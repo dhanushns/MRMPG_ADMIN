@@ -59,6 +59,15 @@ const ApprovalsPage = () => {
         memberData: null
     });
 
+    // Settlement Modal state
+    const [settlementModal, setSettlementModal] = useState<{
+        isOpen: boolean;
+        memberData: RelievingRequestData | null;
+    }>({
+        isOpen: false,
+        memberData: null
+    });
+
     // Loading states
     const [approveLoading, setApproveLoading] = useState(false);
     const [rejectLoading, setRejectLoading] = useState(false);
@@ -199,21 +208,21 @@ const ApprovalsPage = () => {
             case "relieving_requests":
                 return [
                     {
-                        key: "memberName",
-                        label: "Member Name",
-                        width: "12%",
-                        align: "left" as const,
-                    },
-                    {
                         key: "memberMemberId",
                         label: "Member ID",
                         width: "10%",
                         align: "center" as const,
                     },
                     {
+                        key: "memberName",
+                        label: "Member Name",
+                        width: "12%",
+                        align: "left" as const,
+                    },
+                    {
                         key: "pgName",
                         label: "PG Name",
-                        width: "12%"
+                        width: "15%"
                     },
                     {
                         key: "roomNo",
@@ -232,6 +241,11 @@ const ApprovalsPage = () => {
                         }
                     },
                     {
+                        key: "memberPhone",
+                        label: "Phone",
+                        width: "10%"
+                    },
+                    {
                         key: "status",
                         label: "Status",
                         width: "8%",
@@ -242,49 +256,6 @@ const ApprovalsPage = () => {
                             </span>
                         )
                     },
-                    {
-                        key: "pendingDues",
-                        label: "Pending Dues",
-                        width: "10%",
-                        align: "center" as const,
-                        render: (value: unknown) => (
-                            <div className='currency-value'>
-                                <span className='currency-symbol'>
-                                    <ui.Icons name="indianRupee" size={14} />
-                                </span>
-                                <span className='currency-amount'>{value as string}</span>
-                            </div>
-                        )
-                    },
-                    {
-                        key: "finalAmount",
-                        label: "Final Amount",
-                        width: "10%",
-                        align: "center" as const,
-                        render: (value: unknown) => (
-                            <div className='currency-value'>
-                                <span className='currency-symbol'>
-                                    <ui.Icons name="indianRupee" size={14} />
-                                </span>
-                                <span className='currency-amount'>{value as string}</span>
-                            </div>
-                        )
-                    },
-                    {
-                        key: "reason",
-                        label: "Reason",
-                        width: "15%",
-                        render: (value: unknown) => (
-                            <div className="text-truncate" title={value as string}>
-                                {value as string}
-                            </div>
-                        )
-                    },
-                    {
-                        key: "memberPhone",
-                        label: "Phone",
-                        width: "10%"
-                    }
                 ]
             default:
                 return [];
@@ -464,7 +435,7 @@ const ApprovalsPage = () => {
         setFetchingStats(true);
         try {
             let apiUrl = '';
-            
+
             // Build different endpoints based on active tab
             switch (activeTab) {
                 case 'pending_registration':
@@ -678,6 +649,26 @@ const ApprovalsPage = () => {
         });
     };
 
+    // Settlement Modal handlers
+    const handleOpenSettlementModal = (requestId: string) => {
+        const requestData = relievingRequestsData.find(request => request.id === requestId);
+        if (requestData) {
+            setSettlementModal({
+                isOpen: true,
+                memberData: requestData
+            });
+            // Close the relieving request modal
+            handleCloseRelievingRequestModal();
+        }
+    };
+
+    const handleCloseSettlementModal = () => {
+        setSettlementModal({
+            isOpen: false,
+            memberData: null
+        });
+    };
+
     const handleApproveUser = async (userId: string, pgId: string, formData: { roomId: string; rentAmount?: string; pricePerDay?: string; advanceAmount?: string; pgLocation: string; dateOfJoining?: string }) => {
         setApproveLoading(true);
         try {
@@ -711,7 +702,7 @@ const ApprovalsPage = () => {
                 status: 'REJECTED',
             };
 
-            const apiResponse = await ApiClient.put(`/approval/members/${userId}`, rejectForm) as BaseApiResponse;
+            const apiResponse = await ApiClient.put(`/approvals/members/${userId}`, rejectForm) as BaseApiResponse;
 
             if (apiResponse && apiResponse.success) {
                 notification.showSuccess('Member Rejected', 'Member has been rejected successfully');
@@ -734,7 +725,7 @@ const ApprovalsPage = () => {
                 approvalStatus: 'APPROVED'
             };
 
-            const apiResponse = await ApiClient.put(`/approval/payments/${paymentId}`, approveForm) as BaseApiResponse;
+            const apiResponse = await ApiClient.put(`/approvals/payments/${paymentId}`, approveForm) as BaseApiResponse;
 
             if (apiResponse && apiResponse.success) {
                 notification.showSuccess('Payment Approved', 'Payment has been approved successfully');
@@ -755,10 +746,10 @@ const ApprovalsPage = () => {
         setRejectLoading(true);
         try {
             const rejectForm = {
-                status: 'REJECTED'
+                approvalStatus: 'REJECTED'
             };
 
-            const apiResponse = await ApiClient.put(`/approval/payments/${paymentId}`, rejectForm) as BaseApiResponse;
+            const apiResponse = await ApiClient.put(`/approvals/payments/${paymentId}`, rejectForm) as BaseApiResponse;
 
             if (apiResponse && apiResponse.success) {
                 notification.showSuccess('Payment Rejected', 'Payment has been rejected successfully');
@@ -776,20 +767,50 @@ const ApprovalsPage = () => {
     };
 
     // Relieving Request API handlers
-    const handleApproveRelievingRequest = async (requestId: string) => {
+    const handleApproveRelievingRequest = async (requestId: string, formData?: { finalAmount: string; paymentMethod: 'CASH' | 'ONLINE'; settlementProof?: File }) => {
         setApproveLoading(true);
         try {
-            const approveForm = {
-                status: 'APPROVED'
+            let approveForm: any = {
+                approvalStatus: 'APPROVED'
             };
 
-            const apiResponse = await ApiClient.put(`/approvals/leaving-requests/${requestId}`, approveForm) as BaseApiResponse;
+            // If form data is provided (from settlement modal), include it
+            if (formData) {
+                approveForm = {
+                    ...approveForm,
+                    finalAmount: parseFloat(formData.finalAmount),
+                    paymentMethod: formData.paymentMethod
+                };
+
+                // Handle file upload if provided
+                if (formData.settlementProof) {
+                    const formDataWithFile = new FormData();
+                    formDataWithFile.append('approvalStatus', 'APPROVED');
+                    formDataWithFile.append('finalAmount', formData.finalAmount);
+                    formDataWithFile.append('paymentMethod', formData.paymentMethod);
+                    formDataWithFile.append('settlementProof', formData.settlementProof);
+
+                    const apiResponse = await ApiClient.patchFormData(`/approvals/leaving-requests/${requestId}/${formData.paymentMethod}`, formDataWithFile) as BaseApiResponse;
+
+                    if (apiResponse && apiResponse.success) {
+                        notification.showSuccess('Relieving Request Approved', 'Member relieving request has been approved and settled successfully');
+                        fetchRelievingRequestsData();
+                        fetchApprovalStats();
+                        handleCloseSettlementModal();
+                        return;
+                    } else {
+                        throw new Error(apiResponse?.message || 'Failed to approve relieving request');
+                    }
+                }
+            }
+
+            const apiResponse = await ApiClient.patch(`/approvals/leaving-requests/${requestId}/${approveForm.paymentMethod}`, approveForm) as BaseApiResponse;
 
             if (apiResponse && apiResponse.success) {
                 notification.showSuccess('Relieving Request Approved', 'Member relieving request has been approved successfully');
                 fetchRelievingRequestsData();
                 fetchApprovalStats();
-                handleCloseRelievingRequestModal();
+                handleCloseSettlementModal();
             } else {
                 notification.showError(apiResponse?.message || 'Relieving Request Approval Failed', 'Failed to approve relieving request');
             }
@@ -804,7 +825,7 @@ const ApprovalsPage = () => {
         setRejectLoading(true);
         try {
             const rejectForm = {
-                status: 'REJECTED'
+                approvalStatus: 'REJECTED'
             };
 
             const apiResponse = await ApiClient.put(`/approvals/leaving-requests/${requestId}`, rejectForm) as BaseApiResponse;
@@ -813,7 +834,7 @@ const ApprovalsPage = () => {
                 notification.showSuccess('Relieving Request Rejected', 'Member relieving request has been rejected successfully');
                 fetchRelievingRequestsData();
                 fetchApprovalStats();
-                handleCloseRelievingRequestModal();
+                handleCloseSettlementModal();
             } else {
                 notification.showError(apiResponse?.message || 'Relieving Request Rejection Failed', 'Failed to reject relieving request');
             }
@@ -883,15 +904,15 @@ const ApprovalsPage = () => {
                             }
                         }}
                         onRowClick={
-                            activeTab === 'pending_payment' 
+                            activeTab === 'pending_payment'
                                 ? (row) => handlePaymentQuickView(row as PaymentApprovalData)
                                 : activeTab === 'relieving_requests'
-                                ? (row) => handleRelievingRequestView(row as unknown as RelievingRequestData)
-                                : undefined
+                                    ? (row) => handleRelievingRequestView(row as unknown as RelievingRequestData)
+                                    : undefined
                         }
                         className={
-                            activeTab === 'pending_payment' || activeTab === 'relieving_requests' 
-                                ? 'table--clickable' 
+                            activeTab === 'pending_payment' || activeTab === 'relieving_requests'
+                                ? 'table--clickable'
                                 : ''
                         }
                     />
@@ -929,6 +950,13 @@ const ApprovalsPage = () => {
                 isOpen={relievingRequestModal.isOpen}
                 onClose={handleCloseRelievingRequestModal}
                 memberData={relievingRequestModal.memberData}
+                onProcessRequest={handleOpenSettlementModal}
+            />
+
+            <layouts.SettlementModal
+                isOpen={settlementModal.isOpen}
+                onClose={handleCloseSettlementModal}
+                memberData={settlementModal.memberData}
                 onApprove={handleApproveRelievingRequest}
                 onReject={handleRejectRelievingRequest}
                 approveLoading={approveLoading}

@@ -220,6 +220,7 @@ const TableLayout: React.FC<types["TableLayoutProps"]> = ({
                                 onClick={onRefresh}
                                 disabled={refreshLoading || loading}
                                 leftIcon={<ui.Icons name={refreshLoading ? "loader" : "refresh"} size={16} className={refreshLoading ? "animate-spin" : ""} />}
+                                iconOnlyOnMobile={true}
                             >
                                 {refreshLoading ? "Refreshing..." : "Refresh"}
                             </ui.Button>
@@ -252,6 +253,7 @@ const TableLayout: React.FC<types["TableLayoutProps"]> = ({
                             onClick={onRefresh}
                             disabled={refreshLoading || loading}
                             leftIcon={<ui.Icons name={refreshLoading ? "loader" : "refresh"} size={16} className={refreshLoading ? "animate-spin" : ""} />}
+                            iconOnlyOnMobile={true}
                         >
                             {refreshLoading ? "Refreshing..." : "Refresh"}
                         </ui.Button>

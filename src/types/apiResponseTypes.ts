@@ -602,6 +602,7 @@ export interface RelievingRequestData {
   roomId: string;
   requestedLeaveDate: string;
   reason: string;
+  feedback?: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'COMPLETED';
   approvedBy: string | null;
   approvedAt: string | null;
@@ -617,7 +618,7 @@ export interface RelievingRequestData {
   memberMemberId: string;
   memberPhone: string;
   memberEmail: string;
-  memberGender: 'MALE' | 'FEMALE';
+  memberAge: number;
   // Flattened PG fields
   pgName: string;
   pgType: PgType;

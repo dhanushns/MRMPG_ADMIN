@@ -49,9 +49,7 @@
   // Mobile responsive
   @media (max-width: 640px) {
     padding: 10px 20px 14px;
-    flex-direction: column;
     gap: 12px;
-    align-items: flex-start;
 
     .refresh-section {
       align-self: flex-end;
@@ -62,13 +60,6 @@
   @media (max-width: 480px) {
     padding: 8px 18px 12px;
     gap: 10px;
-
-    .refresh-section{
-      width: 100%;
-      button{
-        width: 100%;
-      }
-    }
 
     .last-updated {
       font-size: 12px;

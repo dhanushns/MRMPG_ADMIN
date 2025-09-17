@@ -70,36 +70,24 @@
   }
 
   &__toggle {
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    padding: 8px;
-    cursor: pointer;
     display: flex;
     align-items: center;
-    width: 100%;
-    min-width: 36px;
     justify-content: center;
-
-    @media (max-width: 480px) {
-      padding: 6px;
-      min-width: 32px;
-    }
 
     .toggle-icon {
       display: flex;
       align-items: center;
       justify-content: center;
       transition: all 0.4s ease-in-out;
-      width: 30px;
-      height: 30px;
-      margin: 10px;
-
-      @media (max-width: 480px) {
-        font-size: 10px;
-      }
 
       &.collapsed {
         transform: rotate(180deg);
+      }
+    }
+
+    .toggle-text {
+      @media (max-width: 768px) {
+        font-size: var(--font-size-sm);
       }
     }
   }
@@ -275,21 +263,14 @@
     flex-wrap: wrap;
 
     @media (max-width: 768px) {
-      gap: 10px;
+      gap: 8px;
       margin-top: 14px;
     }
 
     @media (max-width: 480px) {
-      flex-direction: column;
       gap: 8px;
       margin-top: 12px;
-    }
-
-    @media (max-width: 360px) {
-      .filter-button {
-        width: 100%;
-        justify-content: center;
-      }
+      justify-content: center;
     }
   }
 
@@ -298,6 +279,11 @@
     align-items: center;
     justify-content: flex-end;
     padding: 20px 0;
+
+    @media (max-width: 480px) {
+      justify-content: center;
+      padding: 16px 0;
+    }
   }
 
   // Loading state styles
@@ -424,34 +410,10 @@
 }
 
 .filter-button {
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: 1px solid transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 38px;
-  white-space: nowrap;
-
-  @media (max-width: 768px) {
-    padding: 7px 14px;
-    font-size: 13px;
-    min-height: 36px;
-  }
-
-  @media (max-width: 480px) {
-    padding: 8px 16px;
-    font-size: 14px;
-    min-height: 40px;
-    white-space: normal;
-    text-align: center;
-
-    &__download-report {
-      width: 100%;
+  // Additional filter-specific button styling can go here
+  &__download-report {
+    @media (max-width: 480px) {
+      // Button component handles sizing automatically
     }
   }
 }
