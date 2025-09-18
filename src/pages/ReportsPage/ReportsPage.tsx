@@ -42,7 +42,10 @@ const ReportsPage = (): React.ReactElement => {
         endOfWeek.setDate(startOfWeek.getDate() + 6);
         endOfWeek.setHours(23, 59, 59, 999);
 
-        const weekNumber = Math.ceil((today.getDate() - startOfWeek.getDate() + 1) / 7);
+        // Calculate correct week number for the year
+        const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
+        const pastDaysOfYear = (today.getTime() - firstDayOfYear.getTime()) / 86400000;
+        const weekNumber = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
 
         return {
             start: startOfWeek,
@@ -124,9 +127,7 @@ const ReportsPage = (): React.ReactElement => {
             // For weekly reports
             if (reportType === 'weekly') {
                 const weekToUse = selectedWeek || getCurrentWeek();
-                const startDate = weekToUse.start.toISOString().split('T')[0];
-                const endDate = weekToUse.end.toISOString().split('T')[0];
-                queryParams = `?startDate=${startDate}&endDate=${endDate}`;
+                queryParams = `?weekNumber=${weekToUse.weekNumber}&year=${weekToUse.year}`;
             }
 
             // For monthly reports
@@ -135,7 +136,7 @@ const ReportsPage = (): React.ReactElement => {
                 queryParams = `?month=${monthToUse.month + 1}&year=${monthToUse.year}`;
             }
 
-            const apiResponse = await ApiClient.get(`/report/${reportType}/cards${queryParams}`) as ReportsPageCardsResponse;
+            const apiResponse = await ApiClient.get(`/stats/reports/${reportType}${queryParams}`) as ReportsPageCardsResponse;
             if (apiResponse.success && apiResponse.data) {
                 setCardsResponse(apiResponse);
                 setCardData(apiResponse.data.cards);
@@ -367,6 +368,7 @@ const ReportsPage = (): React.ReactElement => {
 
     // Handle week selection
     const handleWeekChange = useCallback((weekRange: WeekRange | null) => {
+        console.log("Selected week:", weekRange);
         setSelectedWeek(weekRange);
         if (weekRange) {
             setSelectedMonth(null);
@@ -387,8 +389,8 @@ const ReportsPage = (): React.ReactElement => {
     const handleDownloadReport = useCallback(async () => {
         setDownloadLoading(true);
         try {
-            let downloadUrl = `/report/download/${reportType}`;
-            let queryParams = new URLSearchParams();
+            const downloadUrl = `/report/download/${reportType}`;
+            const queryParams = new URLSearchParams();
 
             // For weekly reports
             if (reportType === 'weekly') {

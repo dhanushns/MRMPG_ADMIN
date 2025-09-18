@@ -95,6 +95,7 @@ import {
   Target,
   IndianRupeeIcon,
   ReceiptIndianRupeeIcon,
+  WalletIcon,
 
 } from "lucide-react";
 import type { types } from "@/types";
@@ -226,6 +227,8 @@ const iconMap = {
   
   indianRupeeIcon: IndianRupeeIcon,
   receiptIndianRupeeIcon: ReceiptIndianRupeeIcon, 
+
+  walletIcon: WalletIcon,
 
 } as const;
 

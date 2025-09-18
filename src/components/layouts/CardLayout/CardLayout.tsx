@@ -99,15 +99,18 @@ const CardLayout: React.FC<CardLayoutProps> = ({
 
     return (
         <div 
-            className={`card-layout card-layout--${color} ${onClick ? 'card-layout--clickable' : ''} ${showActions !== 'never' && actions.length > 0 ? `card-layout--actions-${showActions}` : ''} ${className}`}
+            className={`card-layout card-layout--${color} ${onClick ? 'card-layout--clickable' : ''} ${showActions !== 'never' && actions.length > 0 ? `card-layout--actions-${showActions}` : ''} ${badge ? 'card-layout--has-badge' : ''} ${className}`}
             onClick={onClick}
             style={style}
         >
             <span className="card-layout__border"></span>
             
+            {/* New floating badge design */}
             {badge && (
-                <div className={`card-layout__badge card-layout__badge--${badge.color || color}`}>
-                    {badge.text}
+                <div className={`card-layout__badge-container ${percentage !== undefined ? 'card-layout__badge-container--with-trend' : ''}`}>
+                    <div className={`card-layout__badge card-layout__badge--${badge.color || color}`}>
+                        {badge.text}
+                    </div>
                 </div>
             )}
 
