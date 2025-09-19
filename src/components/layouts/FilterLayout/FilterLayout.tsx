@@ -24,7 +24,7 @@ const FilterLayout = ({
     onDownloadReport
 }: types["FilterLayoutProps"]): React.ReactElement => {
     const isInitialized = useRef(false);
-    
+
     const [filterValues, setFilterValues] = useState<Record<string, FilterValue>>({});
     const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -32,35 +32,35 @@ const FilterLayout = ({
 
     useEffect(() => {
         if (filters.length === 0) return;
-        
+
         setFilterValues(prevValues => {
             const newValues: Record<string, FilterValue> = { ...prevValues };
             let hasChanges = false;
-            
+
             filters.forEach(filter => {
-                
-                if (!(filter.id in prevValues) || 
-                    ((prevValues[filter.id] === null || prevValues[filter.id] === undefined || prevValues[filter.id] === '') 
-                     && filter.defaultValue !== undefined && filter.defaultValue !== null)) {
+
+                if (!(filter.id in prevValues) ||
+                    ((prevValues[filter.id] === null || prevValues[filter.id] === undefined || prevValues[filter.id] === '')
+                        && filter.defaultValue !== undefined && filter.defaultValue !== null)) {
                     newValues[filter.id] = filter.defaultValue || null;
                     hasChanges = true;
                 }
             });
-            
+
             Object.keys(prevValues).forEach(key => {
                 if (!filters.find(f => f.id === key)) {
                     delete newValues[key];
                     hasChanges = true;
                 }
             });
-            
+
             if (hasChanges) {
                 return newValues;
             }
-            
+
             return prevValues;
         });
-        
+
         isInitialized.current = true;
     }, [filters]);
 
@@ -74,7 +74,7 @@ const FilterLayout = ({
                 return newErrors;
             });
         }
-        
+
         // Use the parent onChange function if provided
         if (onChange) {
             onChange(id, value);
@@ -391,11 +391,11 @@ const FilterLayout = ({
                     {title && <h3 className="filter-layout__title">{title}</h3>}
                     {collapsible && (
                         <>
-                            <ui.Button 
-                                type="button" 
-                                variant="secondary" 
+                            <ui.Button
+                                type="button"
+                                variant="secondary"
                                 size="small"
-                                className="filter-layout__toggle" 
+                                className="filter-layout__toggle"
                                 onClick={() => setIsCollapsed(!isCollapsed)}
                                 aria-expanded={!isCollapsed}
                                 disabled={loading}
@@ -424,16 +424,29 @@ const FilterLayout = ({
                     {(showResetButton || showApplyButton) && (
                         <div className="filter-layout__actions">
                             {showResetButton && (
-                                <ui.Button 
-                                    type="button" 
-                                    variant="outline" 
+                                <ui.Button
+                                    type="button"
+                                    variant="outline"
                                     size="small"
-                                    className="filter-button" 
+                                    className="filter-button"
                                     onClick={handleReset}
                                     disabled={loading}
                                     leftIcon={<ui.Icons name="refresh" size={16} />}
                                 >
                                     Reset
+                                </ui.Button>
+                            )}
+                            {showApplyButton && (
+                                <ui.Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="small"
+                                    className="filter-button"
+                                    onClick={handleApply}
+                                    disabled={loading}
+                                    leftIcon={<ui.Icons name="refresh" size={16} />}
+                                >
+                                    Apply
                                 </ui.Button>
                             )}
                         </div>
@@ -442,11 +455,11 @@ const FilterLayout = ({
             )}
             {downloadReport && (
                 <div className="filter-layout__footer">
-                    <ui.Button 
-                        type="button" 
-                        variant="primary" 
+                    <ui.Button
+                        type="button"
+                        variant="primary"
                         size="small"
-                        className="filter-button filter-button__download-report" 
+                        className="filter-button filter-button__download-report"
                         rightIcon={<ui.Icons name="download" />}
                         disabled={loading}
                         onClick={onDownloadReport}

@@ -257,6 +257,7 @@ const TableLayout: React.FC<types["TableLayoutProps"]> = ({
                         >
                             {refreshLoading ? "Refreshing..." : "Refresh"}
                         </ui.Button>
+                        {}
                     </div>
                 </div>
             )}

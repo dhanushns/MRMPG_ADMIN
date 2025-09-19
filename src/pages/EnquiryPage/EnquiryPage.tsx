@@ -63,7 +63,7 @@ const EnquiryPage = (): React.ReactElement => {
         setCardLoading(true);
 
         try {
-            const apiResponse = await ApiClient.get('/enquiry/stats') as EnquiryStatsResponse;
+            const apiResponse = await ApiClient.get('/stats/enquiry') as EnquiryStatsResponse;
             if (apiResponse.success && apiResponse.data) {
                 setCards(apiResponse.data.cards || []);
                 setLastUpdated(apiResponse.data.lastUpdated);
@@ -85,7 +85,7 @@ const EnquiryPage = (): React.ReactElement => {
         setFilterLoading(true);
 
         try {
-            const apiResponse = await ApiClient.get('/enquiry/filters') as EnquiryFiltersResponse;
+            const apiResponse = await ApiClient.get('/filters/enquiry') as EnquiryFiltersResponse;
             if (apiResponse.success && apiResponse.data) {
                 setFilters(apiResponse.data.filters);
             } else {

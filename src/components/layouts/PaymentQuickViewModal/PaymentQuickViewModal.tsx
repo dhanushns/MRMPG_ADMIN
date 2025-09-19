@@ -107,7 +107,6 @@ const PaymentQuickViewModal: React.FC<PaymentQuickViewModalProps> = ({
                     <div className="payment-quick-view-modal__header">
                         <div className="header-content">
                             <h2>Payment Approval - {getMonthName(memberData.paymentDetails.month)} {memberData.paymentDetails.year}</h2>
-                            <p className="subtitle">Review member payment details and approve or reject</p>
                         </div>
                         <ui.Button
                             variant="ghost"

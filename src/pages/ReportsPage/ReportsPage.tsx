@@ -162,9 +162,7 @@ const ReportsPage = (): React.ReactElement => {
             // For weekly reports
             if (reportType === 'weekly') {
                 const weekToUse = selectedWeek || getCurrentWeek();
-                const startDate = weekToUse.start.toISOString().split('T')[0];
-                const endDate = weekToUse.end.toISOString().split('T')[0];
-                queryParams += `&startDate=${startDate}&endDate=${endDate}`;
+                queryParams += `&weekNumber=${weekToUse.weekNumber}&year=${weekToUse.year}`;
             }
 
             // For monthly reports
@@ -176,16 +174,16 @@ const ReportsPage = (): React.ReactElement => {
             let apiResponse: PgReportResponse | RoomReportResponse | PaymentReportResponse | FinancialReportResponse;
             switch (activeTab) {
                 case "pg-report":
-                    apiResponse = await ApiClient.get(`/report/${reportType}/${activeTab}?${queryParams}`) as PgReportResponse;
+                    apiResponse = await ApiClient.get(`/report/${activeTab}?${queryParams}`) as PgReportResponse;
                     break;
                 case "room-report":
-                    apiResponse = await ApiClient.get(`/report/${reportType}/${activeTab}?${queryParams}`) as RoomReportResponse;
+                    apiResponse = await ApiClient.get(`/report/${activeTab}?${queryParams}`) as RoomReportResponse;
                     break;
                 case "payment-report":
-                    apiResponse = await ApiClient.get(`/report/${reportType}/${activeTab}?${queryParams}`) as PaymentReportResponse;
+                    apiResponse = await ApiClient.get(`/report/${activeTab}?${queryParams}`) as PaymentReportResponse;
                     break;
                 case "financial-report":
-                    apiResponse = await ApiClient.get(`/report/${reportType}/${activeTab}?${queryParams}`) as FinancialReportResponse;
+                    apiResponse = await ApiClient.get(`/report/${activeTab}?${queryParams}`) as FinancialReportResponse;
                     break;
                 default:
                     throw new Error("Invalid tab");
@@ -304,8 +302,6 @@ const ReportsPage = (): React.ReactElement => {
                     { key: "totalAmountDue", label: "Amount Due", align: "right", render: (value) => `₹${value}`, sortable: false },
                     { key: "totalAmountReceived", label: "Amount Received", align: "right", render: (value) => `₹${value}`, sortable: false },
                     { key: "collectionEfficiency", label: "Collection %", align: "center", render: (value) => `${value}%`, sortable: false },
-                    { key: "avgApprovalTime", label: "Avg Approval Time", align: "center", render: (value) => `${value} hrs`, sortable: false },
-                    { key: "paymentSubmissionRate", label: "Submission %", align: "center", render: (value) => `${value}%`, sortable: false }
                 ];
 
             case "financial-report":

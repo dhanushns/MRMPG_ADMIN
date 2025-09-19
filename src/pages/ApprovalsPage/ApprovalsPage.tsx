@@ -860,9 +860,8 @@ const ApprovalsPage = () => {
                             filters={filterItems}
                             loading={filterItemsLoading}
                             columns={4}
-                            showApplyButton
                             showResetButton
-                            onApply={handlePaymentFilterApply}
+                            onChange={handlePaymentFilterApply}
                             onReset={handleResetFilters} />
                     </div>
                 )}
